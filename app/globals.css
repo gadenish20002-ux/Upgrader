@@ -79,6 +79,9 @@
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-tektur: var(--font-tektur);
+  --font-exo: var(--font-tektur);
+  --font-exo2: var(--font-tektur);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

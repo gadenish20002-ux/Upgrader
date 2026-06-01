@@ -249,7 +249,7 @@ function SkinCard({
         <div className="absolute right-1 bottom-0 top-0 z-[2] flex items-center justify-center transition-transform duration-300" style={{ width: 65, height: "100%" }}>
           {/* Hover background effect */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0 pointer-events-none">
-            <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-[150%] h-[150%] max-w-none opacity-50 object-contain" />
+            <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-[300%] h-[300%] max-w-none object-contain" />
           </div>
 
           <div className="relative w-full h-[80%] z-10 transition-transform duration-300 group-hover:scale-110">

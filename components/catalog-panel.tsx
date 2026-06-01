@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { ChevronsUp, Search, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
@@ -31,13 +31,13 @@ export function CatalogPanel({
     <div className="h-full flex flex-col">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-[#1e1f23] rounded-none lg:rounded-t-xl mb-0 lg:mb-2">
         <div className="flex items-center cursor-pointer">
-          <ChevronsUp className="h-5 w-5 text-[#f0c000] mr-1.5" strokeWidth={3} />
+          <Image src="/assets/images/header/logo.svg" alt="logo" width={20} height={20} className="mr-1.5" />
           <span className="font-bold text-white text-sm">Прокачать до</span>
           <ChevronDown className="h-4 w-4 text-white/50 ml-1.5" />
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="relative">
-             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-[#f0c000] flex items-center justify-center text-[8px] text-black font-bold">C</div>
+             <Image src="/assets/icons/coin.svg" alt="coin" width={14} height={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" />
             <Input
               value={min}
               onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))}
@@ -47,7 +47,7 @@ export function CatalogPanel({
             />
           </div>
           <div className="relative">
-             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-[#f0c000] flex items-center justify-center text-[8px] text-black font-bold">C</div>
+             <Image src="/assets/icons/coin.svg" alt="coin" width={14} height={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" />
             <Input
               value={max}
               onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))}
@@ -57,7 +57,7 @@ export function CatalogPanel({
             />
           </div>
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+            <Image src="/assets/icons/search.svg" alt="search" width={16} height={16} className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -90,8 +90,10 @@ export function CatalogPanel({
               
               <div className="absolute top-2 right-2 flex flex-col items-end z-10">
                 <div className="flex items-center gap-1">
-                  <div className="flex items-center justify-center h-3 w-3 rounded-full bg-[#f0c000] text-[8px] text-black font-extrabold pb-[1px]">C</div>
-                  <span className="text-[11px] font-bold text-[#f0c000]">{formatPrice(skin.price)} <span className="text-[9px] text-[#f0c000]/70">₽</span></span>
+                  <span className="text-[11px] font-bold text-[#f0c000] flex items-center gap-1">
+                    {formatPrice(skin.price)}
+                    <Image src="/assets/icons/coin-2.svg" alt="coin" width={12} height={12} />
+                  </span>
                 </div>
                 <span className="text-[9px] font-bold text-white/40 mt-0.5">{skin.wear}</span>
               </div>

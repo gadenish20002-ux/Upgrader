@@ -97,7 +97,7 @@ export function LiveDropAnimation() {
 
         // 3. Vertical slot
         const stack: SkinItem[] = [
-          randomSkin(), randomSkin(), randomSkin(), pickPremium(),
+          randomSkin(), randomSkin(), randomSkin(), randomSkin(), randomSkin(), randomSkin(), randomSkin(), pickPremium(),
         ]
         setVertStack(stack)
         setPhase("vert-start")
@@ -105,7 +105,7 @@ export function LiveDropAnimation() {
         if (!alive.current) return
 
         setPhase("vert-end")
-        await wait(1400) // match CSS transition duration
+        await wait(3200) // match CSS transition duration
         if (!alive.current) return
 
         // 4. Show premium
@@ -244,7 +244,7 @@ export function LiveDropAnimation() {
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      opacity: isFocused ? 0.7 : 0,
+                      opacity: isFocused ? 0.85 : 0,
                       transition: 'opacity 0.6s ease',
                       zIndex: 0
                     }}
@@ -264,7 +264,7 @@ export function LiveDropAnimation() {
                       transition: 'opacity 0.6s ease 0.3s',
                       filter: 'invert(1) opacity(0.25)',
                       zIndex: 0,
-                      animation: phase === 'vert-end' ? 'arrowPulse 1.4s ease-in-out forwards' : 'none'
+                      animation: phase === 'vert-end' ? 'arrowPulse 3.2s ease-in-out forwards' : 'none'
                     }}
                   />
                 </>
@@ -283,7 +283,7 @@ export function LiveDropAnimation() {
                       flexDirection: "column",
                       transform: `translateY(${vertY}px)`,
                       transition: phase === "vert-end" || phase === "showing"
-                        ? "transform 1.4s cubic-bezier(0.15, 0.85, 0.3, 1)"
+                        ? "transform 3.2s cubic-bezier(0.15, 0.85, 0.32, 1.12)"
                         : "none",
                     }}
                   >
@@ -307,7 +307,7 @@ export function LiveDropAnimation() {
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={isLast ? vs.image : vertSil}
+                            src={vs.image}
                             alt={vs.name}
                             style={{
                               width: "82%",
@@ -316,7 +316,7 @@ export function LiveDropAnimation() {
                               display: "block",
                               filter: isLast
                                 ? "drop-shadow(0 4px 14px rgba(0,0,0,0.8))"
-                                : "brightness(0) invert(0.65)",
+                                : "none",
                               opacity: 1,
                             }}
                           />

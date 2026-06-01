@@ -5,7 +5,7 @@ import { RARITY_COLORS } from "@/lib/default-data"
 import { LoginButton } from "./login-button"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
-import { Backpack } from "lucide-react"
+import { Backpack, Store } from "lucide-react"
 
 export function InventoryPanel({
   selectedUids,
@@ -22,16 +22,22 @@ export function InventoryPanel({
       <div className="hidden lg:flex items-center gap-3 px-4 py-3 bg-[#1e1f23] rounded-t-xl mb-2">
         <div className="flex items-center gap-1 p-1 rounded-[10px] bg-[#232325]">
           <button className="flex items-center justify-center h-[28px] w-[28px] rounded-[8px] bg-[#FBD506] text-[#1C1C20] transition-colors" aria-label="Мой инвентарь">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="opacity-90">
-              <path d="M21.5 2.5a2.5 2.5 0 0 0-3.5 0l-12 12a2.5 2.5 0 0 0 0 3.5l1.5 1.5a2.5 2.5 0 0 0 3.5 0l12-12a2.5 2.5 0 0 0 0-3.5z" />
-              <path d="M6 14.5l3.5 3.5" />
-            </svg>
+            <div 
+              className="w-6 h-6 bg-[#1C1C20]" 
+              style={{
+                maskImage: `url('/assets/icons/karambit_solid_perfect.png')`,
+                maskSize: '130%',
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskImage: `url('/assets/icons/karambit_solid_perfect.png')`,
+                WebkitMaskSize: '130%',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center'
+              }}
+            />
           </button>
           <button className="flex items-center justify-center h-[28px] w-[28px] rounded-[8px] text-white/40 hover:text-white transition-colors" aria-label="Магазин">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <Store className="h-4 w-4" strokeWidth={2.5} />
           </button>
         </div>
         <span className="font-medium text-white text-[15px] tracking-wide">Мой инвентарь</span>
@@ -52,7 +58,7 @@ export function InventoryPanel({
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#16171a]/70 px-4 py-8 text-center z-10 backdrop-blur-[1px]">
               <h3 className="text-xl font-bold text-white drop-shadow-md">Вы не авторизованы</h3>
               <p className="text-sm font-medium text-white/70 drop-shadow-md mb-2">Войдите для доступа к апгрейдам</p>
-              <LoginButton className="drop-shadow-lg" />
+              <LoginButton className="drop-shadow-lg" withIcon={true} />
               <LiveDropAnimation />
             </div>
           </>
@@ -88,8 +94,10 @@ export function InventoryPanel({
                   
                   <div className="absolute top-2 right-2 flex flex-col items-end z-10">
                     <div className="flex items-center gap-1">
-                      <div className="flex items-center justify-center h-3 w-3 rounded-full bg-[#f0c000] text-[8px] text-black font-extrabold pb-[1px]">C</div>
-                      <span className="text-[11px] font-bold text-[#f0c000]">{formatPrice(skin.price)} <span className="text-[9px] text-[#f0c000]/70">₽</span></span>
+                      <span className="text-[11px] font-bold text-[#f0c000] flex items-center gap-1">
+                        {formatPrice(skin.price)}
+                        <Image src="/assets/icons/coin-2.svg" alt="coin" width={12} height={12} />
+                      </span>
                     </div>
                     <span className="text-[9px] font-bold text-white/40 mt-0.5">{skin.wear}</span>
                   </div>

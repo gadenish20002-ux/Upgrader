@@ -62,7 +62,7 @@ export function SiteHeader() {
 
             <div className="h-full">
               <div className="flex h-full items-center gap-1 md:gap-2">
-                <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.06rem] w-[1.06rem] md:h-4 md:w-4" />
+                <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.06rem] w-[1.06rem] md:h-4 md:w-4 opacity-60" />
                 <div className="flex flex-col">
                   <span className="hidden text-sm text-[#A7A7A7] md:block leading-none">Апгрейдов</span>
                   <span className="text-[0.9075rem] font-semibold md:text-sm text-white leading-none">
@@ -177,7 +177,7 @@ export function SiteHeader() {
               />
             </div>
           ) : (
-            <LoginButton />
+            <LoginButton className="!w-[167px] !h-[44px] !text-sm whitespace-nowrap" />
           )}
         </div>
       </div>

@@ -1,13 +1,3 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Center circle -->
-  <circle cx="8" cy="8" r="2.2" fill="#FBD506"/>
-  <!-- Petals -->
-  <ellipse cx="8" cy="3.2" rx="1.5" ry="2.2" fill="#FBD506"/>
-  <ellipse cx="8" cy="12.8" rx="1.5" ry="2.2" fill="#FBD506"/>
-  <ellipse cx="3.2" cy="8" rx="2.2" ry="1.5" fill="#FBD506"/>
-  <ellipse cx="12.8" cy="8" rx="2.2" ry="1.5" fill="#FBD506"/>
-  <ellipse cx="3.8" cy="3.8" rx="1.5" ry="2.2" transform="rotate(-45 3.8 3.8)" fill="#FBD506"/>
-  <ellipse cx="12.2" cy="12.2" rx="1.5" ry="2.2" transform="rotate(-45 12.2 12.2)" fill="#FBD506"/>
-  <ellipse cx="12.2" cy="3.8" rx="1.5" ry="2.2" transform="rotate(45 12.2 3.8)" fill="#FBD506"/>
-  <ellipse cx="3.8" cy="12.2" rx="1.5" ry="2.2" transform="rotate(45 3.8 12.2)" fill="#FBD506"/>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 11C17.6569 11 19 9.65685 19 8C19 6.34315 17.6569 5 16 5C15.7725 5 15.5511 5.02535 15.3392 5.07348C15.759 5.96023 16 6.9535 16 8C16 9.0465 15.759 10.0398 15.3392 10.9265C15.5511 10.9747 15.7725 11 16 11ZM8 11C9.65685 11 11 9.65685 11 8C11 6.34315 9.65685 5 8 5C6.34315 5 5 6.34315 5 8C5 9.65685 6.34315 11 8 11ZM8 13C5.33333 13 0 14.3333 0 17V19H16V17C16 14.3333 10.6667 13 8 13ZM16 13C15.8361 13 15.6322 13.0189 15.4054 13.0425C16.8522 13.9928 18 15.3308 18 17V19H24V17C24 14.3333 18.6667 13 16 13Z" fill="#f0c000"/>
 </svg>

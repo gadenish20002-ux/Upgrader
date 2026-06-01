@@ -114,7 +114,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       </div>
 
       {/* Main Upgrade Interface: Unified Grid for Mobile & Desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-[1fr_auto_1fr] lg:grid-rows-[auto_1fr] w-full items-start gap-x-2 gap-y-4 lg:gap-x-4 lg:gap-y-0">
+      <div className="grid grid-cols-2 lg:grid-cols-[1fr_auto_1fr] lg:grid-rows-[auto_auto_auto] w-full items-start gap-x-2 gap-y-4 lg:gap-x-4 lg:gap-y-0 lg:mt-8">
         
         {/* Settings Icons */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-1 order-1 flex gap-2 lg:mb-2 self-end">
@@ -130,7 +130,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Center Wheel */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 order-2 flex flex-col items-center justify-center relative z-20 py-2 lg:mt-24">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
             <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} />
             {multiplier > 0 && (
@@ -142,7 +142,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Left Card */}
-        <div className="col-span-1 lg:col-span-1 lg:col-start-1 lg:row-start-2 order-3 flex flex-col rounded-xl bg-[#1c1d21] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.35)] overflow-hidden w-full" style={{ aspectRatio: '259/240' }}>
+        <div className="col-span-1 lg:col-span-1 lg:col-start-1 lg:row-start-2 order-3 flex flex-col rounded-xl bg-[#1c1d21] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.35)] overflow-hidden w-full lg:self-center" style={{ aspectRatio: '259/240' }}>
           <div className="text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 shrink-0">
             <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug">Выберите предметы и/или баланс для использования</h3>
             <p className="text-[7px] lg:text-[11px] text-[#6b6b6b] mt-0.5">Вы можете выбрать несколько предметов</p>
@@ -177,7 +177,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Right Card */}
-        <div className="col-span-1 lg:col-span-1 lg:col-start-3 lg:row-start-2 order-4 flex flex-col rounded-xl bg-[#1c1d21] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.35)] overflow-hidden w-full" style={{ aspectRatio: '259/240' }}>
+        <div className="col-span-1 lg:col-span-1 lg:col-start-3 lg:row-start-2 order-4 flex flex-col rounded-xl bg-[#1c1d21] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.35)] overflow-hidden w-full lg:self-center" style={{ aspectRatio: '259/240' }}>
           <div className="text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 shrink-0">
             <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug flex items-center justify-center h-full min-h-[22px] lg:min-h-0">Выберите предмет для апгрейда</h3>
           </div>
@@ -202,7 +202,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Upgrade Button */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-5 mt-2 lg:mt-12 w-full flex justify-center">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 mt-2 lg:mt-6 w-full flex justify-center">
           <button
             onClick={handleSpin}
             disabled={spinning || !state.loggedIn}
