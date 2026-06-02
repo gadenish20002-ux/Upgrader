@@ -31,6 +31,7 @@ export interface AppState {
   balance: number
   inventory: InventoryItem[]
   skins: Skin[]
+  upgradeSkins: Skin[]
   loggedIn: boolean
   username: string
   avatar: string | null
@@ -38,4 +39,8 @@ export interface AppState {
   upgrades: number
   predict: Predict
   adminPassword: string
+  fastMode: boolean
+  fastMultipliers: [number, number, number]
+  fastPercentages: [number, number, number]
+  soundMode: "on" | "off"
 }

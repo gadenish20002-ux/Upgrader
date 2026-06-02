@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Tektur, Exo_2 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
@@ -9,6 +9,13 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 const tektur = Tektur({ subsets: ["latin", "cyrillic"], variable: "--font-tektur" });
 const exo2 = Exo_2({ subsets: ["latin", "cyrillic"], variable: "--font-exo2" });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  interactiveWidget: 'resizes-content',
+}
 
 export const metadata: Metadata = {
   title: 'UPGRADER — Апгрейд CS2 скинов',
@@ -40,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
+      <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg-PEFHGDDX.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
         <StoreProvider>
           {children}
           <Toaster position="top-center" theme="dark" richColors />

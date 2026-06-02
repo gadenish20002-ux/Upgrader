@@ -88,39 +88,11 @@ export function LiveFeed({
           }
           .chevron-bg { animation: chevron-slide 4s linear infinite; }
         `}</style>
-        <div className="flex items-center gap-2 mb-2 text-[#f0c000] text-xs font-bold uppercase tracking-wider">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#f0c000] animate-pulse" />
+        <div className="flex items-center mb-2 text-[#f0c000] text-[10px] font-medium tracking-wider">
           Лучший дроп
         </div>
         <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
-          {/* Pinned large card */}
-          <div className="shrink-0 pr-1 pl-0 snap-start">
-            <div className="relative h-[4.5rem] w-[10rem] overflow-hidden rounded-r-xl"
-                 style={{ background: "linear-gradient(135deg, #7a6000 0%, #4a3a00 60%, #1e1800 100%)" }}>
-              {/* Left colored bar (yellow for top item) */}
-              <div className="absolute left-0 top-0 bottom-0 w-[4px] z-[3] bg-[#f0c000]" />
-              
-              {/* Chevron animation background */}
-              <div className="absolute inset-0 z-0 opacity-15 flex justify-end pr-1">
-                <div className="w-8 h-[200%] chevron-bg flex flex-col items-center">
-                  <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-8 h-8 shrink-0 opacity-70" />
-                  <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-8 h-8 shrink-0 opacity-70 -mt-2" />
-                  <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-8 h-8 shrink-0 opacity-70 -mt-2" />
-                  <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-8 h-8 shrink-0 opacity-70 -mt-2" />
-                </div>
-              </div>
-
-              <div className="absolute left-2.5 bottom-0 top-0 z-[2] flex flex-col justify-center gap-[1px]">
-                <div className="text-[10px] font-extrabold uppercase tracking-wide text-white leading-tight truncate max-w-[80px] drop-shadow">MARBLE FADE</div>
-                <div className="text-[9px] font-medium text-white/40 truncate max-w-[80px]">★ Butterfly Knife</div>
-              </div>
-              <div className="absolute right-1 bottom-0 top-0 z-[2] flex items-center h-full w-[4.5rem]">
-                <div className="relative w-full h-[75%]">
-                  <Image src="/assets/images/game/butterfly.avif" alt="Marble Fade" fill className="object-contain drop-shadow-[0_0_12px_rgba(251,213,6,0.3)]" sizes="80px" />
-                </div>
-              </div>
-            </div>
-          </div>
+          <BestDropCard horizontal />
 
           {items.map((skin) => (
             <SkinCard key={`${skin.id}-m`} skin={skin} isEntering={entering === skin.id} horizontal />
@@ -132,7 +104,7 @@ export function LiveFeed({
 
   /* ── Desktop: vertical pinned list ── */
   return (
-    <aside className="flex flex-col w-full bg-[#17181c] overflow-hidden py-1.5 pl-0 pr-1.5 space-y-1.5" style={{ height: "100%" }}>
+    <aside className="flex flex-col w-[12.5rem] h-full py-1.5 pl-1.5 space-y-1.5 rounded-r-lg lg:top-[4.6rem]" style={{ height: "100%" }}>
       <style>{`
         @keyframes slide-down {
           from { opacity: 0; transform: translateY(-100%); }
@@ -141,60 +113,26 @@ export function LiveFeed({
         .feed-enter {
           animation: slide-down 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-          animation: slide-down 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
         @keyframes chevron-slide {
           0% { transform: translateY(0); }
           100% { transform: translateY(-50%); }
         }
         .chevron-bg { animation: chevron-slide 4s linear infinite; }
+        .invisible-scroll::-webkit-scrollbar {
+          display: none;
+        }
+        .invisible-scroll {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
       
-      {/* Pinned top card */}
-      <div className="shrink-0 z-10 relative">
-        <div
-          className="relative w-full overflow-hidden rounded-r-xl group"
-          style={{
-            height: 72,
-            background: "linear-gradient(160deg, #9a7600 0%, #4f3b00 50%, #1e1700 100%)",
-          }}
-        >
-          {/* Left colored bar (yellow for top item) */}
-          <div className="absolute left-0 top-0 bottom-0 w-[4px] z-[3] bg-[#f0c000]" />
-
-          {/* Animated chevron background */}
-          <div className="absolute inset-0 z-0 opacity-20 flex justify-end pr-2">
-            <div className="w-16 h-[200%] chevron-bg flex flex-col items-center">
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60" />
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60 -mt-3" />
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60 -mt-3" />
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60 -mt-3" />
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60 -mt-3" />
-              <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-16 h-16 shrink-0 opacity-60 -mt-3" />
-            </div>
-          </div>
-
-          <div className="absolute left-3 bottom-0 top-0 z-[2] flex flex-col justify-center gap-0.5">
-            <div className="text-[11px] font-extrabold uppercase tracking-wide text-white leading-tight truncate max-w-[100px] drop-shadow">MARBLE FADE</div>
-            <div className="text-[10px] font-medium text-white/40 truncate max-w-[100px]">★ Butterfly Knife</div>
-          </div>
-          <div className="absolute right-2 bottom-0 top-0 z-[2] flex items-center h-full w-[7.5rem]">
-            <div className="relative w-full h-[80%]">
-              <Image
-                src="/assets/images/game/butterfly.avif"
-                alt="Butterfly Knife | Marble Fade"
-                fill
-                className="object-contain drop-shadow-[0_0_12px_rgba(251,213,6,0.5)]"
-                sizes="120px"
-                priority
-              />
-            </div>
-          </div>
-        </div>
+      <div className="relative bg-[#1c1d21] w-full flex-col overflow-hidden rounded-r-lg py-1.5">
+        <BestDropCard />
       </div>
 
       {/* Scrollable animated feed */}
-      <div className="flex-1 overflow-hidden flex flex-col relative space-y-1.5">
+      <div className="invisible-scroll flex bg-[#1c1d21] flex-col space-y-0.5 overflow-y-auto rounded-r-lg py-1.5 pr-1.5 h-[calc(100vh-10.75rem)]">
         {items.map((skin) => (
           <SkinCard
             key={`${skin.id}-${skin.name}`}
@@ -219,50 +157,125 @@ function SkinCard({
 }) {
   return (
     <div
-      className={`shrink-0 ${horizontal ? "h-[4.5rem] w-[10rem] pl-0 pr-1 snap-start" : "w-full"} ${isEntering && !horizontal ? "feed-enter" : ""}`}
+      className={`shrink-0 ${horizontal ? "h-[3.75rem] w-[7.5rem] snap-start pr-1" : "h-[5rem] w-[11.75rem]"} ${isEntering && !horizontal ? "feed-enter" : ""}`}
     >
-      <div
-        className="relative w-full h-full overflow-hidden rounded-r-xl group cursor-pointer"
-        style={{
-          height: horizontal ? "100%" : 72,
-          background: `linear-gradient(to right, ${skin.rarity}22 0%, #212226 60%)`,
-        }}
+      <button 
+        className={`group bg-card relative flex h-[100%] w-full items-end overflow-hidden ${horizontal ? "rounded-lg p-1" : "rounded-r-lg p-2"}`}
+        style={horizontal ? { border: `1px solid ${skin.rarity}` } : undefined}
       >
-        {/* Left colored bar */}
-        <div className="absolute left-0 top-0 bottom-0 w-[4px] z-[3]" style={{ backgroundColor: skin.rarity }} />
-
-        {/* Default Text */}
-        <div className="absolute left-2.5 bottom-0 top-0 z-[2] flex flex-col justify-center gap-[1px] opacity-100 group-hover:opacity-0 transition-opacity duration-300">
-          <div className="text-[10px] font-extrabold uppercase tracking-wide text-white leading-tight truncate max-w-[80px]">
-            {skin.name}
+        {horizontal ? (
+          <div className="pointer-events-none absolute inset-0 z-[4] flex items-end justify-between p-1 select-none">
+            <img className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+            <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-black/60 px-1 py-[0.125rem]">
+              <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+              <span className="font-exo text-[0.45rem] font-bold text-white leading-none">{(Math.random() * 100).toFixed(2)}%</span>
+            </div>
           </div>
-          <div className="text-[9px] font-medium text-white/40 truncate max-w-[80px]">{skin.weapon}</div>
-        </div>
-
-        {/* Hover User Info */}
-        <div className="absolute left-3 bottom-0 top-0 z-[2] flex flex-col justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <img src="/assets/images/game/unknown-item-2.svg" alt="User" className="w-6 h-6 rounded-full bg-[#1c1d21]" />
-          <div className="text-[10px] font-medium text-white truncate max-w-[100px]">Player</div>
-        </div>
-
-        {/* Weapon image */}
-        <div className="absolute right-1 bottom-0 top-0 z-[2] flex items-center justify-center transition-transform duration-300" style={{ width: 65, height: "100%" }}>
-          {/* Hover background effect */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0 pointer-events-none">
-            <img src="/assets/images/game/unknown-item-2.svg" alt="" className="w-[300%] h-[300%] max-w-none object-contain" />
+        ) : (
+          <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
+            <div className="absolute -top-1 -left-1.5 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
+              <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+              <span className="font-exo text-xxxs font-normal text-white">
+                {(Math.random() * 100).toFixed(2)}%
+              </span>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
+              <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">
+                {skin.name}
+              </span>
+              <span className="text-[#FFFFFF80] font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold">
+                {skin.weapon}
+              </span>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+              <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+              <span className="font-exo text-xxs max-w-[11rem] truncate font-normal text-white">
+                Player
+              </span>
+            </div>
           </div>
+        )}
+        
+        <img alt="drop-item" className={`absolute top-1/2 z-[2] h-full object-contain -translate-y-1/2 ${horizontal ? "left-1/2 -translate-x-1/2 max-w-[80%] max-h-[80%]" : "right-0 max-h-[5.6875rem] w-full max-w-[5.8125rem]"}`} src={skin.img} />
+        
+        {!horizontal && (
+          <div className="absolute top-0 left-0 h-full w-0.5" style={{ background: skin.rarity }}></div>
+        )}
+        <div className="absolute top-0 left-0 h-full w-full pointer-events-none" style={{ background: horizontal ? `linear-gradient(180deg, rgba(35, 35, 37, 0) 0%, ${skin.rarity}26 100%)` : `linear-gradient(270deg, rgba(35, 35, 37, 0.2) 25.06%, ${skin.rarity}4d 100%)` }}></div>
+        {!horizontal && (
+          <img alt="" className="absolute top-1/2 -right-1.5 h-[6.6875rem] w-[4.125rem] -translate-y-1/2 opacity-0 transition-opacity duration-700 group-hover:opacity-100" src="https://s3.upgrader.pro/cdn/fa/images/upgrader-arrow-up.svg" />
+        )}
+      </button>
+    </div>
+  )
+}
 
-          <div className="relative w-full h-[80%] z-10 transition-transform duration-300 group-hover:scale-110">
-            <Image
-              src={skin.img}
-              alt={skin.name}
-              fill
-              className="object-contain drop-shadow-md"
-              sizes="80px"
-            />
+/* ── Best drop card ── */
+function BestDropCard({ horizontal = false }: { horizontal?: boolean }) {
+  return (
+    <div className={`shrink-0 z-10 relative ${horizontal ? "h-[3.75rem] w-[8.25rem] snap-start pr-1 pl-0" : "h-[5rem] w-[11.75rem]"}`}>
+      <button className={`group bg-card relative flex h-full w-full items-end overflow-hidden rounded-lg ${horizontal ? "border-[1px] border-[#f0c000]" : "p-2"}`}>
+        {horizontal ? (
+          <div className="pointer-events-none absolute inset-0 z-[4] flex items-end justify-between p-1 select-none">
+            <img className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+            <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-[#f0c000]/20 px-1 py-[0.125rem]">
+              <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+              <span className="font-exo text-[0.45rem] font-bold text-[#f0c000] leading-none">79.07%</span>
+            </div>
+          </div>
+        ) : (
+          <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
+            <div className="absolute -top-1 -left-2 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
+              <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+              <span className="font-exo text-xxxs font-normal text-white">79.07%</span>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
+              <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">Slaughter</span>
+              <span className="font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold text-[#FFFFFF80]">★ StatTrak™ Butterfly Knife</span>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+              <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+              <span className="font-tektur text-xxs max-w-[11rem] truncate font-bold text-white uppercase">Player</span>
+            </div>
+          </div>
+        )}
+        
+        {!horizontal && (
+          <div className="absolute top-2 right-2 z-[3] flex translate-y-[-50%] items-center justify-center space-x-0.5 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+            <span className="text-[0.625rem] leading-none font-semibold text-white">128099.22</span>
+            <img alt="" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+          </div>
+        )}
+        
+        <img alt="drop-item" className={`absolute top-1/2 z-[2] h-full object-contain -translate-y-1/2 ${horizontal ? "left-1/2 -translate-x-1/2 max-w-[80%] max-h-[80%]" : "right-0 max-h-[5.6875rem] w-full max-w-[5.8125rem]"}`} src="/assets/images/game/butterfly.avif" />
+        
+        <div 
+          className="absolute top-0 left-0 w-full h-full z-[0] pointer-events-none"
+          style={{
+            background: 'radial-gradient(198px 93.5px at 126px 105.5px, #FBD506 0%, rgba(251,213,6,0.1) 100%)',
+            filter: 'blur(15px)',
+            opacity: 0.8
+          }}
+        />
+
+        <div className="absolute top-0 -right-2 h-full w-16 overflow-hidden z-[1] transition-opacity duration-500 opacity-60 group-hover:opacity-100 pointer-events-none mask-image-gradient">
+          <div className="w-full h-[200%] flex flex-col items-center justify-around chevron-bg">
+            {[...Array(6)].map((_, i) => (
+              <img key={i} src="https://s3.upgrader.pro/cdn/fa/images/upgrader-arrow-up.svg" alt="" className="w-[4.125rem] h-auto shrink-0 mb-4" />
+            ))}
           </div>
         </div>
-      </div>
+      </button>
+      <style>{`
+        .mask-image-gradient {
+          mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+        }
+      `}</style>
     </div>
   )
 }

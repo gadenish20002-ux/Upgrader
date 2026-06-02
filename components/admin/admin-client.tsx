@@ -5,6 +5,7 @@ import { PredictControl } from "./predict-control"
 import { BalanceControl } from "./balance-control"
 import { InventoryControl } from "./inventory-control"
 import { SkinsControl } from "./skins-control"
+import { UpgradeSkinsControl } from "./upgrade-skins-control"
 import { SettingsControl } from "./settings-control"
 import { Logo } from "@/components/logo"
 import { ArrowLeft } from "lucide-react"
@@ -34,9 +35,11 @@ export function AdminClient() {
             <SettingsControl />
           </div>
           <InventoryControl />
+          <UpgradeSkinsControl />
           <SkinsControl />
         </main>
       </div>
     </AdminGate>
   )
 }
+

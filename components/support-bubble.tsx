@@ -31,15 +31,22 @@ export function SupportBubble() {
         {open ? (
           <X className="h-6 w-6 text-white" />
         ) : (
-          <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="chatGrad" x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="100%" stopColor="#f0f0f0" />
-              </linearGradient>
-            </defs>
-            <path fill="url(#chatGrad)" d="M21 15C21 16.1046 20.1046 17 19 17H14.5L12 21L9.5 17H5C3.89543 17 3 16.1046 3 15V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V15Z" />
-          </svg>
+          <span className="cc-2gk6o flex items-center justify-center w-full h-full" data-id="chat_closed" data-prefer-search="false">
+            <span 
+              className="cc-1er0q cc-nch8a block w-[32px] h-[28px] bg-white" 
+              data-partial-pending="false"
+              style={{
+                maskImage: 'url("/assets/Без названия.svg")',
+                WebkitMaskImage: 'url("/assets/Без названия.svg")',
+                maskSize: 'contain',
+                WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+              }}
+            ></span>
+          </span>
         )}
       </button>
     </>

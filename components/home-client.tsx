@@ -13,11 +13,11 @@ export function HomeClient() {
   const [sidebarTargetId, setSidebarTargetId] = useState<string | null>(null)
 
   if (!ready) {
-    return <div className="min-h-screen bg-[#111214]" />
+    return <div className="min-h-screen bg-transparent" />
   }
 
   return (
-    <div className="min-h-screen bg-[#111214] text-foreground flex flex-col">
+    <div className="min-h-screen bg-transparent text-foreground flex flex-col">
       <SiteHeader />
       <div className="flex flex-1 flex-col lg:flex-row pt-[3.25rem] md:pt-[4.25rem]">
         {/* Mobile: Top Live Feed */}
