@@ -29,7 +29,7 @@ export function InventoryPanel({
   return (
     <div className="h-full flex flex-col">
       {/* Header separated with mb-2 */}
-      <div className="lg:rounded-t-xl flex flex-col space-y-4 rounded-t-none bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
+      <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
         <div className="flex min-h-[2.125rem] w-full flex-wrap items-center justify-between lg:flex-row lg:space-x-2">
           <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:w-auto lg:flex-row lg:flex-wrap">
             <div className="flex w-full flex-none items-center justify-center lg:w-auto lg:space-x-1.5">
@@ -91,11 +91,20 @@ export function InventoryPanel({
                  <div key={i} className="rounded-lg border border-white/5 bg-white/5 h-[120px]" />
                ))}
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#16171a]/70 px-4 py-8 text-center z-10 backdrop-blur-[1px]">
-              <h3 className="text-xl font-bold text-white drop-shadow-md">Вы не авторизованы</h3>
-              <p className="text-sm font-medium text-white/70 drop-shadow-md mb-2">Войдите для доступа к апгрейдам</p>
-              <LoginButton className="drop-shadow-lg" withIcon={true} />
-              <LiveDropAnimation />
+            <div className="absolute inset-0 z-10 flex w-full flex-1 flex-col items-center justify-center lg:h-full bg-[#16171a]/70 backdrop-blur-[1px]">
+              <div className="font-exo relative z-20 flex w-full flex-col items-center justify-center">
+                <span className="text-[1.25rem] font-medium leading-none text-white">Вы не авторизованы</span>
+                <span className="mt-2 text-[0.875rem] leading-none text-white opacity-50">Войдите для доступа к апгрейдам</span>
+                <button onClick={() => useStore.getState().login()} className="mt-8 flex h-[2.5rem] items-center gap-2 rounded-[0.75rem] bg-[#FDD811] px-3 py-2 shadow-[0_0_2px_0_rgba(255,255,255,0.50)_inset] shadow-[0_0_20px_0_rgba(255,221,35,0.25)] transition-all duration-200 hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)]">
+                  <span className="text-[1rem] font-semibold text-[#202022]"> Войти через Steam </span>
+                  <img alt="" className="h-5 w-5" src="https://s3.upgrader.pro/cdn/fa/icons/steam-dark.svg" />
+                </button>
+              </div>
+              <div className="relative w-full items-center justify-center overflow-hidden lg:h-[19.375rem] mt-6 pointer-events-none">
+                <div className="w-full transition-opacity duration-500 lg:absolute lg:-left-[16.5%] lg:w-[133%] opacity-100">
+                  <LiveDropAnimation />
+                </div>
+              </div>
             </div>
           </>
         ) : displayedSkins.length === 0 ? (
@@ -119,7 +128,7 @@ export function InventoryPanel({
               const shadow = SHADOWS[index % 5];
 
               return (
-                <div key={id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+                <div key={id} className={`bg-block flex h-[4.5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[5.5rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                   <div className="w-full h-full">
                     <button
                       onClick={() => {
@@ -148,15 +157,15 @@ export function InventoryPanel({
                       <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.svg')` }}>
                         <div className="absolute top-1.5 right-1.5 z-[2] flex flex-col items-end justify-center space-x-0.5">
                           <div className="flex items-center justify-center space-x-0.5">
-                            <span className="font-tektur text-gradient-yellow text-[0.5rem] font-bold text-white lg:text-[0.625rem]">{formatPrice(skin.price)}</span>
+                            <span className="font-tektur text-gradient-yellow text-xxxs font-bold text-white lg:text-xxs">{formatPrice(skin.price)}</span>
                             <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
                           </div>
-                          <span className="text-gray font-exo text-[0.5rem] font-semibold text-[#85878d]">{skin.wear}</span>
+                          <span className="text-gray font-exo text-xxxs font-semibold">{skin.wear}</span>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                         <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center">
-                          <span className="text-gray text-[0.4375rem] font-semibold text-[#85878d] lg:text-[0.5rem]">{skin.weapon}</span>
-                          <span className="text-secondary font-tektur max-w-full truncate text-[0.5rem] font-bold text-white lg:text-[0.625rem]">{skin.name}</span>
+                          <span className="text-gray font-semibold text-xxxxs">{skin.weapon}</span>
+                          <span className="text-secondary text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{skin.name}</span>
                         </div>
                         <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                       </div>

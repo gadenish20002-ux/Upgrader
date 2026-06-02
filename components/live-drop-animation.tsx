@@ -210,26 +210,28 @@ export function LiveDropAnimation() {
                 width: CELL,
                 height: CELL,
                 flexShrink: 0,
-                borderRadius: 12,
+                borderRadius: isCenter ? 19 : 12,
                 overflow: "hidden",
                 position: "relative",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "#222328",
-                border: "1.5px solid rgba(255,255,255,0.18)",
+                background: (isCenter && isFocused) ? "rgb(0,0,0)" : "#222328",
+                border: (isCenter && isFocused) ? "2px solid rgb(42,43,44)" : "1.5px solid rgba(255,255,255,0.18)",
                 boxShadow: "none",
                 opacity: isCenter ? 1 : 0.85,
                 transform: scaled ? "scale(1.16)" : "scale(1)",
-                transition: "transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease",
+                transition: "transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease, background 0.25s ease, border 0.25s ease",
                 zIndex: isCenter ? 5 : 1,
               }}
             >
               {/* Rarity top stripe */}
-              <div style={{
-                position: "absolute", top: 0, left: 0, right: 0,
-                height: 2, background: rc, zIndex: 2,
-              }} />
+              {!(isCenter && isFocused) && (
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0,
+                  height: 2, background: rc, zIndex: 2,
+                }} />
+              )}
 
               {/* Background Light and Arrow for center card */}
               {isCenter && (

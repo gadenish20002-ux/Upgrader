@@ -51,7 +51,11 @@ export function LiveFeed({
       counterRef.current++
 
       setEntering(newItem.id)
-      setItems((prev) => [newItem, ...prev.slice(0, 11)])
+      setItems((prev) => {
+        const arr = [...prev, newItem]
+        if (arr.length > 12) return arr.slice(arr.length - 12)
+        return arr
+      })
 
       setTimeout(() => setEntering(null), 200)
 
@@ -106,12 +110,12 @@ export function LiveFeed({
   return (
     <aside className="flex flex-col w-[12.5rem] h-full py-1.5 pl-1.5 space-y-1.5 rounded-r-lg lg:top-[4.6rem]" style={{ height: "100%" }}>
       <style>{`
-        @keyframes slide-down {
-          from { opacity: 0; transform: translateY(-100%); }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(100%); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .feed-enter {
-          animation: slide-down 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: slide-up 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
         @keyframes chevron-slide {
           0% { transform: translateY(0); }

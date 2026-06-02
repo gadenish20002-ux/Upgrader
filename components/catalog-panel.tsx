@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
@@ -32,9 +32,29 @@ export function CatalogPanel({
       .sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, query, min, max, sortOrder])
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 15
+
+  // Reset to first page on filter changes
+  useMemo(() => {
+    setCurrentPage(1)
+  }, [query, min, max, sortOrder, showNewItems])
+
+  const allItems = useMemo(() => {
+    return [
+      { type: 'button' as const },
+      ...filtered.map(skin => ({ type: 'skin' as const, skin }))
+    ];
+  }, [filtered, showNewItems])
+
+  const totalPages = Math.max(1, Math.ceil(allItems.length / ITEMS_PER_PAGE))
+  const validCurrentPage = Math.min(currentPage, totalPages)
+  
+  const currentItems = allItems.slice((validCurrentPage - 1) * ITEMS_PER_PAGE, validCurrentPage * ITEMS_PER_PAGE)
+
   return (
     <div className="h-full flex flex-col">
-      <div className="tablet:rounded-t-xl flex flex-col space-y-4 rounded-t-none bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
+      <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
         <div className="flex min-h-[2.125rem] w-full flex-wrap items-center justify-between lg:flex-row lg:space-x-2">
           <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:w-auto lg:flex-row lg:flex-wrap">
             <div className="flex h-[2.375rem] min-h-[2.125rem] w-full flex-none items-center justify-center lg:w-auto lg:space-x-1.5">
@@ -131,109 +151,134 @@ export function CatalogPanel({
         </div>
       </div>
 
-      <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] overflow-hidden min-h-[500px] lg:min-h-[560px]">
-        <div className="custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5">
-          {!showNewItems ? (
-            <button 
-              onClick={() => {
-                if (state.soundMode === "on") {
-                  const audio = new Audio("/sounds/choiceSkin.mp3");
-                  audio.play().catch(() => {});
-                }
-                setShowNewItems(true);
-              }}
-              className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
-            >
-              <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/next-arrow-yellow.svg" />
-              <img 
-                alt="" 
-                className="absolute top-0 left-0 z-[1] w-full opacity-30" 
-                style={{ filter: "brightness(0) saturate(100%) invert(91%) sepia(94%) saturate(5364%) hue-rotate(359deg) brightness(108%) contrast(106%)" }} 
-                src="/assets/smoke.webp" 
-              />
-              <img alt="" className="absolute top-0 left-0 z-[2] w-full" src="https://s3.upgrader.pro/cdn/fa/images/collection-filter/ellipse.svg" />
-              <img alt="" className="absolute z-[3] h-[75%] lg:h-[90%] top-2" src="/assets/glock.webp" />
-              <div className="absolute z-[4] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
-              <div className="z-[4] mx-2 mt-auto mb-0 flex h-full w-full flex-col items-center justify-end pb-2 lg:pb-3">
-                <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFFFFF] uppercase"> НОВЫЕ СКИНЫ </span>
-                <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFDD24] uppercase"> уже здесь </span>
-              </div>
-            </button>
-          ) : (
-            <button 
-              onClick={() => {
-                if (state.soundMode === "on") {
-                  const audio = new Audio("/sounds/choiceSkin.mp3");
-                  audio.play().catch(() => {});
-                }
-                setShowNewItems(false);
-              }}
-              className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
-            >
-              <img alt="" className="absolute top-0 left-0 z-[1] w-full" src="/assets/ellipse.svg" />
-              <div className="absolute z-[2] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
-              <img alt="" className="absolute z-[2] h-full max-h-[4.375rem] object-cover lg:max-h-[79%]" src="/assets/chevron-left.svg" />
-              <div className="z-[3] mx-[1.125rem] my-auto mb-0 flex h-full w-full flex-col items-center justify-center">
-                <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFFFFF] uppercase"> назад </span>
-                <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFDD24] uppercase"> к скинам </span>
-              </div>
-            </button>
-          )}
-
-        {filtered.map((skin) => {
-          const selected = skin.id === targetId
-          const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
-          return (
-            <button
-              key={skin.id}
-              onClick={() => {
-                if (state.soundMode === "on") {
-                  const audio = new Audio("/sounds/choiceSkin.mp3")
-                  audio.play().catch(() => {})
-                }
-                onSelect(skin.id)
-              }}
-              className={`group relative overflow-hidden rounded-lg bg-[#212125] p-2 text-left transition-all h-[100px] lg:h-[135px] border ${
-                selected ? "border-[#f0c000] ring-1 ring-[#f0c000] shadow-[inset_0_0_15px_rgba(240,192,0,0.15)]" : "border-white/5 hover:border-white/20 hover:bg-[#28282c]"
-              }`}
-            >
-              <div 
-                className="absolute left-1/2 top-0 h-[80%] w-full -translate-x-1/2 opacity-20 pointer-events-none"
-                style={{ background: `radial-gradient(ellipse at top, ${rarityColor} 0%, transparent 70%)` }}
-              />
-
-              <span className="absolute left-0 top-0 h-[2px] w-full" style={{ background: rarityColor }} />
-              
-              <div className="absolute top-2 right-2 flex flex-col items-end z-10">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-bold text-[#f0c000] flex items-center gap-1">
-                    {formatPrice(skin.price)}
-                    <Image src="/assets/icons/coin-2.svg" alt="coin" width={10} height={10} />
-                  </span>
-                </div>
-                <span className="text-[8px] font-bold text-white/40 mt-0.5">{skin.wear}</span>
-              </div>
-
-              <div className="relative mx-auto flex items-center justify-center h-12 lg:h-[4.5rem] w-full mt-4 mb-1 z-10">
-                <img src={skin.image || "/placeholder.svg"} alt={skin.name} className="max-w-[85%] max-h-full object-contain drop-shadow-xl" />
-              </div>
-              {selected && (
-                <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[20] flex h-full w-full items-center justify-center rounded-md">
-                  <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
-                    <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
-                    <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
+      <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] flex flex-col min-h-[500px] lg:min-h-[560px]">
+        <div className="grid w-full grid-cols-3 gap-1 px-1.5 lg:grid-cols-5 lg:gap-1.5 flex-1 content-start">
+          {currentItems.map((item, index) => {
+            if (item.type === 'button') {
+              return !showNewItems ? (
+                <button 
+                  key="new-items-btn"
+                  onClick={() => {
+                    if (state.soundMode === "on") {
+                      const audio = new Audio("/sounds/choiceSkin.mp3");
+                      audio.play().catch(() => {});
+                    }
+                    setShowNewItems(true);
+                  }}
+                  className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                >
+                  <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/next-arrow-yellow.svg" />
+                  <img 
+                    alt="" 
+                    className="absolute top-0 left-0 z-[1] w-full opacity-30" 
+                    style={{ filter: "brightness(0) saturate(100%) invert(91%) sepia(94%) saturate(5364%) hue-rotate(359deg) brightness(108%) contrast(106%)" }} 
+                    src="/assets/smoke.webp" 
+                  />
+                  <img alt="" className="absolute top-0 left-0 z-[2] w-full" src="https://s3.upgrader.pro/cdn/fa/images/collection-filter/ellipse.svg" />
+                  <img alt="" className="absolute z-[3] h-[75%] lg:h-[90%] top-2" src="/assets/glock.webp" />
+                  <div className="absolute z-[4] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
+                  <div className="z-[4] mx-2 mt-auto mb-0 flex h-full w-full flex-col items-center justify-end pb-2 lg:pb-3">
+                    <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFFFFF] uppercase"> НОВЫЕ СКИНЫ </span>
+                    <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFDD24] uppercase"> уже здесь </span>
                   </div>
-                </div>
-              )}
+                </button>
+              ) : (
+                <button 
+                  key="back-btn"
+                  onClick={() => {
+                    if (state.soundMode === "on") {
+                      const audio = new Audio("/sounds/choiceSkin.mp3");
+                      audio.play().catch(() => {});
+                    }
+                    setShowNewItems(false);
+                  }}
+                  className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                >
+                  <img alt="" className="absolute top-0 left-0 z-[1] w-full" src="/assets/ellipse.svg" />
+                  <div className="absolute z-[2] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
+                  <img alt="" className="absolute z-[2] h-full max-h-[4.375rem] object-cover lg:max-h-[79%]" src="/assets/chevron-left.svg" />
+                  <div className="z-[3] mx-[1.125rem] my-auto mb-0 flex h-full w-full flex-col items-center justify-center">
+                    <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFFFFF] uppercase"> назад </span>
+                    <span className="font-tektur text-[9px] lg:text-[12px] leading-tight font-bold text-[#FFDD24] uppercase"> к скинам </span>
+                  </div>
+                </button>
+              )
+            }
 
-              <div className="text-center z-10 relative pb-0.5 flex flex-col items-center">
-                <div className="truncate text-[8px] text-[#85878d] uppercase">{skin.weapon}</div>
-                <div className="truncate text-[10px] font-bold text-white uppercase">{skin.name}</div>
-              </div>
-            </button>
-          )
-        })}
+            const skin = item.skin!
+            const selected = skin.id === targetId
+            const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
+            
+            return (
+              <button
+                key={skin.id}
+                onClick={() => {
+                  if (state.soundMode === "on") {
+                    const audio = new Audio("/sounds/choiceSkin.mp3")
+                    audio.play().catch(() => {})
+                  }
+                  onSelect(skin.id)
+                }}
+                className={`group relative overflow-hidden rounded-lg bg-[#212125] p-2 text-left transition-all h-[100px] lg:h-[135px] border ${
+                  selected ? "border-[#f0c000] ring-1 ring-[#f0c000] shadow-[inset_0_0_15px_rgba(240,192,0,0.15)]" : "border-white/5 hover:border-white/20 hover:bg-[#28282c]"
+                }`}
+              >
+                <div 
+                  className="absolute left-1/2 top-0 h-[80%] w-full -translate-x-1/2 opacity-20 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse at top, ${rarityColor} 0%, transparent 70%)` }}
+                />
+
+                <span className="absolute left-0 top-0 h-[2px] w-full" style={{ background: rarityColor }} />
+                
+                <div className="absolute top-2 right-2 flex flex-col items-end z-10">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] font-bold text-[#f0c000] flex items-center gap-1">
+                      {formatPrice(skin.price)}
+                      <Image src="/assets/icons/coin-2.svg" alt="coin" width={10} height={10} />
+                    </span>
+                  </div>
+                  <span className="text-[8px] font-bold text-white/40 mt-0.5">{skin.wear}</span>
+                </div>
+
+                <div className="relative mx-auto flex items-center justify-center h-12 lg:h-[4.5rem] w-full mt-4 mb-1 z-10">
+                  <img src={skin.image || "/placeholder.svg"} alt={skin.name} className="max-w-[85%] max-h-full object-contain drop-shadow-xl" />
+                </div>
+                {selected && (
+                  <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[20] flex h-full w-full items-center justify-center rounded-md">
+                    <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
+                      <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
+                      <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-center z-10 relative pb-0.5 flex flex-col items-center">
+                  <div className="truncate text-[8px] text-[#85878d] uppercase">{skin.weapon}</div>
+                  <div className="truncate text-[10px] font-bold text-white uppercase">{skin.name}</div>
+                </div>
+              </button>
+            )
+          })}
         </div>
+        
+        {totalPages > 1 && (
+          <div className="mt-4 flex justify-center items-center gap-2 pb-2">
+            <button
+              disabled={validCurrentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#212125] text-white/50 transition-colors hover:text-white disabled:opacity-50 disabled:hover:text-white/50"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              disabled={validCurrentPage === totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#212125] text-white/50 transition-colors hover:text-white disabled:opacity-50 disabled:hover:text-white/50"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
