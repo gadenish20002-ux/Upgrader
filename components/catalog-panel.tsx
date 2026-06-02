@@ -33,7 +33,7 @@ export function CatalogPanel({
   }, [state.upgradeSkins, query, min, max, sortOrder])
 
   const [currentPage, setCurrentPage] = useState(1)
-  const ITEMS_PER_PAGE = 15
+  const ITEMS_PER_PAGE = 20
 
   // Reset to first page on filter changes
   useMemo(() => {
@@ -165,7 +165,7 @@ export function CatalogPanel({
                     }
                     setShowNewItems(true);
                   }}
-                  className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                  className="relative flex h-[4.5rem] lg:h-[5.5rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
                 >
                   <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/next-arrow-yellow.svg" />
                   <img 
@@ -192,7 +192,7 @@ export function CatalogPanel({
                     }
                     setShowNewItems(false);
                   }}
-                  className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                  className="relative flex h-[4.5rem] lg:h-[5.5rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
                 >
                   <img alt="" className="absolute top-0 left-0 z-[1] w-full" src="/assets/ellipse.svg" />
                   <div className="absolute z-[2] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
@@ -209,54 +209,54 @@ export function CatalogPanel({
             const selected = skin.id === targetId
             const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
             
+            const hexToRgb = (hex: string) => {
+              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+            };
+            const SHADOWS = ['ak47', 'usp', 'famas', 'knife', 'ak47'];
+            const shadow = SHADOWS[index % 5];
+            
             return (
-              <button
-                key={skin.id}
-                onClick={() => {
-                  if (state.soundMode === "on") {
-                    const audio = new Audio("/sounds/choiceSkin.mp3")
-                    audio.play().catch(() => {})
-                  }
-                  onSelect(skin.id)
-                }}
-                className={`group relative overflow-hidden rounded-lg bg-[#212125] p-2 text-left transition-all h-[100px] lg:h-[135px] border ${
-                  selected ? "border-[#f0c000] ring-1 ring-[#f0c000] shadow-[inset_0_0_15px_rgba(240,192,0,0.15)]" : "border-white/5 hover:border-white/20 hover:bg-[#28282c]"
-                }`}
-              >
-                <div 
-                  className="absolute left-1/2 top-0 h-[80%] w-full -translate-x-1/2 opacity-20 pointer-events-none"
-                  style={{ background: `radial-gradient(ellipse at top, ${rarityColor} 0%, transparent 70%)` }}
-                />
-
-                <span className="absolute left-0 top-0 h-[2px] w-full" style={{ background: rarityColor }} />
-                
-                <div className="absolute top-2 right-2 flex flex-col items-end z-10">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-bold text-[#f0c000] flex items-center gap-1">
-                      {formatPrice(skin.price)}
-                      <Image src="/assets/icons/coin-2.svg" alt="coin" width={10} height={10} />
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-bold text-white/40 mt-0.5">{skin.wear}</span>
-                </div>
-
-                <div className="relative mx-auto flex items-center justify-center h-12 lg:h-[4.5rem] w-full mt-4 mb-1 z-10">
-                  <img src={skin.image || "/placeholder.svg"} alt={skin.name} className="max-w-[85%] max-h-full object-contain drop-shadow-xl" />
-                </div>
-                {selected && (
-                  <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[20] flex h-full w-full items-center justify-center rounded-md">
-                    <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
-                      <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
-                      <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
+              <div key={skin.id} className={`bg-block flex h-[4.5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[5.5rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+                <div className="w-full h-full">
+                  <button
+                    onClick={() => {
+                      if (state.soundMode === "on") {
+                        const audio = new Audio("/sounds/choiceSkin.mp3")
+                        audio.play().catch(() => {})
+                      }
+                      onSelect(skin.id)
+                    }}
+                    className={`group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] transition-all`}
+                    style={{ background: selected ? "linear-gradient(93deg, rgba(211, 179, 0, 0.4) 1.16%, rgba(168, 142, 0, 0.4) 50.58%, rgba(211, 179, 0, 0.4) 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
+                  >
+                    {selected && (
+                      <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
+                        <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
+                          <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
+                          <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.svg')` }}>
+                      <div className="absolute top-1.5 right-1.5 z-[2] flex flex-col items-end justify-center space-x-0.5">
+                        <div className="flex items-center justify-center space-x-0.5">
+                          <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
+                          <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                        </div>
+                        <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                      </div>
+                      <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                      <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center leading-tight">
+                        <span className="text-[#85878d] font-semibold text-[0.4375rem] lg:text-[0.5rem] uppercase">{skin.weapon}</span>
+                        <span className="text-white text-[0.5rem] lg:text-[0.625rem] font-tektur max-w-full truncate font-bold">{skin.name}</span>
+                      </div>
+                      <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                     </div>
-                  </div>
-                )}
-
-                <div className="text-center z-10 relative pb-0.5 flex flex-col items-center">
-                  <div className="truncate text-[8px] text-[#85878d] uppercase">{skin.weapon}</div>
-                  <div className="truncate text-[10px] font-bold text-white uppercase">{skin.name}</div>
+                  </button>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>

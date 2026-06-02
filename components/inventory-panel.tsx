@@ -157,15 +157,15 @@ export function InventoryPanel({
                       <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.svg')` }}>
                         <div className="absolute top-1.5 right-1.5 z-[2] flex flex-col items-end justify-center space-x-0.5">
                           <div className="flex items-center justify-center space-x-0.5">
-                            <span className="font-tektur text-gradient-yellow text-xxxs font-bold text-white lg:text-xxs">{formatPrice(skin.price)}</span>
+                            <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
                             <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
                           </div>
-                          <span className="text-gray font-exo text-xxxs font-semibold">{skin.wear}</span>
+                          <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
-                        <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center">
-                          <span className="text-gray font-semibold text-xxxxs">{skin.weapon}</span>
-                          <span className="text-secondary text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{skin.name}</span>
+                        <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center leading-tight">
+                          <span className="text-[#85878d] font-semibold text-[0.4375rem] lg:text-[0.5rem] uppercase">{skin.weapon}</span>
+                          <span className="text-white text-[0.5rem] lg:text-[0.625rem] font-tektur max-w-full truncate font-bold">{skin.name}</span>
                         </div>
                         <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                       </div>
