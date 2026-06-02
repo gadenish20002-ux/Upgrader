@@ -130,15 +130,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <h3 className="m-0 px-[1.5rem] text-base leading-[19px] font-medium text-white"> Звук в апгрейде </h3>
                 <div className="flex flex-col">
                   <label className="flex cursor-pointer items-start gap-2 p-0 px-[1.5rem] py-2 transition-all duration-200 hover:bg-[#FFFFFF05]">
-                    <input type="radio" name="sound" value="on" checked={soundMode === "on"} onChange={() => setSoundMode("on")} className="hidden" />
-                    <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-100"></span>
+                    <input type="radio" name="sound" value="on" checked={soundMode === "on"} onChange={() => setSoundMode("on")} className="peer hidden" />
+                    <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-0"></span>
                     <div className="flex flex-1 flex-col gap-1.5">
                       <div className="text-sm font-normal text-white"> Включен </div>
                       <div className="text-xs leading-[18px] font-normal text-white opacity-50"> Значение по умолчанию. Звуковые эффекты (нажатия кнопок, щелчки анимации и финальные овации) включены </div>
                     </div>
                   </label>
                   <label className="flex cursor-pointer items-start gap-2 p-0 px-[1.5rem] py-2 transition-all duration-200 hover:bg-[#FFFFFF05]">
-                    <input type="radio" name="sound" value="off" checked={soundMode === "off"} onChange={() => setSoundMode("off")} className="hidden" />
+                    <input type="radio" name="sound" value="off" checked={soundMode === "off"} onChange={() => setSoundMode("off")} className="peer hidden" />
                     <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-0"></span>
                     <div className="flex flex-1 flex-col gap-1.5">
                       <div className="text-sm font-normal text-white"> Выключен </div>
@@ -152,15 +152,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <h3 className="m-0 px-[1.5rem] text-base leading-[19px] font-medium text-white"> Тип прокрутки </h3>
                 <div className="flex flex-col">
                   <label className="flex cursor-pointer items-start gap-2 p-0 px-[1.5rem] py-2 transition-all duration-200 hover:bg-[#FFFFFF05]">
-                    <input type="radio" name="scroll_type" value="normal" checked={scrollType === "normal"} onChange={() => setScrollType("normal")} className="hidden" />
-                    <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-100"></span>
+                    <input type="radio" name="scroll_type" value="normal" checked={scrollType === "normal"} onChange={() => setScrollType("normal")} className="peer hidden" />
+                    <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-0"></span>
                     <div className="flex flex-1 flex-col gap-1.5">
                       <div className="text-sm font-normal text-white"> Обычная </div>
                       <div className="text-xs leading-[18px] font-normal text-white opacity-50"> Значение по умолчанию. Стрелка крутится медленно </div>
                     </div>
                   </label>
                   <label className="flex cursor-pointer items-start gap-2 p-0 px-[1.5rem] py-2 transition-all duration-200 hover:bg-[#FFFFFF05]">
-                    <input type="radio" name="scroll_type" value="fast" checked={scrollType === "fast"} onChange={() => setScrollType("fast")} className="hidden" />
+                    <input type="radio" name="scroll_type" value="fast" checked={scrollType === "fast"} onChange={() => setScrollType("fast")} className="peer hidden" />
                     <span className="relative mt-0.5 h-4 w-4 flex-shrink-0 rounded-full border border-[#a7a7a7] bg-[#171820] after:absolute after:top-1/2 after:left-1/2 after:h-2.5 after:w-2.5 after:-translate-x-1/2 after:-translate-y-1/2 after:transform after:rounded-full after:bg-[#fcd506] after:transition-opacity after:content-[''] peer-checked:after:opacity-100 after:opacity-0"></span>
                     <div className="flex flex-1 flex-col gap-1.5">
                       <div className="text-sm font-normal text-white"> Ускоренная </div>

@@ -24,7 +24,7 @@ export function InventoryPanel({
 }) {
   const { state } = useStore()
 
-  const displayedSkins = mode === "shop" ? state.skins : state.inventory
+  const displayedSkins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
 
   return (
     <div className="h-full flex flex-col">
@@ -123,8 +123,10 @@ export function InventoryPanel({
                   <div className="w-full h-full">
                     <button
                       onClick={() => {
-                        const audio = new Audio("/sounds/choiceSkin.mp3")
-                        audio.play().catch(() => {})
+                        if (state.soundMode === "on") {
+                          const audio = new Audio("/sounds/choiceSkin.mp3")
+                          audio.play().catch(() => {})
+                        }
                         if (mode === "shop") {
                           onToggleShopItem(id)
                         } else {

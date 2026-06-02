@@ -10,10 +10,11 @@ interface UpgradeWheelProps {
   chance: number
   hasSelection: boolean
   fastMode?: boolean
+  soundMode?: "on" | "off"
 }
 
 export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(function UpgradeWheel(
-  { chance, hasSelection, fastMode },
+  { chance, hasSelection, fastMode, soundMode = "on" },
   ref,
 ) {
   // rotation=0 → pointer at BOTTOM (6 o'clock) pointing UP — default idle state
@@ -29,9 +30,11 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
       new Promise<boolean>((resolve) => {
         setSpinning(true)
         setResult("none")
-        const spinAudio = new Audio("/sounds/longSpin.mp3")
-        spinAudio.playbackRate = fastMode ? (7300 / 1800) : 1
-        spinAudio.play().catch(() => {})
+        if (soundMode === "on") {
+          const spinAudio = new Audio("/sounds/longSpin.mp3")
+          spinAudio.playbackRate = fastMode ? (7300 / 1800) : 1
+          spinAudio.play().catch(() => {})
+        }
 
         // Arc is centered at 6 o'clock (BOTTOM = 0 or 360 pointer rotation).
         // It covers segAngle symmetrically.
@@ -142,10 +145,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             </div>
           </div>
           
-          <span className="text-[10px] lg:text-xs absolute top-[1.275rem] left-[6.275rem] text-white/50 lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
-          <span className="text-[10px] lg:text-xs absolute top-[6.625rem] left-[1.175rem] text-white/50 lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
-          <span className="text-[10px] lg:text-xs absolute top-[6.625rem] left-[11.675rem] text-white/50 lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
-          <span className="text-[10px] lg:text-xs absolute top-[11.657rem] left-[6.5rem] text-white/50 lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
+          <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-white/50 lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
+          <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-white/50 lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
+          <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-white/50 lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
+          <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-white/50 lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
         </div>
       </div>
     </div>

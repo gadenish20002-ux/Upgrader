@@ -155,8 +155,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     if (result) {
       addToInventory(targetSkin.id)
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
-      const winAudio = new Audio("/sounds/fireworkWin.mp3")
-      winAudio.play().catch(() => {})
+      if (state.soundMode === "on") {
+        const winAudio = new Audio("/sounds/fireworkWin.mp3")
+        winAudio.play().catch(() => {})
+      }
     } else {
       toast.error("Не повезло. Попробуйте снова!")
     }
@@ -182,10 +184,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           <button className="transition-all duration-200 hover:brightness-50" aria-label="Информация">
             <img src="/assets/info-circle.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
           </button>
-          <button className="transition-all duration-200 hover:brightness-50" aria-label="Настройки">
+          <button onClick={() => setIsSettingsOpen(true)} className="transition-all duration-200 hover:brightness-50" aria-label="Настройки">
             <img src="/assets/icons/settings.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
           </button>
-          <button className="transition-all duration-200 hover:brightness-50" aria-label="Звук">
+          <button onClick={() => setState((p) => ({ ...p, soundMode: p.soundMode === "on" ? "off" : "on" }))} className={`transition-all duration-200 hover:brightness-50 ${state.soundMode === "on" ? "opacity-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "opacity-50"}`} aria-label="Звук">
             <img src="/assets/icons/sound.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
           </button>
           <button onClick={() => setState((p) => ({ ...p, fastMode: !p.fastMode }))} className={`transition-all duration-200 hover:brightness-50 ${state.fastMode ? "opacity-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "opacity-50"}`} aria-label="Быстрый режим">
@@ -196,7 +198,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Center Wheel */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
-            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} />
+            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} soundMode={state.soundMode} />
             {multiplier > 0 && (
               <div className="absolute top-1/2 left-1/2 z-40 -translate-x-1/2 translate-y-[4.8rem] text-xs font-bold text-[#f0c000] drop-shadow-md lg:translate-y-[6.8rem]">
                 x{multiplier.toFixed(2)}

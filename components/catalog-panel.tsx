@@ -136,8 +136,10 @@ export function CatalogPanel({
           {!showNewItems ? (
             <button 
               onClick={() => {
-                const audio = new Audio("/sounds/choiceSkin.mp3");
-                audio.play().catch(() => {});
+                if (state.soundMode === "on") {
+                  const audio = new Audio("/sounds/choiceSkin.mp3");
+                  audio.play().catch(() => {});
+                }
                 setShowNewItems(true);
               }}
               className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
@@ -160,8 +162,10 @@ export function CatalogPanel({
           ) : (
             <button 
               onClick={() => {
-                const audio = new Audio("/sounds/choiceSkin.mp3");
-                audio.play().catch(() => {});
+                if (state.soundMode === "on") {
+                  const audio = new Audio("/sounds/choiceSkin.mp3");
+                  audio.play().catch(() => {});
+                }
                 setShowNewItems(false);
               }}
               className="relative flex h-[100px] lg:h-[135px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
@@ -183,8 +187,10 @@ export function CatalogPanel({
             <button
               key={skin.id}
               onClick={() => {
-                const audio = new Audio("/sounds/choiceSkin.mp3")
-                audio.play().catch(() => {})
+                if (state.soundMode === "on") {
+                  const audio = new Audio("/sounds/choiceSkin.mp3")
+                  audio.play().catch(() => {})
+                }
                 onSelect(skin.id)
               }}
               className={`group relative overflow-hidden rounded-lg bg-[#212125] p-2 text-left transition-all h-[100px] lg:h-[135px] border ${
