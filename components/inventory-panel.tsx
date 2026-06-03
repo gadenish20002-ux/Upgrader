@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useMemo } from "react"
 import { useStore, getSkin, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { LoginButton } from "./login-button"
+import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
 import { Backpack, Store } from "lucide-react"
@@ -13,7 +15,9 @@ export function InventoryPanel({
   mode,
   setMode,
   selectedShopIds,
-  onToggleShopItem
+  onToggleShopItem,
+  onAddShopItem,
+  onRemoveShopItem
 }: {
   selectedUids: string[]
   onToggle: (uid: string) => void
@@ -21,10 +25,21 @@ export function InventoryPanel({
   setMode: (mode: "inventory" | "shop") => void
   selectedShopIds: string[]
   onToggleShopItem: (id: string) => void
+  onAddShopItem?: (id: string) => void
+  onRemoveShopItem?: (id: string) => void
 }) {
   const { state } = useStore()
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
 
-  const displayedSkins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
+  const displayedSkins = useMemo(() => {
+    const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
+    return [...skins].sort((a, b) => {
+      const skinA = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
+      const skinB = mode === "shop" ? (b as any) : getSkin(state.skins, (b as any).skinId)
+      if (!skinA || !skinB) return 0
+      return sortOrder === "desc" ? skinB.price - skinA.price : skinA.price - skinB.price
+    })
+  }, [state.skins, state.inventory, mode, sortOrder])
 
   return (
     <div className="h-full flex flex-col">
@@ -32,12 +47,14 @@ export function InventoryPanel({
       <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
         <div className="flex min-h-[2.125rem] w-full flex-wrap items-center justify-between lg:flex-row lg:space-x-2">
           <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:w-auto lg:flex-row lg:flex-wrap">
-            <div className="flex w-full flex-none items-center justify-center lg:w-auto lg:space-x-1.5">
-              <div className="flex h-[2.375rem] w-full flex-none items-center justify-center gap-1 rounded-[6.25rem] bg-[#17181C] p-[0.25rem] lg:w-auto lg:rounded-[0.625rem]">
+            <div className="flex w-full flex-none items-center justify-start gap-2 lg:w-auto">
+              {/* Icon tabs: Мои скины / Магазин */}
+              <div className="flex h-[2.375rem] flex-none items-center justify-center gap-1 rounded-[6.25rem] bg-[#17181C] p-[0.25rem] lg:rounded-[0.625rem]">
                 <button 
-                  className={`flex h-full flex-1 items-center justify-center gap-1 rounded-[6.25rem] px-[0.375rem] py-[0.25rem] transition-colors duration-200 hover:bg-[#202022] lg:w-[1.875rem] lg:rounded-[0.375rem] ${mode === "inventory" ? "!cursor-default bg-[#FBD506] opacity-100 hover:bg-[#FBD506]" : "opacity-50"}`}
+                  className={`flex h-full items-center justify-center gap-1 rounded-[6.25rem] px-[0.375rem] py-[0.25rem] transition-colors duration-200 hover:bg-[#202022] lg:w-[1.875rem] lg:rounded-[0.375rem] ${mode === "inventory" ? "!cursor-default bg-[#FBD506] opacity-100 hover:bg-[#FBD506]" : "opacity-50"}`}
                   aria-label="Мои скины"
                   onClick={() => setMode("inventory")}
+                  title="Мои скины"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 18 14" fill="none" style={{ color: mode === "inventory" ? "rgb(32, 32, 34)" : "white" }}>
                     <g clipPath="url(#clip0_7752_23768)">
@@ -52,9 +69,10 @@ export function InventoryPanel({
                   <span className={`ml-1 text-[0.875rem] lg:hidden font-medium ${mode === "inventory" ? "text-[#202022]" : "text-white"}`}> Мои скины </span>
                 </button>
                 <button 
-                  className={`flex h-full flex-1 items-center justify-center gap-1 rounded-[6.25rem] px-[0.375rem] py-[0.25rem] transition-colors duration-200 hover:bg-[#202022] lg:w-[1.875rem] lg:rounded-[0.375rem] ${mode === "shop" ? "!cursor-default bg-[#FBD506] opacity-100 hover:bg-[#FBD506]" : "opacity-50"}`}
+                  className={`flex h-full items-center justify-center gap-1 rounded-[6.25rem] px-[0.375rem] py-[0.25rem] transition-colors duration-200 hover:bg-[#202022] lg:w-[1.875rem] lg:rounded-[0.375rem] ${mode === "shop" ? "!cursor-default bg-[#FBD506] opacity-100 hover:bg-[#FBD506]" : "opacity-50"}`}
                   aria-label="Магазин"
                   onClick={() => setMode("shop")}
+                  title="Магазин"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: mode === "shop" ? "rgb(32, 32, 34)" : "white" }}>
                     <g clipPath="url(#clip0_7752_23772)">
@@ -70,12 +88,76 @@ export function InventoryPanel({
                   <span className={`ml-1 text-[0.875rem] lg:hidden font-medium ${mode === "shop" ? "text-[#202022]" : "text-white"}`}> Магазин </span>
                 </button>
               </div>
-              <span className="hidden flex-wrap text-xs font-medium text-white lg:flex lg:text-base tracking-wide">{mode === "inventory" ? "Мои скины" : "Магазин"}</span>
+              <span className="hidden lg:block text-[1rem] font-medium text-white tracking-wide">{mode === "inventory" ? "Мои скины" : "Магазин"}</span>
             </div>
             
             <div className="flex w-full flex-1 items-center justify-end space-x-2 lg:w-auto">
-              {state.loggedIn && (
-                <span className="text-xs font-bold text-white/50">{displayedSkins.length} предметов</span>
+              {mode === "inventory" ? (
+                state.loggedIn && (
+                  <>
+                    <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="flex h-[2rem] w-[2rem] flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
+                      <img 
+                        className="h-[0.375rem] w-[0.5625rem]" 
+                        alt="Сортировка по возрастанию" 
+                        src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M0.256285%206.31334C0.397714%206.43814%200.572403%206.4994%200.746534%206.49997H8.25287C8.66542%206.49997%208.99998%206.16046%208.99998%205.74182C8.99998%205.55206%208.93011%205.3694%208.80377%205.22957L5.17107%200.77453C4.90861%200.452322%204.43821%200.407224%204.12069%200.67384C4.08883%200.700218%204.05976%200.729432%204.03321%200.759781L0.183335%205.24432C-0.0872241%205.55972%20-0.0545222%206.0385%200.256285%206.31334Z%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3Cdefs%3E%0A%3ClinearGradient%20id%3D%22paint0_linear_2001_3366%22%20x1%3D%220.0899998%22%20y1%3D%220.767856%22%20x2%3D%229.36737%22%20y2%3D%221.44168%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E%0A`} 
+                      />
+                      <img 
+                        className="h-[0.375rem] w-[0.5625rem]" 
+                        alt="Сортировка по убыванию" 
+                        src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M8.7437%200.56163C8.60227%200.43683%208.42758%200.37557%208.25345%200.375H0.747112C0.334565%200.375%203.66e-08%200.71451%200%201.13315C-1.65e-08%201.32291%200.0698757%201.5056%200.19621%201.6454L3.82891%206.1004C4.09137%206.4227%204.56177%206.4677%204.87929%206.2011C4.91115%206.1748%204.94022%206.1455%204.96677%206.1152L8.81665%201.6306C9.0872%201.31525%209.0545%200.83647%208.7437%200.56163Z%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3C%2Fsvg%3E%0A`} 
+                      />
+                    </button>
+                    <div className="flex h-[2rem] flex-1 flex-nowrap items-center justify-between gap-2 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 lg:h-[2.375rem] lg:flex-none lg:rounded-[0.625rem]">
+                      <span className="text-[0.75rem] leading-[0.875rem] text-[#FFFFFF] opacity-50"> Всего скинов </span>
+                      <span className="flex flex-nowrap items-center justify-center text-[0.75rem] font-tektur font-semibold">
+                        {formatPrice(displayedSkins.reduce((sum, item) => sum + (getSkin(state.skins, (item as any).skinId)?.price || 0), 0))}
+                        <img alt="coin-icon" className="ml-1 h-3.5 lg:h-[0.9075rem] w-3.5 lg:w-[0.9075rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                      </span>
+                    </div>
+                  </>
+                )
+              ) : (
+                <>
+                  <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="flex h-[2rem] w-[2rem] flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
+                    <img 
+                      className="h-[0.375rem] w-[0.5625rem]" 
+                      alt="Сортировка по возрастанию" 
+                      src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M0.256285%206.31334C0.397714%206.43814%200.572403%206.4994%200.746534%206.49997H8.25287C8.66542%206.49997%208.99998%206.16046%208.99998%205.74182C8.99998%205.55206%208.93011%205.3694%208.80377%205.22957L5.17107%200.77453C4.90861%200.452322%204.43821%200.407224%204.12069%200.67384C4.08883%200.700218%204.05976%200.729432%204.03321%200.759781L0.183335%205.24432C-0.0872241%205.55972%20-0.0545222%206.0385%200.256285%206.31334Z%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3Cdefs%3E%0A%3ClinearGradient%20id%3D%22paint0_linear_2001_3366%22%20x1%3D%220.0899998%22%20y1%3D%220.767856%22%20x2%3D%229.36737%22%20y2%3D%221.44168%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E%0A`} 
+                    />
+                    <img 
+                      className="h-[0.375rem] w-[0.5625rem]" 
+                      alt="Сортировка по убыванию" 
+                      src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M8.7437%200.56163C8.60227%200.43683%208.42758%200.37557%208.25345%200.375H0.747112C0.334565%200.375%203.66e-08%200.71451%200%201.13315C-1.65e-08%201.32291%200.0698757%201.5056%200.19621%201.6454L3.82891%206.1004C4.09137%206.4227%204.56177%206.4677%204.87929%206.2011C4.91115%206.1748%204.94022%206.1455%204.96677%206.1152L8.81665%201.6306C9.0872%201.31525%209.0545%200.83647%208.7437%200.56163Z%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3C%2Fsvg%3E%0A`} 
+                    />
+                  </button>
+                  <div className="relative flex h-[2rem] w-full items-center justify-end select-none lg:h-[2.375rem] lg:min-w-[18.125rem]">
+                    <div className="relative z-[1] flex h-full flex-row items-center justify-end transition-all duration-200 mr-2 w-full lg:w-auto">
+                      <div className="mr-[0.375rem] flex h-full w-full flex-1 items-center rounded-[0.375rem] border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] lg:min-w-[5rem] lg:rounded-[0.625rem] lg:px-3">
+                        <span className="opacity-50 font-exo"> Цена </span>
+                      </div>
+                      <div className="relative h-full flex-1">
+                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                        <input name="priceFrom" className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6" placeholder="от" type="number" />
+                      </div>
+                      <div className="relative h-full flex-1">
+                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                        <input name="priceTo" className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6" placeholder="до" type="number" />
+                      </div>
+                    </div>
+                    <input name="itemName" className="absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#FFFFFF0D] font-exo text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] w-[0]" placeholder="" type="text" />
+                    <button className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
+                      <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
+                    </button>
+                  </div>
+                  <button className="relative flex h-[2rem] w-[2rem] flex-shrink-0 items-center justify-center rounded-[0.375rem] bg-[#FEDB1C] transition-colors duration-200 hover:bg-[#fcd500] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
+                    <img alt="" className="h-4 w-4" src="https://s3.upgrader.pro/cdn/fa/icons/black-shop.svg" />
+                    {selectedShopIds.length > 0 && (
+                      <div className="absolute top-[-0.35rem] right-[-0.35rem] flex h-4.5 w-4.5 p-1 items-center justify-center rounded-full border-[3px] border-solid border-[#1E1F23] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)]">
+                        <span className="text-[10px] leading-none text-black font-bold">{selectedShopIds.length}</span>
+                      </div>
+                    )}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -83,7 +165,7 @@ export function InventoryPanel({
       </div>
 
       {/* Main Body */}
-      <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] overflow-hidden min-h-[500px] lg:min-h-[560px]">
+      <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] overflow-hidden min-h-[500px] lg:min-h-[560px] flex flex-col">
         {!state.loggedIn ? (
           <>
             <div className="absolute inset-0 grid grid-cols-2 gap-2 sm:grid-cols-3 p-3 opacity-20 pointer-events-none blur-[2px]">
@@ -112,7 +194,7 @@ export function InventoryPanel({
             {mode === "inventory" ? "Инвентарь пуст" : "Магазин пуст"}
           </div>
         ) : (
-          <div className="z-[1] custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5">
+          <div className="z-[1] custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5 content-start">
             {displayedSkins.map((item, index) => {
               const skin = mode === "shop" ? (item as any) : getSkin(state.skins, (item as any).skinId)
               const id = mode === "shop" ? skin.id : (item as any).uid
@@ -128,7 +210,7 @@ export function InventoryPanel({
               const shadow = SHADOWS[index % 5];
 
               return (
-                <div key={id} className={`bg-block flex h-[4.5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[5.5rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+                <div key={id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                   <div className="w-full h-full">
                     <button
                       onClick={() => {
@@ -145,11 +227,25 @@ export function InventoryPanel({
                       className={`group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] transition-all`}
                       style={{ background: selected ? "linear-gradient(93deg, rgba(211, 179, 0, 0.4) 1.16%, rgba(168, 142, 0, 0.4) 50.58%, rgba(211, 179, 0, 0.4) 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                     >
-                      {selected && (
+                      {selected && mode === "inventory" && (
                         <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
                           <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
                             <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
                             <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
+                          </div>
+                        </div>
+                      )}
+                      {selected && mode === "shop" && (
+                        <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center overflow-hidden rounded-md animate-in fade-in duration-200">
+                          <div className="choosed-item-gradient-new absolute top-0 left-0 z-[1] flex h-full w-full items-center justify-center overflow-hidden rounded-md"></div>
+                          <div className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] z-[2] mx-1.5 mt-auto mb-1.5 flex h-7 w-full items-center justify-between rounded-[1.5rem] p-1 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                            <button onClick={(e) => { e.stopPropagation(); onRemoveShopItem?.(id); }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.9165 7H11.0832" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"></path></svg>
+                            </button>
+                            <span className="font-tektur text-[0.875rem] text-[#17181C]">{selectedShopIds.filter(sid => sid === id).length}</span>
+                            <button onClick={(e) => { e.stopPropagation(); onAddShopItem?.(id); }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.625V11.375M11.375 7H2.625" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"></path></svg>
+                            </button>
                           </div>
                         </div>
                       )}
@@ -163,9 +259,9 @@ export function InventoryPanel({
                           <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
-                        <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center leading-tight">
-                          <span className="text-[#85878d] font-semibold text-[0.4375rem] lg:text-[0.5rem] uppercase">{skin.weapon}</span>
-                          <span className="text-white text-[0.5rem] lg:text-[0.625rem] font-tektur max-w-full truncate font-bold">{skin.name}</span>
+                        <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                          <span className="text-gray font-semibold text-xxxxs">{formatWeaponName(skin.weapon)}</span>
+                          <span className="text-white text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin.name)}</span>
                         </div>
                         <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                       </div>
@@ -174,6 +270,41 @@ export function InventoryPanel({
                 </div>
               )
             })}
+            {Array.from({ length: Math.max(0, 20 - displayedSkins.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className="flex h-[5rem] w-full items-center justify-center overflow-visible rounded-md border-[1px] border-solid border-[rgba(255,255,255,0.10)] bg-[#17181C] py-[1.125rem] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] lg:h-[6.75rem]">
+                <img alt="" className="max-h-full w-auto" src="/assets/item-shadow/usp.png" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {mode === "shop" && selectedShopIds.length > 0 && (
+          <div className="relative mt-auto pt-2 flex min-h-[2rem] w-full items-center justify-center lg:pt-3 lg:min-h-[2.375rem] shrink-0 animate-in fade-in duration-200">
+            <div className="w-full absolute !w-auto animate-in slide-in-from-left duration-200">
+              <div className="flex w-full items-center justify-center space-x-1.5 px-4 lg:w-auto">
+                <button className="flex h-[2rem] w-auto flex-1 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] px-3 transition-colors duration-200 lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem] !cursor-default bg-[#FFFFFF05]" disabled>
+                  <img alt="Previous" className="h-[1rem] lg:h-[1.25rem] lg:w-[1.25rem] opacity-30 rotate-90 w-[1rem]" src="/assets/arrow.svg" />
+                </button>
+                <button className="flex h-[2rem] w-auto flex-1 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] px-3 transition-colors duration-200 lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem] cursor-pointer bg-[#FFFFFF0D] hover:bg-[#FFFFFF1A]">
+                  <img alt="Next" className="-rotate-90 h-[1rem] lg:h-[1.25rem] lg:w-[1.25rem] w-[1rem]" src="/assets/arrow.svg" />
+                </button>
+              </div>
+            </div>
+            <div className="absolute z-[3] right-0 mr-3 flex items-center space-x-1.5 animate-in slide-in-from-right duration-200">
+              <button onClick={() => selectedShopIds.forEach(id => onToggleShopItem(id))} className="flex h-[2rem] w-auto flex-1 flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem]">
+                <img alt="trash" className="h-[1rem] w-[1rem] lg:h-[1.25rem] lg:w-[1.25rem]" src="/assets/trash.svg" />
+              </button>
+              <button className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] relative flex h-[2rem] w-auto items-center justify-center gap-3 rounded-[0.375rem] px-3 transition-all duration-200 select-none focus:outline-none lg:h-[2.375rem] lg:rounded-[0.625rem]">
+                <span className="flex items-center justify-center gap-1">
+                  <img alt="coin" className="h-4 w-4" src="/assets/coin-black.svg" />
+                  <span className="font-tektur text-[0.875rem] leading-normal font-semibold text-black">{formatPrice(selectedShopIds.reduce((sum, id) => sum + (getSkin(state.skins, id)?.price || 0), 0))}</span>
+                </span>
+                <img alt="shop" className="h-4 w-4" src="/assets/black-shop.svg" />
+                <div className="absolute top-[-0.35rem] right-[-0.35rem] flex h-4.5 w-4.5 p-1 items-center justify-center rounded-full border-[3px] border-solid border-[#1E1F23] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)]">
+                  <span className="text-[10px] leading-none text-black font-bold">{selectedShopIds.length}</span>
+                </div>
+              </button>
+            </div>
           </div>
         )}
       </div>

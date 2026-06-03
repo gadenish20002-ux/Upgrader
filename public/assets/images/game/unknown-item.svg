@@ -1,6 +1,6 @@
 <svg width="325" height="195" viewBox="0 0 325 195" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <mask id="mask0_2116_28101" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="325" height="195">
-<rect x="31" width="302.391" height="124.642" transform="rotate(14 31 0)" fill="url(#pattern0_2116_28101)"/>
+<rect x="31" y="-52" width="302.391" height="228" transform="rotate(14 31 0)" fill="url(#pattern0_2116_28101)"/>
 </mask>
 <g mask="url(#mask0_2116_28101)">
 <rect x="53.6616" y="-90.8926" width="304.571" height="243.635" transform="rotate(14 53.6616 -90.8926)" fill="#151518"/>
@@ -12,7 +12,7 @@
 </g>
 <defs>
 <pattern id="pattern0_2116_28101" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_2116_28101" transform="matrix(0.00195312 0 0 0.00473843 0 -0.409778)"/>
+<use xlink:href="#image0_2116_28101" transform="matrix(0.00195312 0 0 0.0025903 0 0.004057)"/>
 </pattern>
 <clipPath id="clip0_2116_28101">
 <rect width="66" height="107" fill="white" transform="translate(136.192 20)"/>

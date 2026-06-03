@@ -123,6 +123,10 @@
   --text-xxs--line-height: 0.75rem;
   --text-xxxs: 0.5rem;
   --text-xxxs--line-height: 0.625rem;
+  --text-xxxxs: 0.4375rem;
+  --text-xxxxs--line-height: 0.5rem;
+  --breakpoint-tablet: 48rem;
+  --color-gray: #A7A7A7;
 }
 
 @layer base {
@@ -151,6 +155,44 @@
 
 .bg-block {
   background-color: #17181c;
+}
+
+@keyframes slide-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-top {
+  animation: slide-in-top 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.invisible-scroll::-webkit-scrollbar {
+  display: none;
+}
+.invisible-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .btn-gradient-1, .btn-gradient-2, .btn-gradient-3 {
   position: relative;
@@ -229,6 +271,112 @@
 .choosed-item-gradient-close {
   background: linear-gradient(93deg, #fbd506 1.16%, #ffdd23, #fbd506);
 }
+.choosed-item-gradient-new {
+  background: linear-gradient(180deg, #fedb1b00, #fedb1b99);
+}
 .bg-dark {
   background-color: #17181C;
 }
+
+/* ============================================================
+   Odometer (rolling-number counter) styles
+   ============================================================ */
+.odometer {
+  display: inline-block;
+  vertical-align: baseline;
+  *vertical-align: auto;
+  *zoom: 1;
+  *display: inline;
+  position: relative;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.odometer.odometer-animating-up .odometer-ribbon-inner,
+.odometer.odometer-animating-down.odometer-animating .odometer-ribbon-inner {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.odometer.odometer-animating-up.odometer-animating .odometer-ribbon-inner {
+  transform: translateY(-100%);
+}
+.odometer.odometer-animating-down .odometer-ribbon-inner {
+  transform: translateY(-100%);
+}
+.odometer.odometer-animating-down.odometer-animating .odometer-ribbon-inner {
+  transform: translateY(0);
+}
+.odometer-inside {
+  display: inline-block;
+}
+.odometer-digit {
+  display: inline-block;
+  vertical-align: baseline;
+  *vertical-align: auto;
+  *zoom: 1;
+  *display: inline;
+  position: relative;
+  overflow: hidden;
+}
+.odometer-digit-spacer {
+  display: inline-block;
+  vertical-align: baseline;
+  *vertical-align: auto;
+  *zoom: 1;
+  *display: inline;
+  visibility: hidden;
+}
+.odometer-digit-inner {
+  text-align: left;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+.odometer-ribbon {
+  display: block;
+}
+.odometer-ribbon-inner {
+  display: block;
+  backface-visibility: hidden;
+}
+.odometer-value {
+  display: block;
+  transform: translateZ(0);
+}
+.odometer-formatting-mark {
+  display: inline-block;
+  vertical-align: baseline;
+  color: inherit;
+  opacity: 1;
+  white-space: pre;
+}
+
+/* Hide spin buttons for number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@keyframes pulse-border-glow {
+  0%, 100% {
+    border-color: rgba(247, 211, 36, 0.3);
+    box-shadow: 0 0 2px rgba(247, 211, 36, 0.2);
+  }
+  50% {
+    border-color: rgba(247, 211, 36, 1);
+    box-shadow: 0 0 6px rgba(247, 211, 36, 0.6);
+  }
+}
+
+.animate-pulse-border-glow {
+  animation: pulse-border-glow 1.5s ease-in-out infinite;
+}
+

@@ -25,11 +25,8 @@ export function HomeClient() {
           <LiveFeed selectedId={sidebarTargetId} onSelect={setSidebarTargetId} isMobile={true} />
         </div>
         
-        {/* Desktop: Sidebar Live Feed — sticky, full viewport height */}
-        <div
-          className="hidden lg:block w-[12.5rem] shrink-0 border-r border-[#232325] mt-2 rounded-tr-xl overflow-hidden"
-          style={{ position: "sticky", top: "calc(4.25rem + 0.5rem)", height: "calc(100vh - 4.25rem - 0.5rem)", overflowY: "hidden" }}
-        >
+        {/* Desktop: Sidebar Live Feed */}
+        <div className="hidden lg:block shrink-0">
           <LiveFeed selectedId={sidebarTargetId} onSelect={setSidebarTargetId} isMobile={false} />
         </div>
 

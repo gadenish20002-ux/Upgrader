@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useStore, formatNumber } from "@/lib/store"
 import { Logo } from "./logo"
 import { LogOut, Camera } from "lucide-react"
@@ -8,10 +8,31 @@ import { Button } from "@/components/ui/button"
 import { LoginButton } from "./login-button"
 import Image from "next/image"
 
+
 export function SiteHeader() {
   const { state, logout, setState } = useStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarMenu, setAvatarMenu] = useState(false)
+
+  // Имитация изменения онлайна и количества апгрейдов
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setState((p) => {
+        // Онлайн может немного падать или расти (-5 до +5)
+        const onlineChange = Math.floor(Math.random() * 11) - 5
+        let newOnline = p.online + onlineChange
+        if (newOnline < 0) newOnline = 0
+        
+        // Апгрейды растут десятками (от +10 до +50)
+        const upgradesChange = Math.floor(Math.random() * 41) + 10
+        const newUpgrades = p.upgrades + upgradesChange
+
+        return { ...p, online: newOnline, upgrades: newUpgrades }
+      })
+    }, 1500) // каждые 1.5 секунды
+
+    return () => clearInterval(interval)
+  }, [setState])
 
   function handleAvatarClick() {
     setAvatarMenu((v) => !v)
@@ -47,31 +68,34 @@ export function SiteHeader() {
             </a>
           </div>
 
-          <div className="flex items-center justify-start space-x-3">
+          <div className="tablet:flex hidden items-center justify-start space-x-3">
+            {/* Online counter */}
             <div className="h-full">
-              <div className="flex h-full items-center gap-1 md:gap-2">
-                <img src="/assets/images/header/online-yellow.svg" alt="Online" className="h-[1rem] w-[1rem] lg:h-4 lg:w-4" />
+              <div className="flex h-full items-center gap-2">
+                <img src="/assets/images/header/online-yellow.svg" alt="Online" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="hidden text-sm text-[#A7A7A7] md:block leading-none"> Онлайн </span>
-                  <span className="text-[0.9rem] font-bold md:text-sm text-white leading-none">
+                  <span className="text-gray tablet:block hidden text-sm"> Онлайн </span>
+                  <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
                     {formatNumber(state.online)}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="h-full hidden md:block">
-              <div className="flex h-full items-center gap-1 md:gap-2">
-                <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.06rem] w-[1.06rem] md:h-4 md:w-4 opacity-60" />
+            {/* Upgrades counter */}
+            <div className="h-full">
+              <div className="flex h-full items-center gap-2">
+                <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="hidden text-sm text-[#A7A7A7] md:block leading-none">Апгрейдов</span>
-                  <span className="text-[0.9075rem] font-semibold md:text-sm text-white leading-none">
+                  <span className="text-gray tablet:block hidden text-sm">Апгрейдов</span>
+                  <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
                     {formatNumber(state.upgrades)}
                   </span>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
 
         <div className="h-full flex items-center justify-end shrink-1 flex-[2] lg:flex-1">

@@ -1,18 +1,18 @@
 <svg width="324" height="195" viewBox="0 0 324 195" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <mask id="mask0_2116_28102" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="324" height="195">
-<rect x="30.1538" width="302.391" height="124.642" transform="rotate(14 30.1538 0)" fill="url(#pattern0_2116_28102)"/>
+<rect x="30.1538" y="-52" width="302.391" height="228" transform="rotate(14 30.1538 0)" fill="url(#pattern0_2116_28102)"/>
 </mask>
 <g mask="url(#mask0_2116_28102)">
 <rect x="52.8154" y="-90.8926" width="304.571" height="243.635" transform="rotate(14 52.8154 -90.8926)" fill="#151518"/>
 </g>
-<g clip-path="url(#clip0_2116_28102)">
+<g>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M195.192 97.5414L162.257 73.4311L129.321 97.5414V75.1103L162.257 51L195.192 75.1103V97.5414Z" fill="#FBD506"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M189.192 121L162.301 101.314L135.41 121V102.686L162.301 83L189.192 102.686V121Z" fill="#826E01"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M189.192 61L162.301 41.3145L135.41 61V42.6855L162.301 23L189.192 42.6855V61Z" fill="#826E01"/>
 </g>
 <defs>
 <pattern id="pattern0_2116_28102" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_2116_28102" transform="matrix(0.00195312 0 0 0.00473843 0 -0.409778)"/>
+<use xlink:href="#image0_2116_28102" transform="matrix(0.00195312 0 0 0.0025903 0 0.004057)"/>
 </pattern>
 <clipPath id="clip0_2116_28102">
 <rect width="66" height="107" fill="white" transform="matrix(-1 0 0 -1 195.192 126)"/>

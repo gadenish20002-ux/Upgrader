@@ -1,6 +1,6 @@
 "use client"
 
-import { forwardRef, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react"
 
 export interface UpgradeWheelHandle {
   spin: (win: boolean) => Promise<boolean>
@@ -17,17 +17,45 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   { chance, hasSelection, fastMode, soundMode = "on" },
   ref,
 ) {
-  // rotation=0 → pointer at BOTTOM (6 o'clock) pointing UP — default idle state
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [result, setResult] = useState<"none" | "win" | "lose">("none")
   const rotationRef = useRef(0)
+  const [resetTimer, setResetTimer] = useState<NodeJS.Timeout | null>(null)
+  const isResolvingRef = useRef(false)
 
-  const segAngle = Math.min(0.999, Math.max(0.0001, chance)) * 360
+  const [latchedChance, setLatchedChance] = useState(0.5)
+
+  // Track chance for displaying the result after selection clears
+  useEffect(() => {
+    if (hasSelection) {
+      setLatchedChance(chance)
+    }
+  }, [hasSelection, chance])
+
+  // Clear result and reset wheel if user makes a new selection
+  useEffect(() => {
+    if (hasSelection && result !== "none" && !isResolvingRef.current) {
+      setResult("none")
+      setRotation(0)
+      rotationRef.current = 0
+      if (resetTimer) {
+        clearTimeout(resetTimer)
+        setResetTimer(null)
+      }
+    }
+  }, [hasSelection, result, resetTimer])
+
+  const displayChance = hasSelection ? chance : (result !== "none" ? latchedChance : 0.5)
+  const segAngle = Math.min(0.999, Math.max(0.0001, displayChance)) * 360
 
   useImperativeHandle(ref, () => ({
     spin: (win: boolean) =>
       new Promise<boolean>((resolve) => {
+        if (resetTimer) {
+          clearTimeout(resetTimer)
+          setResetTimer(null)
+        }
         setSpinning(true)
         setResult("none")
         if (soundMode === "on") {
@@ -61,9 +89,19 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
         setRotation(next)
 
         window.setTimeout(() => {
+          isResolvingRef.current = true
           setSpinning(false)
           setResult(win ? "win" : "lose")
           resolve(win)
+          setTimeout(() => { isResolvingRef.current = false }, 100)
+
+          // Auto reset back to 50% idle state after showing the result for 2s
+          const timer = setTimeout(() => {
+            setRotation(0)
+            rotationRef.current = 0
+            setResult("none")
+          }, 2000)
+          setResetTimer(timer)
         }, fastMode ? 1800 : 7300)
       }),
   }))
@@ -100,10 +138,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
           </div>
 
           {/* Слой 2: Черный круг с засечками */}
-          <img alt="" className="absolute top-1/2 left-1/2 z-[2] h-full w-full -translate-x-1/2 -translate-y-1/2 scale-[0.95] object-contain lg:scale-[0.92]" src="/assets/images/game/circle-black.svg" />
+          <img alt="" className="absolute top-1/2 left-1/2 z-[3] h-full w-full -translate-x-1/2 -translate-y-1/2 scale-[0.95] object-contain lg:scale-[0.92]" src="/assets/images/game/circle-black.svg" />
           
           {/* Слой 3: Цветной градиент трека */}
-          <div className="absolute top-1/2 left-1/2 z-[3] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
+          <div className="absolute top-1/2 left-1/2 z-[2] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
             <svg className="h-full w-full rotate-0" viewBox="0 0 289 289">
               <defs>
                 <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -114,8 +152,8 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
                 </linearGradient>
               </defs>
               <circle fill="none" stroke={arcStroke} strokeLinecap="butt" cx="144.5" cy="144.5" r="124" strokeWidth="42" 
-                strokeDasharray={`${779.115 * Math.max(0.0001, chance)} ${779.115 * (1 - Math.max(0.0001, chance))}`} 
-                strokeDashoffset={(779.115 * Math.max(0.0001, chance)) / 2 - 779.115 / 4}
+                strokeDasharray={`${779.115 * Math.max(0.0001, displayChance)} ${779.115 * (1 - Math.max(0.0001, displayChance))}`} 
+                strokeDashoffset={(779.115 * Math.max(0.0001, displayChance)) / 2 - 779.115 / 4}
                 className="transition-all duration-500 ease-in-out"
                 style={{
                   transition: "stroke-dasharray 0.3s, stroke-dashoffset 0.3s, stroke 0.3s"
@@ -132,16 +170,14 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
 
           <div className="absolute top-[3.125rem] left-[3.125rem] h-[7.4375rem] w-[7.4375rem] rounded-full lg:top-[4.375rem] lg:left-[4.375rem] lg:h-[12.9375rem] lg:w-[12.9375rem] z-[4]">
             <div className="flex h-full w-full items-center justify-center">
-              {hasSelection && (
-                <div className="flex flex-col items-center justify-center text-center">
-                  <span className="bg-clip-text bg-gradient-to-b font-bold from-[#FFE02D] lg:text-4xl text-2xl text-transparent to-[#53DB42] transition-all duration-500 ease-in-out"> 
-                    {(chance * 100).toFixed(2)}%
-                  </span>
-                  <span className="bg-clip-text bg-gradient-to-b from-[#FFE02D] lg:text-sm text-transparent text-xs to-[#53DB42] transition-all duration-500 ease-in-out"> 
-                    {getChanceText(chance)}
-                  </span>
-                </div>
-              )}
+              <div className="flex flex-col items-center justify-center text-center">
+                <span className="bg-clip-text bg-gradient-to-b font-bold from-[#FFE02D] lg:text-4xl text-2xl text-transparent to-[#53DB42] transition-all duration-500 ease-in-out"> 
+                  {(displayChance * 100).toFixed(2)}%
+                </span>
+                <span className="bg-clip-text bg-gradient-to-b from-[#FFE02D] lg:text-sm text-transparent text-xs to-[#53DB42] transition-all duration-500 ease-in-out"> 
+                  {getChanceText(displayChance)}
+                </span>
+              </div>
             </div>
           </div>
           

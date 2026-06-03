@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
+import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
@@ -80,28 +81,16 @@ export function CatalogPanel({
             
             <div className="flex w-full flex-1 items-center justify-end space-x-2 lg:w-auto">
               <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="flex h-[2rem] w-[2rem] flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
-                <div className="h-[0.375rem] w-[0.5625rem]">
-                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0.256285 6.31334C0.397714 6.43814 0.572403 6.4994 0.746534 6.49997H8.25287C8.66542 6.49997 8.99998 6.16046 8.99998 5.74182C8.99998 5.55206 8.93011 5.3694 8.80377 5.22957L5.17107 0.77453C4.90861 0.452322 4.43821 0.407224 4.12069 0.67384C4.08883 0.700218 4.05976 0.729432 4.03321 0.759781L0.183335 5.24432C-0.0872241 5.55972 -0.0545222 6.0385 0.256285 6.31334Z" fill={sortOrder === 'asc' ? "url(#paint0_linear_2001_3366_asc)" : "#808080"} />
-                    <defs>
-                      <linearGradient id="paint0_linear_2001_3366_asc" x1="0.0899998" y1="0.767856" x2="9.36737" y2="1.44168" gradientUnits="userSpaceOnUse">
-                        <stop offset="0.5" stopColor="#FFDD23" />
-                        <stop offset="1" stopColor="#FBD506" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-                <div className="h-[0.375rem] w-[0.5625rem]">
-                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.7437 0.56163C8.60227 0.43683 8.42758 0.37557 8.25345 0.375H0.747112C0.334565 0.375 3.66e-08 0.71451 0 1.13315C-1.65e-08 1.32291 0.0698757 1.5056 0.19621 1.6454L3.82891 6.1004C4.09137 6.4227 4.56177 6.4677 4.87929 6.2011C4.91115 6.1748 4.94022 6.1455 4.96677 6.1152L8.81665 1.6306C9.0872 1.31525 9.0545 0.83647 8.7437 0.56163Z" fill={sortOrder === 'desc' ? "url(#paint0_linear_2001_3366_desc)" : "#808080"} />
-                    <defs>
-                      <linearGradient id="paint0_linear_2001_3366_desc" x1="0.0899998" y1="0.767856" x2="9.36737" y2="1.44168" gradientUnits="userSpaceOnUse">
-                        <stop offset="0.5" stopColor="#FFDD23" />
-                        <stop offset="1" stopColor="#FBD506" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
+                <img 
+                  className="h-[0.375rem] w-[0.5625rem]" 
+                  alt="Сортировка по возрастанию" 
+                  src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M0.256285%206.31334C0.397714%206.43814%200.572403%206.4994%200.746534%206.49997H8.25287C8.66542%206.49997%208.99998%206.16046%208.99998%205.74182C8.99998%205.55206%208.93011%205.3694%208.80377%205.22957L5.17107%200.77453C4.90861%200.452322%204.43821%200.407224%204.12069%200.67384C4.08883%200.700218%204.05976%200.729432%204.03321%200.759781L0.183335%205.24432C-0.0872241%205.55972%20-0.0545222%206.0385%200.256285%206.31334Z%22%20fill%3D%22${sortOrder === 'asc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3Cdefs%3E%0A%3ClinearGradient%20id%3D%22paint0_linear_2001_3366%22%20x1%3D%220.0899998%22%20y1%3D%220.767856%22%20x2%3D%229.36737%22%20y2%3D%221.44168%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E%0A`} 
+                />
+                <img 
+                  className="h-[0.375rem] w-[0.5625rem]" 
+                  alt="Сортировка по убыванию" 
+                  src={`data:image/svg+xml,%3Csvg%20width%3D%229%22%20height%3D%227%22%20viewBox%3D%220%200%209%207%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M8.7437%200.56163C8.60227%200.43683%208.42758%200.37557%208.25345%200.375H0.747112C0.334565%200.375%203.66e-08%200.71451%200%201.13315C-1.65e-08%201.32291%200.0698757%201.5056%200.19621%201.6454L3.82891%206.1004C4.09137%206.4227%204.56177%206.4677%204.87929%206.2011C4.91115%206.1748%204.94022%206.1455%204.96677%206.1152L8.81665%201.6306C9.0872%201.31525%209.0545%200.83647%208.7437%200.56163Z%22%20fill%3D%22${sortOrder === 'desc' ? '%23FFFFFF' : '%23FFFFFF1A'}%22%2F%3E%0A%3C%2Fsvg%3E%0A`} 
+                />
               </button>
 
               <div className="relative flex h-[2rem] w-full items-center justify-end select-none lg:h-[2.375rem] lg:min-w-[18.125rem]">
@@ -165,7 +154,7 @@ export function CatalogPanel({
                     }
                     setShowNewItems(true);
                   }}
-                  className="relative flex h-[4.5rem] lg:h-[5.5rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                  className="relative flex h-[5rem] lg:h-[6.75rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
                 >
                   <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/next-arrow-yellow.svg" />
                   <img 
@@ -192,7 +181,7 @@ export function CatalogPanel({
                     }
                     setShowNewItems(false);
                   }}
-                  className="relative flex h-[4.5rem] lg:h-[5.5rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
+                  className="relative flex h-[5rem] lg:h-[6.75rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
                 >
                   <img alt="" className="absolute top-0 left-0 z-[1] w-full" src="/assets/ellipse.svg" />
                   <div className="absolute z-[2] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
@@ -217,7 +206,7 @@ export function CatalogPanel({
             const shadow = SHADOWS[index % 5];
             
             return (
-              <div key={skin.id} className={`bg-block flex h-[4.5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[5.5rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+              <div key={skin.id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                 <div className="w-full h-full">
                   <button
                     onClick={() => {
@@ -248,9 +237,9 @@ export function CatalogPanel({
                         <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                       </div>
                       <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
-                      <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center leading-tight">
-                        <span className="text-[#85878d] font-semibold text-[0.4375rem] lg:text-[0.5rem] uppercase">{skin.weapon}</span>
-                        <span className="text-white text-[0.5rem] lg:text-[0.625rem] font-tektur max-w-full truncate font-bold">{skin.name}</span>
+                      <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                        <span className="text-gray font-semibold text-xxxxs">{formatWeaponName(skin.weapon)}</span>
+                        <span className="text-white text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin.name)}</span>
                       </div>
                       <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                     </div>

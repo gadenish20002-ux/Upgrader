@@ -7,6 +7,7 @@ import { InventoryPanel } from "./inventory-panel"
 import { CatalogPanel } from "./catalog-panel"
 import { SettingsModal } from "./settings-modal"
 import { RARITY_COLORS } from "@/lib/default-data"
+import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { ChevronsUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,6 +61,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   }, [targetSkin, inputValue])
 
   const multiplier = targetSkin && inputValue > 0 ? targetSkin.price / inputValue : 0
+  const isBothSelected = !!targetSkin && selectedItems.length > 0
 
   function toggleItem(uid: string) {
     setSelectedUids((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]))
@@ -67,6 +69,22 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   function toggleShopItem(id: string) {
     setSelectedShopIds((prev) => (prev.includes(id) ? prev.filter((u) => u !== id) : [...prev, id]))
+  }
+
+  function addShopItem(id: string) {
+    setSelectedShopIds((prev) => [...prev, id])
+  }
+
+  function removeShopItem(id: string) {
+    setSelectedShopIds((prev) => {
+      const idx = prev.lastIndexOf(id)
+      if (idx > -1) {
+        const newArr = [...prev]
+        newArr.splice(idx, 1)
+        return newArr
+      }
+      return prev
+    })
   }
 
   function clearSelection() {
@@ -187,11 +205,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           <button onClick={() => setIsSettingsOpen(true)} className="transition-all duration-200 hover:brightness-50" aria-label="Настройки">
             <img src="/assets/icons/settings.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
           </button>
-          <button onClick={() => setState((p) => ({ ...p, soundMode: p.soundMode === "on" ? "off" : "on" }))} className={`transition-all duration-200 hover:brightness-50 ${state.soundMode === "on" ? "opacity-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "opacity-50"}`} aria-label="Звук">
-            <img src="/assets/icons/sound.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
+          <button onClick={() => setState((p) => ({ ...p, soundMode: p.soundMode === "on" ? "off" : "on" }))} className={`transition-all duration-200 hover:brightness-50 flex items-center justify-center ${state.soundMode === "on" ? "text-[#fde338]" : "text-[#A7A7A7]"}`} aria-label="Звук">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-4 lg:w-4">
+              <path fillRule="evenodd" clipRule="evenodd" d="M7.50718 2.46084C7.65333 2.52143 7.77823 2.624 7.86609 2.75558C7.95395 2.88715 8.00078 3.04182 8.00078 3.20004V12.8C8.00075 12.9583 7.95381 13.1129 7.8659 13.2444C7.778 13.3759 7.65306 13.4784 7.5069 13.539C7.36074 13.5995 7.19992 13.6154 7.04476 13.5845C6.8896 13.5536 6.74706 13.4775 6.63518 13.3656L3.66958 10.4H1.60078C1.38861 10.4 1.18513 10.3158 1.03509 10.1657C0.885069 10.0157 0.800781 9.81218 0.800781 9.60002V6.40004C0.800781 6.18786 0.885069 5.98439 1.03509 5.83435C1.18513 5.68432 1.38861 5.60004 1.60078 5.60004H3.66958L6.63518 2.63444C6.74706 2.52249 6.88962 2.44625 7.04485 2.41534C7.20006 2.38444 7.36097 2.40027 7.50718 2.46084ZM11.7264 2.34324C11.8764 2.19326 12.0798 2.10901 12.292 2.10901C12.5041 2.10901 12.7076 2.19326 12.8576 2.34324C13.6014 3.08536 14.1913 3.96712 14.5935 4.93789C14.9956 5.90865 15.202 6.94929 15.2008 8.00002C15.202 9.05083 14.9956 10.0915 14.5935 11.0622C14.1913 12.033 13.6014 12.9147 12.8576 13.6568C12.7067 13.8026 12.5046 13.8832 12.2949 13.8814C12.0851 13.8795 11.8845 13.7954 11.7361 13.6471C11.5878 13.4987 11.5037 13.2981 11.5018 13.0883C11.5 12.8786 11.5806 12.6765 11.7264 12.5256C12.3217 11.9321 12.7937 11.2267 13.1154 10.45C13.4372 9.6733 13.6021 8.84066 13.6008 8.00002C13.6008 6.23204 12.8856 4.63364 11.7264 3.47444C11.5764 3.32442 11.4921 3.12097 11.4921 2.90884C11.4921 2.6967 11.5764 2.49326 11.7264 2.34324ZM9.46318 4.60564C9.5375 4.53126 9.62574 4.47225 9.72286 4.43199C9.81998 4.39173 9.92406 4.37101 10.0292 4.37101C10.1343 4.37101 10.2384 4.39173 10.3355 4.43199C10.4326 4.47225 10.5209 4.53126 10.5952 4.60564C11.0415 5.05097 11.3954 5.58009 11.6366 6.16261C11.8778 6.74512 12.0016 7.36955 12.0008 8.00002C12.0016 8.63051 11.8778 9.25491 11.6365 9.83746C11.3953 10.4199 11.0414 10.9491 10.5952 11.3944C10.4451 11.5446 10.2415 11.6289 10.0292 11.6289C9.81686 11.6289 9.61326 11.5446 9.46318 11.3944C9.3131 11.2443 9.2287 11.0407 9.2287 10.8284C9.2287 10.6162 9.3131 10.4126 9.46318 10.2624C9.76094 9.96579 9.99702 9.61315 10.158 9.22491C10.3189 8.83659 10.4014 8.42034 10.4008 8.00002C10.4014 7.57973 10.3189 7.16345 10.158 6.77517C9.9971 6.38688 9.76094 6.03427 9.46318 5.73764C9.38878 5.66334 9.32982 5.57511 9.2895 5.47799C9.24926 5.38087 9.22854 5.27677 9.22854 5.17164C9.22854 5.0665 9.24926 4.9624 9.2895 4.86529C9.32982 4.76817 9.38878 4.67994 9.46318 4.60564Z" fill="currentColor"/>
+            </svg>
           </button>
-          <button onClick={() => setState((p) => ({ ...p, fastMode: !p.fastMode }))} className={`transition-all duration-200 hover:brightness-50 ${state.fastMode ? "opacity-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "opacity-50"}`} aria-label="Быстрый режим">
-            <img src="/assets/icons/animate.svg" alt="" className="h-4 w-4 lg:h-4 lg:w-4" />
+          <button onClick={() => setState((p) => ({ ...p, fastMode: !p.fastMode }))} className={`transition-all duration-200 hover:brightness-50 flex items-center justify-center ${state.fastMode ? "text-[#fde338]" : "text-[#A7A7A7]"}`} aria-label="Быстрый режим">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-4 lg:w-4">
+              <path d="M9.50851 5.48747C9.46479 5.39359 9.37063 5.33334 9.26692 5.33334H6.10692L9.22557 0.409344C9.27757 0.327219 9.28076 0.223219 9.23385 0.138156C9.18692 0.0528125 9.09729 0 9.00023 0H4.73357C4.63251 0 4.54023 0.0570625 4.49492 0.147469L0.494916 8.14747C0.453572 8.22987 0.458103 8.328 0.506635 8.40666C0.555447 8.48531 0.641041 8.53331 0.733572 8.53331H3.4757L0.487697 15.6298C0.43676 15.7512 0.482103 15.892 0.594353 15.9608C0.637541 15.9872 0.685541 16 0.733291 16C0.809822 16 0.885291 15.9672 0.937572 15.9053L9.47092 5.77197C9.53782 5.69253 9.55223 5.58159 9.50851 5.48747Z" fill="currentColor"/>
+            </svg>
           </button>
         </div>
 
@@ -215,29 +237,24 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           } : undefined}
         >
           {selectedItems.length === 0 && selectedShopItems.length === 0 && balanceInput === 0 ? (
-            <div className="relative flex h-full w-full flex-col">
-              <div className="text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 shrink-0 z-10">
-                <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug">Выберите предметы и/или баланс для использования</h3>
-                <p className="text-[7px] lg:text-[11px] text-[#6b6b6b] mt-0.5">Вы можете выбрать несколько предметов</p>
+            <div className="relative h-full w-full">
+              <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
+                <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug">Выберите скины или скины и баланс для использования</span>
+                <span className="lg:text-xxs text-[0.4375rem] text-[#A7A7A7]">Вы можете выбрать несколько скинов</span>
               </div>
-              <div className="relative flex-1">
-                <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-[0] h-full w-full object-cover" />
-                <img src="/assets/unknown-item.svg" alt="Unknown item" className="absolute top-1/2 left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
+              <div className="absolute inset-0 z-0">
+                <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
+                <img src="/assets/unknown-item.svg" alt="Unknown item" className="absolute top-[52%] left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
               </div>
             </div>
           ) : (
-            <div className="relative flex h-full w-full flex-col items-center justify-between p-2 lg:p-6">
+            <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
                 onClick={clearSelection}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
               >
                 <img alt="Close" className="h-2 w-2 lg:h-4 lg:w-4" src="/assets/close-gray.svg" />
               </button>
-              
-              <div className="z-[2] flex flex-col items-center justify-between text-center shrink-0">
-                <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug">Выберите предметы и/или баланс для использования</h3>
-                <p className="text-[7px] lg:text-[11px] text-[#6b6b6b] mt-0.5 lg:mt-1">Вы можете выбрать несколько предметов</p>
-              </div>
 
               <div className="relative w-full flex-1 flex flex-col items-center justify-center min-h-0 my-1 lg:my-2">
                 {selectedItems.length + selectedShopItems.length === 1 ? (
@@ -245,9 +262,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                     const skin = selectedItems.length > 0 ? getSkin(state.skins, selectedItems[0]!.skinId)! : selectedShopItems[0]!;
                     return (
                       <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center shrink-0">
-                          <span className="text-white/50 uppercase text-[9px] font-semibold lg:text-xs"> {skin.weapon} </span>
-                          <span className="text-white text-xs font-bold lg:text-2xl mt-0.5 lg:mt-0"> {skin.name} </span>
+                        <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
+                          <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(skin.weapon)} </span>
+                          <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(skin.name)} </span>
                         </div>
                         <div className="relative w-full flex-1 min-h-0">
                           <img className="absolute top-1/2 left-1/2 z-[2] w-[80%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-2xl" src={skin.image || "/placeholder.svg"} alt={skin.name} />
@@ -256,30 +273,30 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                     )
                   })()
                 ) : (
-                  <div className="flex flex-wrap justify-center content-start gap-2 lg:gap-4 max-h-full overflow-y-auto custom-scroll p-1 w-full z-[2]">
+                  <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5 lg:gap-2 max-h-full overflow-y-auto custom-scroll p-1 w-full z-[2] content-start">
                     {selectedItems.map((item) => {
                       const skin = getSkin(state.skins, item!.skinId)!
                       return (
-                        <div key={item!.uid} className="flex flex-col items-center justify-center w-16 lg:w-24 shrink-0">
-                          <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center shrink-0">
-                            <span className="text-white/50 uppercase text-[7px] font-semibold lg:text-[9px]"> {skin.weapon} </span>
-                            <span className="text-white text-[8px] font-bold lg:text-xs mt-0.5 lg:mt-0 leading-tight"> {skin.name} </span>
-                          </div>
-                          <div className="relative w-full h-12 lg:h-16 mt-1">
-                            <img className="absolute top-1/2 left-1/2 z-[2] w-[90%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-md" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                        <div key={item!.uid} className="bg-block relative flex h-[5rem] w-full flex-col items-center justify-center overflow-visible rounded-md bg-[length:85%_85%] bg-center bg-no-repeat transition-all lg:h-[6.75rem] shrink-0 p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, ${RARITY_COLORS[skin.rarity] || "#fff"}40 10%, rgb(28, 28, 32) 75%)` }}>
+                          <div className="bg-block relative flex h-full w-full items-center justify-center rounded-md bg-[#17181c]">
+                            <img className="z-[1] w-full max-w-[80%] max-h-[60%] object-contain drop-shadow-md" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[90%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                              <span className="text-gray font-semibold text-xxxxs">{formatWeaponName(skin.weapon)}</span>
+                              <span className="text-white text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin.name)}</span>
+                            </div>
                           </div>
                         </div>
                       )
                     })}
                     {selectedShopItems.map((skin) => {
                       return (
-                        <div key={skin!.id} className="flex flex-col items-center justify-center w-16 lg:w-24 shrink-0">
-                          <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center shrink-0">
-                            <span className="text-[#f0c000]/70 uppercase text-[7px] font-semibold lg:text-[9px]"> {skin!.weapon} </span>
-                            <span className="text-[#f0c000] text-[8px] font-bold lg:text-xs mt-0.5 lg:mt-0 leading-tight"> {skin!.name} </span>
-                          </div>
-                          <div className="relative w-full h-12 lg:h-16 mt-1">
-                            <img className="absolute top-1/2 left-1/2 z-[2] w-[90%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-md" src={skin!.image || "/placeholder.svg"} alt={skin!.name} />
+                        <div key={skin!.id} className="bg-block relative flex h-[5rem] w-full flex-col items-center justify-center overflow-visible rounded-md bg-[length:85%_85%] bg-center bg-no-repeat transition-all lg:h-[6.75rem] shrink-0 p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, #f0c00040 10%, rgb(28, 28, 32) 75%)` }}>
+                          <div className="bg-block relative flex h-full w-full items-center justify-center rounded-md bg-[#17181c]">
+                            <img className="z-[1] w-full max-w-[80%] max-h-[60%] object-contain drop-shadow-md" src={skin!.image || "/placeholder.svg"} alt={skin!.name} />
+                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[90%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                              <span className="text-[#f0c000]/70 font-semibold text-xxxxs">{formatWeaponName(skin!.weapon)}</span>
+                              <span className="text-[#f0c000] text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin!.name)}</span>
+                            </div>
                           </div>
                         </div>
                       )
@@ -288,8 +305,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 )}
               </div>
               
-              <div className="z-[2] flex items-center justify-center space-x-0.5 lg:space-x-1.5 shrink-0">
-                <span className="text-gradient-yellow text-[11px] font-bold lg:text-xl"> {formatPrice(inputValue)} </span>
+              <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0">
+                <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(inputValue)} </span>
                 <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
               </div>
             </div>
@@ -328,7 +345,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           style={targetSkin ? { background: `linear-gradient(270deg, rgba(28, 28, 32, 0) 0.05%, ${RARITY_COLORS[targetSkin.rarity]}26 99.95%) #17181C` } : undefined}
         >
           {targetSkin ? (
-            <div className="relative flex h-full w-full flex-col items-center justify-between p-2 lg:p-6">
+            <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
                 onClick={() => setTargetId(null)}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
@@ -337,27 +354,27 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </button>
               
               <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
-                <span className="text-white/50 uppercase text-[9px] font-semibold lg:text-xs"> {targetSkin.weapon} </span>
-                <span className="text-white text-xs font-bold lg:text-2xl mt-0.5 lg:mt-0"> {targetSkin.name} </span>
+                <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(targetSkin.weapon)} </span>
+                <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(targetSkin.name)} </span>
               </div>
               
-              <div className="relative w-full flex-1 min-h-0">
+              <div className="relative w-full flex-1 min-h-0 my-1 lg:my-2">
                 <img className="absolute top-1/2 left-1/2 z-[2] w-[80%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-2xl" src={targetSkin.image || "/placeholder.svg"} alt={targetSkin.name} />
               </div>
               
-              <div className="z-[2] flex items-center justify-center space-x-0.5 lg:space-x-1.5">
-                <span className="text-gradient-yellow text-[11px] font-bold lg:text-xl"> {formatPrice(targetSkin.price)} </span>
+              <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0">
+                <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(targetSkin.price)} </span>
                 <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
               </div>
             </div>
           ) : (
-            <div className="relative flex h-full w-full flex-col">
-              <div className="text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 shrink-0 z-10">
+            <div className="relative h-full w-full">
+              <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10">
                 <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug flex items-center justify-center h-full min-h-[22px] lg:min-h-0">Выберите предмет для апгрейда</h3>
               </div>
-              <div className="relative flex-1">
-                <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-[0] h-full w-full object-cover" />
-                <img src="/assets/images/game/unknown-item-2.svg" alt="Unknown item" className="absolute top-1/2 left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
+              <div className="absolute inset-0 z-0">
+                <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
+                <img src="/assets/images/game/unknown-item-2.svg" alt="Unknown item" className="absolute top-[52%] left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
               </div>
             </div>
           )}
@@ -367,12 +384,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center mt-2 lg:mt-6 w-full h-12 lg:h-14">
           <div className="flex h-full w-full items-center justify-center space-x-1">
             {state.fastMultipliers.map((mult, idx) => (
-              <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className="bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem]">
+              <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isBothSelected ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
                 <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
               </button>
             ))}
             {state.fastPercentages.map((perc, idx) => (
-              <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] btn-gradient-${idx + 1}`}>
+              <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isBothSelected ? 'animate-pulse-border-glow border-[#f7d324]' : `border-white/10 btn-gradient-${idx + 1}`}`}>
                 <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">{perc}%</span>
               </button>
             ))}
@@ -419,7 +436,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           </div>
         </div>
         {/* Content */}
-        <div className="grid w-full grid-cols-1 lg:grid-cols-2 items-start lg:gap-6">
+        <div className="grid w-full grid-cols-1 lg:grid-cols-2 items-start lg:gap-2">
           <div className={`w-full ${mobileTab === "inventory" ? "block" : "hidden lg:block"}`}>
             <InventoryPanel 
               selectedUids={selectedUids} 
@@ -428,6 +445,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               setMode={setLeftPanelMode}
               selectedShopIds={selectedShopIds}
               onToggleShopItem={toggleShopItem}
+              onAddShopItem={addShopItem}
+              onRemoveShopItem={removeShopItem}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>
