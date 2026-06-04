@@ -69,7 +69,7 @@ export function SiteFooter() {
                   <img alt="flag" className="h-[1.0625rem] w-[1.625rem] rounded-[2px] object-cover" src="/assets/images/game/ru.png" />
                   <span className="font-tektur text-sm font-semibold text-white/80"> RUS </span>
                 </span>
-                <img src="/assets/images/header/arrow-down.svg" alt="arrow-down" className="h-[0.375rem] w-[0.6875rem] opacity-80 transition-transform duration-300" />
+                <img src="/assets/arrow-down.svg" alt="arrow-down" className="h-[0.375rem] w-[0.6875rem] opacity-80 transition-transform duration-300" />
               </button>
             </div>
           </div>
@@ -96,7 +96,7 @@ export function SiteFooter() {
                   <img alt="flag" className="h-[1.0625rem] w-[1.625rem] rounded-[2px] object-cover" src="/assets/images/game/ru.png" />
                   <span className="font-tektur text-sm font-semibold text-white/80"> RUS </span>
                 </span>
-                <img src="/assets/images/header/arrow-down.svg" alt="arrow-down" className="h-[0.375rem] w-[0.6875rem] opacity-80 transition-transform duration-300" />
+                <img src="/assets/arrow-down.svg" alt="arrow-down" className="h-[0.375rem] w-[0.6875rem] opacity-80 transition-transform duration-300" />
               </button>
             </div>
           </div>

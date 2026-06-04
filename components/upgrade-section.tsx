@@ -6,6 +6,7 @@ import { UpgradeWheel, type UpgradeWheelHandle } from "./upgrade-wheel"
 import { InventoryPanel } from "./inventory-panel"
 import { CatalogPanel } from "./catalog-panel"
 import { SettingsModal } from "./settings-modal"
+import { CartModal } from "./cart-modal"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { ChevronsUp, X } from "lucide-react"
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
+import { WinAnimationOverlay } from "./win-animation-overlay"
 
 const WIN_FACTOR = 0.92 // house edge
 
@@ -25,10 +27,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [selectedShopIds, setSelectedShopIds] = useState<string[]>([])
   const [targetId, setTargetId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
+  const [winAnimating, setWinAnimating] = useState(false)
+  const [winAnimKey, setWinAnimKey] = useState(0)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [balanceInput, setBalanceInput] = useState(0)
+  const [catalogPriceMin, setCatalogPriceMin] = useState<number | null>(null)
+  const [catalogPriceMax, setCatalogPriceMax] = useState<number | null>(null)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [wonItemUid, setWonItemUid] = useState<string | null>(null)
 
   // keep target in sync if a sidebar category was clicked
   const effectiveTarget = targetId ?? sidebarTargetId
@@ -48,9 +56,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       const skin = getSkin(state.skins, item!.skinId)
       return sum + (skin?.price ?? 0)
     }, 0)
-    const shopSum = selectedShopItems.reduce((sum, skin) => sum + (skin!.price ?? 0), 0)
-    return inventorySum + shopSum + balanceInput
-  }, [selectedItems, selectedShopItems, state.skins, balanceInput])
+    return inventorySum + balanceInput
+  }, [selectedItems, state.skins, balanceInput])
 
   const targetSkin = effectiveTarget ? getSkin(state.skins, effectiveTarget) : undefined
 
@@ -65,10 +72,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   function toggleItem(uid: string) {
     setSelectedUids((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]))
+    setWonItemUid(null)
   }
 
   function toggleShopItem(id: string) {
     setSelectedShopIds((prev) => (prev.includes(id) ? prev.filter((u) => u !== id) : [...prev, id]))
+    setWonItemUid(null)
   }
 
   function addShopItem(id: string) {
@@ -91,6 +100,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setSelectedUids([])
     setSelectedShopIds([])
     setBalanceInput(0)
+    setWonItemUid(null)
+  }
+
+  function handleAddWonItem() {
+    if (wonItemUid) {
+      setSelectedUids([wonItemUid])
+      setWonItemUid(null)
+    }
   }
 
   function findClosestSkin(targetPrice: number) {
@@ -106,6 +123,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       }
     }
     setTargetId(closest.id)
+    setWonItemUid(null)
     if (window.innerWidth < 1024) {
       setMobileTab("catalog")
     }
@@ -116,7 +134,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Выберите предметы или укажите баланс")
       return
     }
-    findClosestSkin(inputValue * multiplier)
+    const targetPrice = inputValue * multiplier
+    setCatalogPriceMin(Math.floor(targetPrice * 0.6))
+    setCatalogPriceMax(Math.ceil(targetPrice * 1.6))
+    findClosestSkin(targetPrice)
   }
 
   function handleFastPercentage(percent: number) {
@@ -125,7 +146,36 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       return
     }
     const targetPrice = (inputValue * WIN_FACTOR) / (percent / 100)
+    setCatalogPriceMin(Math.floor(targetPrice * 0.6))
+    setCatalogPriceMax(Math.ceil(targetPrice * 1.6))
     findClosestSkin(targetPrice)
+  }
+
+  function handleBuyCartItems() {
+    if (!state.loggedIn) {
+      toast.error("Войдите через Steam, чтобы совершать покупки")
+      return
+    }
+    if (selectedShopIds.length === 0) return
+
+    const totalCartPrice = selectedShopItems.reduce((sum, skin) => sum + (skin!.price ?? 0), 0)
+    
+    if (totalCartPrice > state.balance) {
+      toast.error("Недостаточно баланса")
+      return
+    }
+
+    setState((p) => ({ ...p, balance: p.balance - totalCartPrice }))
+    selectedShopIds.forEach(id => addToInventory(id))
+    
+    toast.success("Предметы успешно куплены!")
+    if (state.soundMode === "on") {
+      const audio = new Audio("/sounds/choiceSkin.mp3")
+      audio.play().catch(() => {})
+    }
+    
+    setSelectedShopIds([])
+    setIsCartOpen(false)
   }
 
   async function handleSpin() {
@@ -141,9 +191,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Выберите предметы или укажите баланс")
       return
     }
-    const shopSum = selectedShopItems.reduce((sum, skin) => sum + (skin!.price ?? 0), 0)
-    const totalBalanceRequired = balanceInput + shopSum
-    if (totalBalanceRequired > state.balance) {
+    
+    if (balanceInput > state.balance) {
       toast.error("Недостаточно баланса")
       return
     }
@@ -168,21 +217,27 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
     // settle
     removeFromInventory(selectedUids)
-    setState((p) => ({ ...p, upgrades: p.upgrades + 1, balance: Math.max(0, p.balance - totalBalanceRequired) }))
+    setState((p) => ({ ...p, upgrades: p.upgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
+
+    let newUid: string | null = null
 
     if (result) {
-      addToInventory(targetSkin.id)
+      newUid = addToInventory(targetSkin.id)
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
       if (state.soundMode === "on") {
         const winAudio = new Audio("/sounds/fireworkWin.mp3")
         winAudio.play().catch(() => {})
       }
+      setWinAnimating(true)
+      setWinAnimKey((k) => k + 1)
     } else {
       toast.error("Не повезло. Попробуйте снова!")
     }
 
     clearSelection()
-    setTargetId(null)
+    if (newUid) {
+      setWonItemUid(newUid)
+    }
     setSpinning(false)
   }
 
@@ -221,22 +276,17 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
             <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} soundMode={state.soundMode} />
-            {multiplier > 0 && (
-              <div className="absolute top-1/2 left-1/2 z-40 -translate-x-1/2 translate-y-[4.8rem] text-xs font-bold text-[#f0c000] drop-shadow-md lg:translate-y-[6.8rem]">
-                x{multiplier.toFixed(2)}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Left Card */}
         <div 
           className="col-span-1 lg:col-span-1 lg:col-start-1 lg:row-start-2 order-3 flex flex-col rounded-md lg:rounded-xl bg-[#17181C] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] overflow-hidden w-full lg:self-center aspect-[10.275/9.625] lg:aspect-[23.1875/21.5] relative"
-          style={selectedItems.length + selectedShopItems.length === 1 ? { 
-            background: `linear-gradient(90deg, ${RARITY_COLORS[(selectedItems.length > 0 ? getSkin(state.skins, selectedItems[0]!.skinId)! : selectedShopItems[0]!).rarity]}26 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C` 
+          style={selectedItems.length === 1 ? { 
+            background: `linear-gradient(90deg, ${RARITY_COLORS[(getSkin(state.skins, selectedItems[0]!.skinId)!).rarity]}26 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C` 
           } : undefined}
         >
-          {selectedItems.length === 0 && selectedShopItems.length === 0 && balanceInput === 0 ? (
+          {selectedItems.length === 0 && balanceInput === 0 ? (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
                 <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug">Выберите скины или скины и баланс для использования</span>
@@ -257,9 +307,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </button>
 
               <div className="relative w-full flex-1 flex flex-col items-center justify-center min-h-0 my-1 lg:my-2">
-                {selectedItems.length + selectedShopItems.length === 1 ? (
+                {selectedItems.length === 1 ? (
                   (() => {
-                    const skin = selectedItems.length > 0 ? getSkin(state.skins, selectedItems[0]!.skinId)! : selectedShopItems[0]!;
+                    const skin = getSkin(state.skins, selectedItems[0]!.skinId)!;
                     return (
                       <div className="flex flex-col items-center justify-center w-full h-full">
                         <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
@@ -267,7 +317,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                           <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(skin.name)} </span>
                         </div>
                         <div className="relative w-full flex-1 min-h-0">
-                          <img className="absolute top-1/2 left-1/2 z-[2] w-[80%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-2xl" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                          <img className="absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                         </div>
                       </div>
                     )
@@ -283,19 +333,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                             <div className="absolute left-1/2 z-[2] flex w-full max-w-[90%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
                               <span className="text-gray font-semibold text-xxxxs">{formatWeaponName(skin.weapon)}</span>
                               <span className="text-white text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin.name)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                    {selectedShopItems.map((skin) => {
-                      return (
-                        <div key={skin!.id} className="bg-block relative flex h-[5rem] w-full flex-col items-center justify-center overflow-visible rounded-md bg-[length:85%_85%] bg-center bg-no-repeat transition-all lg:h-[6.75rem] shrink-0 p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, #f0c00040 10%, rgb(28, 28, 32) 75%)` }}>
-                          <div className="bg-block relative flex h-full w-full items-center justify-center rounded-md bg-[#17181c]">
-                            <img className="z-[1] w-full max-w-[80%] max-h-[60%] object-contain drop-shadow-md" src={skin!.image || "/placeholder.svg"} alt={skin!.name} />
-                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[90%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
-                              <span className="text-[#f0c000]/70 font-semibold text-xxxxs">{formatWeaponName(skin!.weapon)}</span>
-                              <span className="text-[#f0c000] text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin!.name)}</span>
                             </div>
                           </div>
                         </div>
@@ -333,7 +370,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               className="custom-range w-full" 
               max={state.balance > 0 ? state.balance : 100} 
               value={balanceInput}
-              onChange={(e) => setBalanceInput(Number(e.target.value))}
+              onChange={(e) => {
+                setBalanceInput(Number(e.target.value))
+                setWonItemUid(null)
+              }}
               style={{ "--range-progress": `${(balanceInput / (state.balance > 0 ? state.balance : 100)) * 100}%` } as React.CSSProperties} 
             />
           </div>
@@ -359,13 +399,31 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </div>
               
               <div className="relative w-full flex-1 min-h-0 my-1 lg:my-2">
-                <img className="absolute top-1/2 left-1/2 z-[2] w-[80%] max-h-full -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-2xl" src={targetSkin.image || "/placeholder.svg"} alt={targetSkin.name} />
+                <img
+                  key={`weapon-${winAnimKey}`}
+                  className={`absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl${winAnimating ? " animate-win-rock" : ""}`}
+                  src={targetSkin.image || "/placeholder.svg"}
+                  alt={targetSkin.name}
+                />
               </div>
               
               <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0">
-                <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(targetSkin.price)} </span>
-                <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
+                <span className={`text-xxs font-bold lg:text-xl transition-colors duration-300${winAnimating ? " text-[#4ade80]" : " text-gradient-yellow"}`}>
+                  {formatPrice(targetSkin.price)}
+                </span>
+                <img
+                  key={`coin-${winAnimKey}`}
+                  alt="coin"
+                  className={`h-2.5 w-2.5 lg:h-4 lg:w-4${winAnimating ? " animate-win-coin-green" : ""}`}
+                  src="/assets/coin.svg"
+                />
               </div>
+
+              {/* Win Animation Overlay */}
+              <WinAnimationOverlay
+                playing={winAnimating}
+                onComplete={() => setWinAnimating(false)}
+              />
             </div>
           ) : (
             <div className="relative h-full w-full">
@@ -403,13 +461,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 mt-2 lg:mt-6 w-full flex justify-center">
           <button
             type="button"
-            onClick={handleSpin}
-            disabled={spinning || !state.loggedIn}
-            className="inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-tektur font-semibold text-[#1C1C20] !w-full rounded-md lg:rounded-xl px-6 py-3 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] min-h-[41px] space-x-2 lg:space-x-3 lg:min-h-[56px] w-full flex-1 lg:max-w-[306px] text-[0.8125rem] lg:text-xl !h-[1rem] !max-h-[2rem] lg:min-w-[19.125rem] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+            onClick={wonItemUid ? handleAddWonItem : handleSpin}
+            disabled={spinning || (!wonItemUid && !state.loggedIn)}
+            className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-bold text-[#1C1C20] !w-full rounded-md lg:rounded-xl px-6 py-3 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] min-h-[41px] space-x-2 lg:space-x-3 lg:min-h-[56px] w-full flex-1 lg:max-w-[306px] text-[0.8125rem] lg:text-[1.375rem] !h-[1rem] !max-h-[2rem] lg:min-w-[19.125rem] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <img alt="" draggable="false" className="pointer-events-none h-3 w-3 flex-shrink-0 select-none lg:h-4 lg:w-4" src="/assets/icons/logo-black.svg" />
             <span className="pointer-events-none select-none">
-              <span>{spinning ? "Прокачиваем..." : "Прокачать"}</span>
+              <span>{wonItemUid ? "Добавить в апгрейд" : spinning ? "Прокачиваем..." : "Прокачать"}</span>
             </span>
           </button>
         </div>
@@ -447,18 +505,34 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onToggleShopItem={toggleShopItem}
               onAddShopItem={addShopItem}
               onRemoveShopItem={removeShopItem}
+              onOpenCart={() => setIsCartOpen(true)}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>
             <CatalogPanel 
               targetId={effectiveTarget} 
-              onSelect={(id) => setTargetId(effectiveTarget === id ? "" : id)} 
+              onSelect={(id) => {
+                setTargetId(effectiveTarget === id ? "" : id)
+                setWonItemUid(null)
+                setCatalogPriceMin(null)
+                setCatalogPriceMax(null)
+              }} 
+              priceMin={catalogPriceMin}
+              priceMax={catalogPriceMax}
             />
           </div>
         </div>
       </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <CartModal 
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        selectedShopIds={selectedShopIds}
+        onRemoveItem={removeShopItem}
+        onClearCart={() => setSelectedShopIds([])}
+        onBuy={handleBuyCartItems}
+      />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { useStore } from "@/lib/store"
 
 interface SettingsModalProps {
@@ -45,6 +45,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent showCloseButton={false} className="p-0 border-none bg-transparent shadow-none max-w-[23.4375rem] md:max-w-[36.25rem] [&>button]:hidden">
+        <DialogTitle className="sr-only">Настройки</DialogTitle>
         <div tabIndex={0} className="animate-scaleIn bg-[#17181C] border-[#FFFFFF0D] border-[1px] flex flex-col gap-[2rem] items-center max-h-full min-w-full overflow-hidden pb-[1.5rem] relative rounded-[1.5rem] shadow-[0_10px_30px_0_rgba(0,0,0,0.35)] w-full">
           <div className="h-full w-full">
             <div className="custom-scroll flex max-h-[85vh] flex-col gap-[2rem] overflow-y-auto">

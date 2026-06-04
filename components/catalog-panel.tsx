@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
@@ -12,10 +12,14 @@ export function CatalogPanel({
   targetId,
   onSelect,
   setMobileTab,
+  priceMin,
+  priceMax,
 }: {
   targetId: string | null
   onSelect: (id: string) => void
   setMobileTab?: (tab: "inventory" | "catalog") => void
+  priceMin?: number | null
+  priceMax?: number | null
 }) {
   const { state } = useStore()
   const [query, setQuery] = useState("")
@@ -25,12 +29,19 @@ export function CatalogPanel({
   const [searchOpen, setSearchOpen] = useState(false)
   const [showNewItems, setShowNewItems] = useState(false)
 
+  // Sync external price range into the filter inputs
+  useEffect(() => {
+    if (priceMin != null) setMin(String(Math.floor(priceMin)))
+    if (priceMax != null) setMax(String(Math.ceil(priceMax)))
+  }, [priceMin, priceMax])
+
   const filtered = useMemo(() => {
-    return state.upgradeSkins
+    const base = state.upgradeSkins
       .filter((s) => `${s.weapon} ${s.name}`.toLowerCase().includes(query.toLowerCase()))
       .filter((s) => (min ? s.price >= Number(min) : true))
       .filter((s) => (max ? s.price <= Number(max) : true))
-      .sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
+
+    return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, query, min, max, sortOrder])
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -78,6 +89,7 @@ export function CatalogPanel({
                 </svg>
               </div>
             </div>
+            
             
             <div className="flex w-full flex-1 items-center justify-end space-x-2 lg:w-auto">
               <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="flex h-[2rem] w-[2rem] flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
@@ -141,7 +153,7 @@ export function CatalogPanel({
       </div>
 
       <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] flex flex-col min-h-[500px] lg:min-h-[560px]">
-        <div className="grid w-full grid-cols-3 gap-1 px-1.5 lg:grid-cols-5 lg:gap-1.5 flex-1 content-start">
+        <div className="grid w-full grid-cols-3 gap-1 px-1.5 py-1.5 lg:grid-cols-5 lg:gap-1.5 flex-1 content-start">
           {currentItems.map((item, index) => {
             if (item.type === 'button') {
               return !showNewItems ? (
@@ -202,11 +214,11 @@ export function CatalogPanel({
               const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
               return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
             };
-            const SHADOWS = ['ak47', 'usp', 'famas', 'knife', 'ak47'];
+            const SHADOWS = ['usp', 'usp', 'usp', 'usp', 'usp'];
             const shadow = SHADOWS[index % 5];
             
             return (
-              <div key={skin.id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+              <div key={skin.id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all rounded-md ${selected ? "cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                 <div className="w-full h-full">
                   <button
                     onClick={() => {
@@ -216,11 +228,11 @@ export function CatalogPanel({
                       }
                       onSelect(skin.id)
                     }}
-                    className={`group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] transition-all`}
-                    style={{ background: selected ? "linear-gradient(93deg, rgba(211, 179, 0, 0.4) 1.16%, rgba(168, 142, 0, 0.4) 50.58%, rgba(211, 179, 0, 0.4) 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
+                    className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"}`}
+                    style={{ background: selected ? "linear-gradient(93deg, #FBD506 1.16%, #FFDD23 50.58%, #FBD506 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                   >
                     {selected && (
-                      <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
+                      <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
                         <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
                           <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
                           <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />

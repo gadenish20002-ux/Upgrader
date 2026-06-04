@@ -17,7 +17,8 @@ export function InventoryPanel({
   selectedShopIds,
   onToggleShopItem,
   onAddShopItem,
-  onRemoveShopItem
+  onRemoveShopItem,
+  onOpenCart
 }: {
   selectedUids: string[]
   onToggle: (uid: string) => void
@@ -27,6 +28,7 @@ export function InventoryPanel({
   onToggleShopItem: (id: string) => void
   onAddShopItem?: (id: string) => void
   onRemoveShopItem?: (id: string) => void
+  onOpenCart?: () => void
 }) {
   const { state } = useStore()
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
@@ -149,7 +151,7 @@ export function InventoryPanel({
                       <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
                     </button>
                   </div>
-                  <button className="relative flex h-[2rem] w-[2rem] flex-shrink-0 items-center justify-center rounded-[0.375rem] bg-[#FEDB1C] transition-colors duration-200 hover:bg-[#fcd500] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
+                  <button onClick={onOpenCart} className="relative flex h-[2rem] w-[2rem] flex-shrink-0 items-center justify-center rounded-[0.375rem] bg-[#FEDB1C] transition-colors duration-200 hover:bg-[#fcd500] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
                     <img alt="" className="h-4 w-4" src="https://s3.upgrader.pro/cdn/fa/icons/black-shop.svg" />
                     {selectedShopIds.length > 0 && (
                       <div className="absolute top-[-0.35rem] right-[-0.35rem] flex h-4.5 w-4.5 p-1 items-center justify-center rounded-full border-[3px] border-solid border-[#1E1F23] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)]">
@@ -194,7 +196,7 @@ export function InventoryPanel({
             {mode === "inventory" ? "Инвентарь пуст" : "Магазин пуст"}
           </div>
         ) : (
-          <div className="z-[1] custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5 content-start">
+          <div className="z-[1] custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 py-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5 content-start">
             {displayedSkins.map((item, index) => {
               const skin = mode === "shop" ? (item as any) : getSkin(state.skins, (item as any).skinId)
               const id = mode === "shop" ? skin.id : (item as any).uid
@@ -206,11 +208,11 @@ export function InventoryPanel({
                 const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
                 return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
               };
-              const SHADOWS = ['ak47', 'usp', 'famas', 'knife', 'ak47'];
+              const SHADOWS = ['usp', 'usp', 'usp', 'usp', 'usp'];
               const shadow = SHADOWS[index % 5];
 
               return (
-                <div key={id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all ${selected ? "ring-2 ring-[#FFDD24] rounded-md cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
+                <div key={id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all rounded-md ${selected ? "cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                   <div className="w-full h-full">
                     <button
                       onClick={() => {
@@ -224,11 +226,11 @@ export function InventoryPanel({
                           onToggle(id)
                         }
                       }}
-                      className={`group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] transition-all`}
-                      style={{ background: selected ? "linear-gradient(93deg, rgba(211, 179, 0, 0.4) 1.16%, rgba(168, 142, 0, 0.4) 50.58%, rgba(211, 179, 0, 0.4) 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
+                      className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"}`}
+                      style={{ background: selected ? "linear-gradient(93deg, #FBD506 1.16%, #FFDD23 50.58%, #FBD506 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                     >
                       {selected && mode === "inventory" && (
-                        <div className="bg-[linear-gradient(93deg,rgba(211,179,0,0.4)_1.16%,rgba(168,142,0,0.4)_50%,rgba(211,179,0,0.4))] absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
+                        <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
                           <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
                             <img alt="" className="w-[0.8125rem] group-hover:hidden lg:w-5" src="/assets/arrow-white.svg" />
                             <img alt="" className="hidden group-hover:block" src="/assets/close-gray.svg" />
@@ -236,16 +238,16 @@ export function InventoryPanel({
                         </div>
                       )}
                       {selected && mode === "shop" && (
-                        <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center overflow-hidden rounded-md animate-in fade-in duration-200">
-                          <div className="choosed-item-gradient-new absolute top-0 left-0 z-[1] flex h-full w-full items-center justify-center overflow-hidden rounded-md"></div>
+                        <div className="absolute top-0 left-0 z-[3] flex h-full w-full items-center justify-center overflow-hidden rounded-md animate-in fade-in duration-200">
+                          <div className="choosed-item-gradient-new absolute top-0 left-0 z-[1] flex h-full w-full items-center justify-center overflow-hidden rounded-md animate-in fade-in duration-200"></div>
                           <div className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] z-[2] mx-1.5 mt-auto mb-1.5 flex h-7 w-full items-center justify-between rounded-[1.5rem] p-1 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                            <button onClick={(e) => { e.stopPropagation(); onRemoveShopItem?.(id); }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white">
+                            <div role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); onRemoveShopItem?.(id); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onRemoveShopItem?.(id); } }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white cursor-pointer">
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.9165 7H11.0832" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"></path></svg>
-                            </button>
+                            </div>
                             <span className="font-tektur text-[0.875rem] text-[#17181C]">{selectedShopIds.filter(sid => sid === id).length}</span>
-                            <button onClick={(e) => { e.stopPropagation(); onAddShopItem?.(id); }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white">
+                            <div role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); onAddShopItem?.(id); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onAddShopItem?.(id); } }} className="transition-all flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full bg-[#17181C] text-center text-[#FEDA1B] duration-200 hover:bg-[#17181CB2] hover:text-white cursor-pointer">
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.625V11.375M11.375 7H2.625" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"></path></svg>
-                            </button>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -291,10 +293,10 @@ export function InventoryPanel({
               </div>
             </div>
             <div className="absolute z-[3] right-0 mr-3 flex items-center space-x-1.5 animate-in slide-in-from-right duration-200">
-              <button onClick={() => selectedShopIds.forEach(id => onToggleShopItem(id))} className="flex h-[2rem] w-auto flex-1 flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem]">
+              <button onClick={() => selectedShopIds.forEach(id => onRemoveShopItem?.(id))} className="flex h-[2rem] w-auto flex-1 flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem]">
                 <img alt="trash" className="h-[1rem] w-[1rem] lg:h-[1.25rem] lg:w-[1.25rem]" src="/assets/trash.svg" />
               </button>
-              <button className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] relative flex h-[2rem] w-auto items-center justify-center gap-3 rounded-[0.375rem] px-3 transition-all duration-200 select-none focus:outline-none lg:h-[2.375rem] lg:rounded-[0.625rem]">
+              <button onClick={onOpenCart} className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] cursor-pointer relative flex h-[2rem] w-auto items-center justify-center gap-3 rounded-[0.375rem] px-3 transition-all duration-200 select-none focus:outline-none lg:h-[2.375rem] lg:rounded-[0.625rem]">
                 <span className="flex items-center justify-center gap-1">
                   <img alt="coin" className="h-4 w-4" src="/assets/coin-black.svg" />
                   <span className="font-tektur text-[0.875rem] leading-normal font-semibold text-black">{formatPrice(selectedShopIds.reduce((sum, id) => sum + (getSkin(state.skins, id)?.price || 0), 0))}</span>

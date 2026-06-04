@@ -13,7 +13,7 @@ interface StoreContextValue {
   // helpers
   login: () => void
   logout: () => void
-  addToInventory: (skinId: string) => void
+  addToInventory: (skinId: string) => string
   removeFromInventory: (uids: string[]) => void
   setBalance: (value: number) => void
   resetAll: () => void
@@ -88,10 +88,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addToInventory = useCallback(
     (skinId: string) => {
+      const uid = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       setState((p) => {
-        const item: InventoryItem = { uid: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, skinId }
+        const item: InventoryItem = { uid, skinId }
         return { ...p, inventory: [item, ...p.inventory], upgrades: p.upgrades + 1 }
       })
+      return uid
     },
     [setState],
   )
