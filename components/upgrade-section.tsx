@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay } from "./win-animation-overlay"
+import { LoseAnimationOverlay } from "./lose-animation-overlay"
 
 const WIN_FACTOR = 0.92 // house edge
 
@@ -29,6 +30,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [spinning, setSpinning] = useState(false)
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
+  const [loseAnimating, setLoseAnimating] = useState(false)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -231,7 +233,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setWinAnimating(true)
       setWinAnimKey((k) => k + 1)
     } else {
-      toast.error("Не повезло. Попробуйте снова!")
+      const shouldShowLoseAnim = inputValue > 50
+      if (shouldShowLoseAnim) {
+        setLoseAnimating(true)
+      } else {
+        toast.error("Не повезло. Попробуйте снова!")
+      }
     }
 
     clearSelection()
@@ -243,6 +250,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto px-2">
+      {/* Relative wrapper so LoseAnimationOverlay can be absolute within it */}
+      <div className="relative w-full flex flex-col items-center">
       {/* Top: Logo */}
       <div className="flex items-center justify-center gap-[0.3125rem] lg:gap-2 mb-2 lg:mb-2 mt-2 lg:mt-0">
         <SiteLogo className="h-[1.5125rem] w-[1.5125rem] lg:h-8 lg:w-8" />
@@ -297,6 +306,59 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 <img src="/assets/unknown-item.svg" alt="Unknown item" className="absolute top-[52%] left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
               </div>
             </div>
+          ) : selectedItems.length >= 2 ? (
+            <div className="relative flex h-full w-full flex-col items-center justify-center rounded-md bg-[#17181C] p-2">
+              <button 
+                onClick={clearSelection}
+                className="absolute top-1.5 right-1.5 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
+              >
+                <img alt="Close" className="h-2 w-2 lg:h-4 lg:w-4" src="/assets/close-gray.svg" />
+              </button>
+              <div className="z-[2] grid min-w-full grid-cols-3 gap-1 lg:gap-2">
+                {selectedItems.map((item) => {
+                  const skin = getSkin(state.skins, item!.skinId)!
+                  const rarityColor = RARITY_COLORS[skin.rarity] || "#8847ff"
+                  return (
+                    <div key={item!.uid} className="aspect-square h-full w-full cursor-pointer">
+                      <div
+                        className="group relative h-full w-full rounded-md p-px shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"
+                        style={{ background: `linear-gradient(137deg, ${rarityColor} 10%, rgb(28,28,32) 75%)` }}
+                      >
+                        <div
+                          className="relative flex h-full w-full items-center justify-center rounded-md overflow-hidden"
+                          style={{ backgroundColor: '#17181c' }}
+                        >
+                          <div className="absolute top-0.5 right-0.5 z-[2] flex items-center space-x-0.5 lg:top-1 lg:right-1">
+                            <span className="font-tektur font-bold text-white leading-normal" style={{ fontSize: 'clamp(3px, 1.2vw, 7px)' }}>
+                              {formatPrice(skin.price)}
+                            </span>
+                            <img alt="" className="h-[5px] w-[5px] lg:h-[9px] lg:w-[9px]" src="/assets/icons/coin.svg" />
+                          </div>
+                          <img
+                            className="z-[1] w-full max-w-[75%] object-contain"
+                            src={skin.image || "/placeholder.svg"}
+                            alt={skin.name}
+                          />
+                          <div className="absolute left-1/2 z-[2] w-full max-w-[85%] -translate-x-1/2 flex flex-col items-center justify-center text-center" style={{ bottom: '6%' }}>
+                            <span className="font-semibold leading-none text-[#A7A7A7]" style={{ fontSize: 'clamp(2px, 0.9vw, 6px)' }}>{formatWeaponName(skin.weapon)}</span>
+                            <span className="font-tektur font-bold leading-none truncate w-full text-center text-white" style={{ fontSize: 'clamp(3px, 1.2vw, 8px)' }}>{formatSkinName(skin.name)}</span>
+                          </div>
+                          <div
+                            className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200"
+                            style={{ background: `radial-gradient(circle, ${rarityColor}66 0%, ${rarityColor}33 30%, ${rarityColor}1a 45%, transparent 70%)` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center space-x-0.5 z-[3] lg:bottom-4">
+                <span className="font-tektur text-gradient-yellow font-bold" style={{ fontSize: 'clamp(6px, 2vw, 18px)' }}>{formatPrice(inputValue)}</span>
+                <img alt="" className="h-[7px] w-[7px] lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
+              </div>
+              <img alt="" className="absolute top-1/2 left-1/2 z-[0] w-full max-w-[14rem] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40" src="/assets/images/game/unknown-item-shadow.webp" />
+            </div>
           ) : (
             <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
@@ -323,21 +385,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                     )
                   })()
                 ) : (
-                  <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5 lg:gap-2 max-h-full overflow-y-auto custom-scroll p-1 w-full z-[2] content-start">
-                    {selectedItems.map((item) => {
-                      const skin = getSkin(state.skins, item!.skinId)!
-                      return (
-                        <div key={item!.uid} className="bg-block relative flex h-[5rem] w-full flex-col items-center justify-center overflow-visible rounded-md bg-[length:85%_85%] bg-center bg-no-repeat transition-all lg:h-[6.75rem] shrink-0 p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, ${RARITY_COLORS[skin.rarity] || "#fff"}40 10%, rgb(28, 28, 32) 75%)` }}>
-                          <div className="bg-block relative flex h-full w-full items-center justify-center rounded-md bg-[#17181c]">
-                            <img className="z-[1] w-full max-w-[80%] max-h-[60%] object-contain drop-shadow-md" src={skin.image || "/placeholder.svg"} alt={skin.name} />
-                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[90%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
-                              <span className="text-gray font-semibold text-xxxxs">{formatWeaponName(skin.weapon)}</span>
-                              <span className="text-white text-xxxs font-tektur max-w-full truncate font-bold lg:text-xxs">{formatSkinName(skin.name)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
+                  // balanceInput > 0 but no items selected
+                  <div className="flex flex-col items-center justify-center w-full h-full">
+                    <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs">Баланс</span>
                   </div>
                 )}
               </div>
@@ -474,6 +524,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
       </div>
 
+      {/* Lose animation overlay — absolute within this relative wrapper */}
+      <LoseAnimationOverlay
+        playing={loseAnimating}
+        onComplete={() => setLoseAnimating(false)}
+        soundEnabled={state.soundMode === "on"}
+      />
+
+      </div>{/* end relative wrapper */}
+
       {/* Bottom: Tabs (Mobile) / Grid (Desktop) */}
       <div className="w-full mt-4 lg:mt-3">
         {/* Mobile Tabs */}
@@ -523,6 +582,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           </div>
         </div>
       </div>
+
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <CartModal 

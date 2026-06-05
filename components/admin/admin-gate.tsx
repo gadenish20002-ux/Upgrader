@@ -36,7 +36,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <Logo className="h-6 w-6 text-primary" />
-            <span className="font-extrabold tracking-wide">UPGRADER ADMIN</span>
+            <span className="font-tektur font-extrabold tracking-wide">UPGRADER ADMIN</span>
           </div>
           <p className="text-sm text-muted-foreground">Введите пароль для доступа к панели</p>
         </div>

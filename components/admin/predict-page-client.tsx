@@ -1,56 +1,92 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { AdminGate } from "./admin-gate"
-import type { PredictOutcome, PredictHint } from "@/lib/types"
-import { ArrowLeft, Target, Check, X, Shuffle, Eye, TrendingUp } from "lucide-react"
-
-const HINT_OPTIONS: { value: PredictHint; label: string; sub: string; color: string; glow: string }[] = [
-  { value: "x2",  label: "×2",  sub: "~50% шанс",  color: "#f0c000", glow: "rgba(240,192,0,0.35)" },
-  { value: "x4",  label: "×4",  sub: "~25% шанс",  color: "#f07a00", glow: "rgba(240,122,0,0.35)" },
-  { value: "x8",  label: "×8",  sub: "~12% шанс",  color: "#eb4b4b", glow: "rgba(235,75,75,0.35)" },
-  { value: "35%", label: "35%", sub: "35% шанс",   color: "#4b9fff", glow: "rgba(75,159,255,0.35)" },
-  { value: "55%", label: "55%", sub: "55% шанс",   color: "#8847ff", glow: "rgba(136,71,255,0.35)" },
-  { value: "75%", label: "75%", sub: "75% шанс",   color: "#4beba4", glow: "rgba(75,235,164,0.35)" },
-]
-
-const OUTCOME_OPTIONS: { value: PredictOutcome; label: string; icon: typeof Check; tone: string; bg: string }[] = [
-  { value: "off",  label: "Авто (честно)",      icon: Shuffle, tone: "#a7a7a7", bg: "rgba(167,167,167,0.08)" },
-  { value: "win",  label: "Гарантированная победа", icon: Check,   tone: "#4beba4", bg: "rgba(75,235,164,0.10)" },
-  { value: "lose", label: "Гарантированное поражение", icon: X,   tone: "#eb4b4b", bg: "rgba(235,75,75,0.10)" },
-]
+import { ArrowLeft } from "lucide-react"
 
 function PredictContent() {
-  const { state, setState } = useStore()
-  const [showHints, setShowHints] = useState(true)
+  const { state } = useStore()
+  // hint from admin state is no longer used for static display
 
-  const outcome = state.predict.outcome
-  const hint = state.predict.hint
+  const [phase, setPhase] = useState<"idle" | "analyzing" | "result">("idle")
+  const [rotation, setRotation] = useState(0)
+  const [dots, setDots] = useState(1)
+  const [randomHint, setRandomHint] = useState<string>("")
 
-  function setOutcome(o: PredictOutcome) {
-    setState((p) => ({ ...p, predict: { ...p.predict, outcome: o } }))
+  useEffect(() => {
+    if (phase === "analyzing") {
+      let currentDots = 1
+      let increasing = true
+      const interval = setInterval(() => {
+        if (increasing) {
+          currentDots++
+          if (currentDots >= 3) increasing = false
+        } else {
+          currentDots--
+          if (currentDots <= 1) increasing = true
+        }
+        setDots(currentDots)
+      }, 400)
+      return () => clearInterval(interval)
+    }
+  }, [phase])
+
+  useEffect(() => {
+    if (phase === "result") {
+      const timer = setTimeout(() => {
+        setPhase("idle")
+        setRotation(0)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [phase])
+
+  const handleClick = () => {
+    if (phase === "idle" || phase === "result") {
+      setPhase("analyzing")
+      
+      // Generate random hint based on fastMultipliers range
+      const minMult = Math.min(...state.fastMultipliers)
+      const maxMult = Math.max(...state.fastMultipliers)
+      const val = Math.floor(Math.random() * (maxMult - minMult + 1) + minMult)
+      setRandomHint("x" + val)
+
+      // Start spinning (5 full spins + some random rotation)
+      setRotation((prev) => prev + 360 * 5 + Math.floor(Math.random() * 360))
+
+      setTimeout(() => {
+        setPhase("result")
+      }, 5000)
+    }
   }
 
-  function setHint(h: PredictHint) {
-    setState((p) => ({ ...p, predict: { ...p.predict, hint: h } }))
-  }
+  // Calculate SVG variables exactly as in UpgradeWheel for chance=0.5
+  const displayChance = 0.5
+  const circumference = 779.115
+  const gap = 8 * Math.min(1, displayChance * 4)
+  const strokeDash = circumference * Math.max(0.0001, displayChance) - 2 * gap
+  const strokeGap = circumference - strokeDash
+  const strokeOffset = (circumference * Math.max(0.0001, displayChance)) / 2 - circumference / 4 - gap
+  const arcStroke = "url(#progress-gradient)"
 
-  const activeHint = HINT_OPTIONS.find((h) => h.value === hint) ?? HINT_OPTIONS[0]
-  const currentOutcome = OUTCOME_OPTIONS.find((o) => o.value === outcome)!
+  // Render dots for analyzing
+  const dotsString = ".".repeat(dots)
+
+  const formattedHint = randomHint.toUpperCase()
 
   return (
-    <div className="min-h-screen" style={{ background: "#0f1013" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#0f1013" }}>
       {/* Header */}
       <header
-        className="sticky top-0 z-40 flex h-14 items-center justify-between px-5"
+        className="sticky top-0 z-40 flex h-14 items-center justify-between px-5 shrink-0"
         style={{ background: "#17181c", borderBottom: "1px solid #232325" }}
       >
         <div className="flex items-center gap-3">
           <img src="/assets/images/header/logo.svg" alt="Logo" className="h-7 w-7" />
-          <span className="font-extrabold tracking-wide text-white">UPGRADER</span>
+          <span className="font-tektur font-extrabold tracking-wide text-white">UPGRADER</span>
           <span
-            className="rounded px-2 py-0.5 text-xs font-bold"
+            className="font-tektur rounded px-2 py-0.5 text-xs font-bold"
             style={{ background: "#f0c000", color: "#111" }}
           >
             PREDICT
@@ -67,192 +103,123 @@ function PredictContent() {
             <ArrowLeft className="h-4 w-4" />
             Админка
           </a>
-          <a
-            href="/"
-            className="flex items-center gap-1.5 text-sm transition-colors"
-            style={{ color: "#a7a7a7" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#f0c000")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#a7a7a7")}
-          >
-            На сайт
-          </a>
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
-
-        {/* Big Predict Card */}
-        <div
-          className="relative mb-6 overflow-hidden rounded-2xl p-8"
-          style={{
-            background: "linear-gradient(135deg, #1a1b20 0%, #16171b 100%)",
-            border: "1px solid #2a2b30",
-            boxShadow: `0 0 60px ${outcome === "win" ? "rgba(75,235,164,0.12)" : outcome === "lose" ? "rgba(235,75,75,0.12)" : "rgba(0,0,0,0)"}`,
-          }}
+      {/* Main Area: Centered Wheel */}
+      <main className="flex-1 flex flex-col items-center justify-center relative w-full overflow-hidden">
+        <div 
+          className="relative flex items-center justify-center cursor-pointer transform scale-[1.3] lg:scale-[1.8] transition-transform" 
+          onClick={handleClick}
         >
-          {/* Decorative glow blob */}
-          <div
-            className="pointer-events-none absolute -top-16 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
-            style={{ background: outcome === "off" ? "transparent" : activeHint.glow }}
-          />
-
-          <div className="relative">
-            {/* Icon + title */}
-            <div className="mb-6 flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl"
-                style={{ background: "rgba(240,192,0,0.12)", border: "1px solid rgba(240,192,0,0.2)" }}
-              >
-                <Target className="h-5 w-5" style={{ color: "#f0c000" }} />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Предикт-окно</h1>
-                <p className="text-xs" style={{ color: "#6b6b6b" }}>Только для администратора</p>
-              </div>
+          <div className="relative flex h-[13.75rem] w-[13.75rem] items-center justify-center lg:h-[21.75rem] lg:w-[21.75rem]">
+            {/* Слой 0: Внешние декорации */}
+            <div className="absolute top-0 left-0 h-[13.75rem] w-[13.75rem] lg:h-[21.875rem] lg:w-[21.875rem] lg:-translate-x-1 lg:-translate-y-1 z-0"></div>
+            
+            <div className="absolute top-[0.3rem] left-[0.3rem] h-[13.125rem] w-[13.125rem] rounded-full border border-[#202021] lg:top-3 lg:left-3 lg:h-[20.25rem] lg:w-[20.25rem] lg:border-2 z-0"></div>
+            
+            <img alt="" className="absolute top-[0.3rem] left-[0.3rem] h-[13.125rem] w-[13.125rem] scale-[1.05] object-contain lg:top-3 lg:left-3 lg:h-[20.25rem] lg:w-[20.25rem] z-0" src="/assets/images/game/upgrade-circle-bg.svg" />
+            
+            {/* Слой 1: Темное фоновое кольцо трека */}
+            <div className="absolute top-1/2 left-1/2 z-[1] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
+              <svg className="h-full w-full rotate-0" viewBox="0 0 289 289">
+                <circle fill="none" stroke="#202021" cx="144.5" cy="144.5" r="124" strokeWidth="42"></circle>
+              </svg>
             </div>
 
-            {/* Current state display */}
-            <div
-              className="mb-6 rounded-xl p-5 text-center"
-              style={{ background: currentOutcome.bg, border: `1px solid ${currentOutcome.tone}30` }}
-            >
-              {outcome === "off" ? (
-                <>
-                  <Shuffle className="mx-auto mb-2 h-8 w-8" style={{ color: "#a7a7a7" }} />
-                  <div className="text-base font-semibold text-white">Честный режим</div>
-                  <div className="mt-1 text-sm" style={{ color: "#6b6b6b" }}>
-                    Результат определяется случайно по шансу игрока
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-2 flex items-center justify-center gap-3">
-                    {outcome === "win" ? (
-                      <Check className="h-8 w-8" style={{ color: "#4beba4" }} />
-                    ) : (
-                      <X className="h-8 w-8" style={{ color: "#eb4b4b" }} />
-                    )}
-                    <div
-                      className="text-5xl font-black tracking-tight"
-                      style={{
-                        color: activeHint.color,
-                        textShadow: `0 0 30px ${activeHint.glow}`,
-                      }}
-                    >
-                      {activeHint.label}
+            {/* Слой 2: Черный круг с засечками */}
+            <img alt="" className="absolute top-1/2 left-1/2 z-[3] h-full w-full -translate-x-1/2 -translate-y-1/2 scale-[0.95] object-contain lg:scale-[0.92]" src="/assets/images/game/circle-black.svg" />
+            
+            {/* Слой 3: Цветной градиент трека */}
+            <div className="absolute top-1/2 left-1/2 z-[2] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
+              <svg className="h-full w-full rotate-0" viewBox="0 0 289 289">
+                <defs>
+                  <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#23d70c', stopOpacity: 1 }}></stop>
+                    <stop offset="60%" style={{ stopColor: '#ebd215', stopOpacity: 1 }}></stop>
+                    <stop offset="80%" style={{ stopColor: '#edb516', stopOpacity: 1 }}></stop>
+                    <stop offset="100%" style={{ stopColor: '#df4125', stopOpacity: 1 }}></stop>
+                  </linearGradient>
+                </defs>
+                <circle fill="none" stroke={arcStroke} strokeLinecap="butt" cx="144.5" cy="144.5" r="124" strokeWidth="42" 
+                  strokeDasharray={`${strokeDash} ${strokeGap}`} 
+                  strokeDashoffset={strokeOffset}
+                  className="transition-all duration-500 ease-in-out"
+                  style={{
+                    transition: "stroke-dasharray 0.3s, stroke-dashoffset 0.3s, stroke 0.3s"
+                  }}></circle>
+              </svg>
+            </div>
+
+            {/* Слой 4: Внутренние элементы и указатель */}
+            <div className="absolute top-[0.45rem] left-[0.45rem] h-[12.8125rem] w-[12.8125rem] rounded-full border-[3px] border-[#101012] lg:top-[0.875rem] lg:left-[0.875rem] lg:h-80 lg:w-80 lg:border-4 z-[4]"></div>
+            
+            <div className="absolute top-1/2 left-1/2 z-[4] h-0 w-0" style={{ transform: `translate(-50%, -50%) rotate(${rotation + 180}deg)`, transformOrigin: "center center", transition: phase === "analyzing" ? `transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)` : "none" }}>
+              <img alt="" className="absolute top-[-6.6875rem] left-[-1.0625rem] h-[2.125rem] w-[2.125rem] max-w-none lg:top-[-10.125rem] lg:left-[-1.46875rem] lg:h-[2.9375rem] lg:w-[2.9375rem]" src="/assets/images/game/pointer.png" />
+            </div>
+
+            {/* Центральный текст */}
+            <div className="absolute top-[3.125rem] left-[3.125rem] h-[7.4375rem] w-[7.4375rem] rounded-full lg:top-[4.375rem] lg:left-[4.375rem] lg:h-[12.9375rem] lg:w-[12.9375rem] z-[4]">
+              <div className="flex h-full w-full items-center justify-center px-2">
+                <div className="flex flex-col items-center justify-center text-center">
+                  {phase === "idle" && (
+                    <span className="font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] transition-all duration-300 uppercase leading-snug tracking-wide"> 
+                      получить сигнал
+                    </span>
+                  )}
+                  
+                  {phase === "analyzing" && (
+                    <div className="flex items-center justify-center w-full">
+                      <span className="font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] transition-all duration-300"> 
+                        анализ
+                      </span>
+                      <span className="font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] text-left inline-block w-[1.5em]">
+                        {dotsString}
+                      </span>
                     </div>
-                  </div>
-                  <div className="mt-1 text-sm font-semibold text-white">
-                    {outcome === "win"
-                      ? `Ставить на ${activeHint.label} → ПОБЕДА`
-                      : `Ставить на ${activeHint.label} → ПРОИГРЫШ`}
-                  </div>
-                  <div className="mt-0.5 text-xs" style={{ color: "#6b6b6b" }}>
-                    {activeHint.sub} · следующий апгрейд{" "}
-                    <span style={{ color: outcome === "win" ? "#4beba4" : "#eb4b4b" }}>
-                      {outcome === "win" ? "выиграет" : "проиграет"}
-                    </span>{" "}
-                    вне зависимости от реального шанса
-                  </div>
-                </>
-              )}
-            </div>
+                  )}
 
-            {/* Outcome Mode Selector */}
-            <div className="mb-6">
-              <div className="mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" style={{ color: "#6b6b6b" }} />
-                <span className="text-sm font-semibold text-white">Режим исхода</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {OUTCOME_OPTIONS.map((opt) => {
-                  const Icon = opt.icon
-                  const active = outcome === opt.value
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setOutcome(opt.value)}
-                      className="rounded-xl p-3 text-center transition-all duration-200"
-                      style={{
-                        background: active ? opt.bg : "rgba(255,255,255,0.03)",
-                        border: active ? `1px solid ${opt.tone}50` : "1px solid #2a2b30",
-                        boxShadow: active ? `0 0 16px ${opt.tone}20` : "none",
-                        transform: active ? "scale(1.02)" : "scale(1)",
-                      }}
-                    >
-                      <Icon
-                        className="mx-auto mb-1.5 h-5 w-5"
-                        style={{ color: active ? opt.tone : "#6b6b6b" }}
-                      />
-                      <div
-                        className="text-xs font-semibold leading-snug"
-                        style={{ color: active ? opt.tone : "#a7a7a7" }}
-                      >
-                        {opt.label}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Hint Selector — only visible when not "off" */}
-            {outcome !== "off" && (
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" style={{ color: "#6b6b6b" }} />
-                    <span className="text-sm font-semibold text-white">На что ставить</span>
-                  </div>
-                  <span className="text-xs" style={{ color: "#6b6b6b" }}>
-                    {outcome === "win" ? "→ победа" : "→ проигрыш"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                  {HINT_OPTIONS.map((opt) => {
-                    const active = hint === opt.value
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => setHint(opt.value)}
-                        className="rounded-xl py-4 text-center transition-all duration-200"
-                        style={{
-                          background: active
-                            ? `linear-gradient(135deg, ${opt.glow.replace("0.35", "0.18")}, ${opt.glow.replace("0.35", "0.08")})`
-                            : "rgba(255,255,255,0.03)",
-                          border: active ? `1px solid ${opt.color}50` : "1px solid #2a2b30",
-                          boxShadow: active ? `0 0 20px ${opt.glow}` : "none",
-                          transform: active ? "scale(1.05)" : "scale(1)",
-                        }}
-                      >
-                        <div
-                          className="text-xl font-black"
-                          style={{ color: active ? opt.color : "#6b6b6b" }}
-                        >
-                          {opt.label}
-                        </div>
-                        <div
-                          className="mt-0.5 text-[10px]"
-                          style={{ color: active ? opt.color + "cc" : "#4a4a4a" }}
-                        >
-                          {opt.sub}
-                        </div>
-                      </button>
-                    )
-                  })}
+                  {phase === "result" && (
+                    <>
+                      <span className="font-sans font-medium lg:text-base text-xs text-[#a4e57e] mb-1"> 
+                        ставь на:
+                      </span>
+                      <span className="font-sans font-black lg:text-6xl text-4xl text-[#a4e57e] mb-1 lg:mb-2 leading-none"> 
+                        {formattedHint}
+                      </span>
+                      <span className="font-sans lg:text-[0.65rem] text-[0.45rem] text-[#6b6b6b] leading-tight mt-1"> 
+                        нажми, чтобы получить<br/>новый сигнал
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+            
+            <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-[#a4e57e] lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
+            <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
+            <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
+            <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
           </div>
         </div>
 
-        {/* Info note */}
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #2a2b30", color: "#6b6b6b" }}
-        >
-          <span style={{ color: "#f0c000" }}>⚠ Только для администратора.</span> Игрок видит лишь
-          результат вращения. Настройки мгновенно синхронизируются между вкладками.
+        {/* Планка с кнопками, как на главной */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 lg:max-w-xl">
+          <div className="flex h-full w-full items-center justify-center space-x-1">
+            {state.fastMultipliers.map((mult, idx) => (
+              <button key={`mult-${idx}`} className="bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem]" disabled>
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
+              </button>
+            ))}
+            {state.fastPercentages.map((perc, idx) => (
+              <button key={`perc-${idx}`} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] btn-gradient-${idx + 1}`} disabled>
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">{perc}%</span>
+              </button>
+            ))}
+            <button className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]" disabled>
+              <img alt="settings" className="h-3.5 w-3.5 skew-x-6 transform lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" />
+            </button>
+          </div>
         </div>
       </main>
     </div>

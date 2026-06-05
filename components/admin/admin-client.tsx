@@ -17,8 +17,8 @@ export function AdminClient() {
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/60 bg-background/95 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-2">
             <Logo className="h-7 w-7 text-primary" />
-            <span className="text-lg font-extrabold tracking-wide">UPGRADER</span>
-            <span className="ml-2 rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+            <span className="font-tektur text-lg font-extrabold tracking-wide">UPGRADER</span>
+            <span className="font-tektur ml-2 rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
               ADMIN
             </span>
           </div>
