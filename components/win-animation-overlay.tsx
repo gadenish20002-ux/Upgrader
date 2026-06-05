@@ -14,52 +14,98 @@ const FRAME_INTERVAL = 1000 / FRAME_FPS // ~33ms per frame
 
 // Total frame counts (from copied assets)
 const FRAME_COUNT = 152  // Рамка
-const SALUT_COUNT = 139  // Салют
+const SALUT1_COUNT = 156 // Салют burst 1
+const SALUT2_COUNT = 156 // Салют burst 2
+const SALUT3_COUNT = 156 // Салют burst 3
 const ARROW_COUNT = 48   // Стрелка
+const SMOKE1_COUNT = 134
+const SMOKE2_COUNT = 135
+const SMOKE3_COUNT = 133
+const SMOKE4_COUNT = 136
 
 // Build frame URL arrays
 const frameUrls = Array.from({ length: FRAME_COUNT }, (_, i) =>
   `/assets/win-anim/frame/f${String(i).padStart(4, "0")}.png`
 )
-const salutUrls = Array.from({ length: SALUT_COUNT }, (_, i) =>
-  `/assets/win-anim/salut/s${String(i).padStart(4, "0")}.png`
+const salut1Urls = Array.from({ length: SALUT1_COUNT }, (_, i) =>
+  `/assets/win-anim/salut1/s${String(i).padStart(4, "0")}.png`
+)
+const salut2Urls = Array.from({ length: SALUT2_COUNT }, (_, i) =>
+  `/assets/win-anim/salut2/s${String(i).padStart(4, "0")}.png`
+)
+const salut3Urls = Array.from({ length: SALUT3_COUNT }, (_, i) =>
+  `/assets/win-anim/salut3/s${String(i).padStart(4, "0")}.png`
 )
 const arrowUrls = Array.from({ length: ARROW_COUNT }, (_, i) =>
   `/assets/win-anim/arrow/a${String(i).padStart(4, "0")}.png`
 )
+const smoke1Urls = Array.from({ length: SMOKE1_COUNT }, (_, i) =>
+  `/assets/win-anim/smoke1/sm${String(i).padStart(4, "0")}.png`
+)
+const smoke2Urls = Array.from({ length: SMOKE2_COUNT }, (_, i) =>
+  `/assets/win-anim/smoke2/sm${String(i).padStart(4, "0")}.png`
+)
+const smoke3Urls = Array.from({ length: SMOKE3_COUNT }, (_, i) =>
+  `/assets/win-anim/smoke3/sm${String(i).padStart(4, "0")}.png`
+)
+const smoke4Urls = Array.from({ length: SMOKE4_COUNT }, (_, i) =>
+  `/assets/win-anim/smoke4/sm${String(i).padStart(4, "0")}.png`
+)
 
 // Preload images once (browser-level cache)
-let preloaded = false
-function preloadFrames() {
+export let preloaded = false
+export function preloadWinAnimationFrames() {
   if (preloaded || typeof window === "undefined") return
   preloaded = true
-  const all = [...frameUrls, ...salutUrls, ...arrowUrls]
-  all.forEach((url) => {
-    const img = new window.Image()
-    img.src = url
-  })
+  const all = [...frameUrls, ...salut1Urls, ...salut2Urls, ...salut3Urls, ...arrowUrls, ...smoke1Urls, ...smoke2Urls, ...smoke3Urls, ...smoke4Urls]
+  
+  // Load in batches of 15 so we don't block the network completely for other assets
+  let i = 0
+  function loadNextBatch() {
+    const batch = all.slice(i, i + 15)
+    if (batch.length === 0) return
+    let loaded = 0
+    batch.forEach((url) => {
+      const img = new window.Image()
+      img.onload = img.onerror = () => {
+        loaded++
+        if (loaded === batch.length) {
+          i += 15
+          // Small delay before next batch to let browser breathe
+          setTimeout(loadNextBatch, 20)
+        }
+      }
+      img.src = url
+    })
+  }
+  
+  // Start preloading after a short delay (let initial page load finish)
+  setTimeout(loadNextBatch, 1000)
 }
 
 export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlayProps) {
   const [frameIdx, setFrameIdx] = useState(0)
-  const [salutIdx, setSalutIdx] = useState(0)
+  const [salut1Idx, setSalut1Idx] = useState(0)
+  const [salut2Idx, setSalut2Idx] = useState(0)
+  const [salut3Idx, setSalut3Idx] = useState(0)
   const [arrowIdx, setArrowIdx] = useState(0)
+  const [smoke1Idx, setSmoke1Idx] = useState(0)
+  const [smoke2Idx, setSmoke2Idx] = useState(0)
+  const [smoke3Idx, setSmoke3Idx] = useState(0)
+  const [smoke4Idx, setSmoke4Idx] = useState(0)
   const [visible, setVisible] = useState(false)
 
-  const frameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const salutTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const arrowTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timersRef = useRef<{ [key: string]: ReturnType<typeof setInterval> | null }>({})
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Preload all frames on mount
+  // Preload all frames on mount (as fallback if not triggered globally)
   useEffect(() => {
-    preloadFrames()
+    preloadWinAnimationFrames()
   }, [])
 
   const stop = useCallback(() => {
-    if (frameTimerRef.current) { clearInterval(frameTimerRef.current); frameTimerRef.current = null }
-    if (salutTimerRef.current) { clearInterval(salutTimerRef.current); salutTimerRef.current = null }
-    if (arrowTimerRef.current) { clearInterval(arrowTimerRef.current); arrowTimerRef.current = null }
+    Object.values(timersRef.current).forEach((t) => { if (t) clearInterval(t) })
+    timersRef.current = {}
     if (fadeOutTimerRef.current) { clearTimeout(fadeOutTimerRef.current); fadeOutTimerRef.current = null }
   }, [])
 
@@ -70,8 +116,14 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
       const t = window.setTimeout(() => {
         stop()
         setFrameIdx(0)
-        setSalutIdx(0)
+        setSalut1Idx(0)
+        setSalut2Idx(0)
+        setSalut3Idx(0)
         setArrowIdx(0)
+        setSmoke1Idx(0)
+        setSmoke2Idx(0)
+        setSmoke3Idx(0)
+        setSmoke4Idx(0)
       }, 500)
       fadeOutTimerRef.current = t as unknown as ReturnType<typeof setTimeout>
       return
@@ -80,43 +132,46 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
     // Reset and start
     stop()
     setFrameIdx(0)
-    setSalutIdx(0)
+    setSalut1Idx(0)
+    setSalut2Idx(0)
+    setSalut3Idx(0)
     setArrowIdx(0)
+    setSmoke1Idx(0)
+    setSmoke2Idx(0)
+    setSmoke3Idx(0)
+    setSmoke4Idx(0)
     setVisible(true)
 
-    // Animate Рамка (border frames) — plays once
-    let fi = 0
-    frameTimerRef.current = setInterval(() => {
-      fi++
-      if (fi >= FRAME_COUNT) {
-        clearInterval(frameTimerRef.current!)
-        frameTimerRef.current = null
-        return
-      }
-      setFrameIdx(fi)
-    }, FRAME_INTERVAL)
+    // Helper to run a sequence
+    const runSequence = (count: number, setter: (idx: number) => void, name: string, loop: boolean = false) => {
+      let i = 0
+      timersRef.current[name] = setInterval(() => {
+        i++
+        if (i >= count) {
+          if (loop) {
+            i = 0
+          } else {
+            clearInterval(timersRef.current[name]!)
+            timersRef.current[name] = null
+            return
+          }
+        }
+        setter(i)
+      }, FRAME_INTERVAL)
+    }
 
-    // Animate Салют (fireworks) — plays once, longest layer
-    let si = 0
-    salutTimerRef.current = setInterval(() => {
-      si++
-      if (si >= SALUT_COUNT) {
-        clearInterval(salutTimerRef.current!)
-        salutTimerRef.current = null
-        return
-      }
-      setSalutIdx(si)
-    }, FRAME_INTERVAL)
-
-    // Animate Стрелка (arrows) — loops while playing
-    let ai = 0
-    arrowTimerRef.current = setInterval(() => {
-      ai = (ai + 1) % ARROW_COUNT
-      setArrowIdx(ai)
-    }, FRAME_INTERVAL)
+    runSequence(FRAME_COUNT, setFrameIdx, 'frame')
+    runSequence(SALUT1_COUNT, setSalut1Idx, 'salut1')
+    runSequence(SALUT2_COUNT, setSalut2Idx, 'salut2')
+    runSequence(SALUT3_COUNT, setSalut3Idx, 'salut3')
+    runSequence(ARROW_COUNT, setArrowIdx, 'arrow', true) // loops
+    runSequence(SMOKE1_COUNT, setSmoke1Idx, 'smoke1')
+    runSequence(SMOKE2_COUNT, setSmoke2Idx, 'smoke2')
+    runSequence(SMOKE3_COUNT, setSmoke3Idx, 'smoke3')
+    runSequence(SMOKE4_COUNT, setSmoke4Idx, 'smoke4')
 
     // Total duration based on the longest layer (salut)
-    const totalDuration = SALUT_COUNT * FRAME_INTERVAL // ~4633ms
+    const totalDuration = Math.max(SALUT1_COUNT, SMOKE4_COUNT) * FRAME_INTERVAL
 
     fadeOutTimerRef.current = window.setTimeout(() => {
       setVisible(false)
@@ -132,7 +187,7 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
   }, [playing]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Don't render anything if we've never started
-  if (!visible && frameIdx === 0 && salutIdx === 0) return null
+  if (!visible && frameIdx === 0 && salut1Idx === 0 && smoke1Idx === 0) return null
 
   return (
     <div
@@ -142,8 +197,52 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
     >
       {/* Layer 0: Салют (fireworks) — fullscreen behind other layers */}
       <img
-        key={`s${salutIdx}`}
-        src={salutUrls[salutIdx]}
+        key={`s1-${salut1Idx}`}
+        src={salut1Urls[salut1Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+      <img
+        key={`s2-${salut2Idx}`}
+        src={salut2Urls[salut2Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+      <img
+        key={`s3-${salut3Idx}`}
+        src={salut3Urls[salut3Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+
+      {/* Layer 0.1: Дым */}
+      <img
+        key={`sm1-${smoke1Idx}`}
+        src={smoke1Urls[smoke1Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+      <img
+        key={`sm2-${smoke2Idx}`}
+        src={smoke2Urls[smoke2Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+      <img
+        key={`sm3-${smoke3Idx}`}
+        src={smoke3Urls[smoke3Idx]}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        draggable={false}
+      />
+      <img
+        key={`sm4-${smoke4Idx}`}
+        src={smoke4Urls[smoke4Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}

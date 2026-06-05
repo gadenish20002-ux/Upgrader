@@ -1,16 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SiteHeader } from "./site-header"
 import { SiteFooter } from "./site-footer"
 import { LiveFeed } from "./live-feed"
 import { UpgradeSection } from "./upgrade-section"
 import { SupportBubble } from "./support-bubble"
 import { useStore } from "@/lib/store"
+import { preloadWinAnimationFrames } from "./win-animation-overlay"
 
 export function HomeClient() {
   const { ready } = useStore()
   const [sidebarTargetId, setSidebarTargetId] = useState<string | null>(null)
+
+  useEffect(() => {
+    preloadWinAnimationFrames()
+  }, [])
 
   if (!ready) {
     return <div className="min-h-screen bg-transparent" />
