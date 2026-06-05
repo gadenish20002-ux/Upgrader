@@ -73,7 +73,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const isBothSelected = !!targetSkin && selectedItems.length > 0
 
   function toggleItem(uid: string) {
-    setSelectedUids((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]))
+    setSelectedUids((prev) => {
+      if (prev.includes(uid)) return prev.filter((u) => u !== uid)
+      if (prev.length >= 6) {
+        toast.error("Вы можете выбрать максимум 6 предметов")
+        return prev
+      }
+      return [...prev, uid]
+    })
     setWonItemUid(null)
   }
 

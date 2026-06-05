@@ -1,0 +1,22 @@
+--- app/layout.tsx
++++ app/layout.tsx
+@@ -1,4 +1,4 @@
+-import type { Metadata } from 'next'
++import type { Metadata, Viewport } from 'next'
+ import { Geist, Geist_Mono, Tektur, Exo_2 } from 'next/font/google'
+ import { Analytics } from '@vercel/analytics/next'
+ import { StoreProvider } from '@/lib/store'
+@@ -13,6 +13,13 @@
+ const tektur = Tektur({ subsets: ["latin", "cyrillic"], variable: "--font-tektur" });
+ const exo2 = Exo_2({ subsets: ["latin", "cyrillic"], variable: "--font-exo2" });
+ 
++export const viewport: Viewport = {
++  width: 'device-width',
++  initialScale: 1,
++  maximumScale: 5,
++  interactiveWidget: 'resizes-content',
++}
++
+ export const metadata: Metadata = {
+   title: 'UPGRADER — Апгрейд CS2 скинов',
+   description: 'Улучшайте свои CS2 предметы. Войдите через Steam и прокачивайте скины.',

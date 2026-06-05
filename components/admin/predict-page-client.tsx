@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { AdminGate } from "./admin-gate"
 import { ArrowLeft } from "lucide-react"
+import { SettingsModal } from "@/components/settings-modal"
 
 function PredictContent() {
   const { state } = useStore()
@@ -13,6 +14,7 @@ function PredictContent() {
   const [rotation, setRotation] = useState(0)
   const [dots, setDots] = useState(1)
   const [randomHint, setRandomHint] = useState<string>("")
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   useEffect(() => {
     if (phase === "analyzing") {
@@ -211,17 +213,14 @@ function PredictContent() {
                 <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
               </button>
             ))}
-            {state.fastPercentages.map((perc, idx) => (
-              <button key={`perc-${idx}`} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] btn-gradient-${idx + 1}`} disabled>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">{perc}%</span>
-              </button>
-            ))}
-            <button className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]" disabled>
+            <button onClick={() => setIsSettingsOpen(true)} className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]">
               <img alt="settings" className="h-3.5 w-3.5 skew-x-6 transform lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" />
             </button>
           </div>
         </div>
       </main>
+      
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   )
 }

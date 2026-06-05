@@ -1,0 +1,59 @@
+import type { TagsObjectForApi, TagsObjectWithBoolean } from 'src/page/tags/types';
+import type { ContextInterface } from 'src/shared/context/types';
+import {
+  convertTagsBooleansToApi,
+  getObjectDifference,
+  isTagObjectEmpty,
+} from 'src/shared/utils/tags';
+
+import Log from '../../../shared/libraries/Log';
+import type { ITagManager } from './types';
+
+/**
+ * Manages tags for the TaggingContainer
+ */
+export default class TagManager implements ITagManager {
+  // local tags from tagging container
+  private _tagsFromTaggingContainer: TagsObjectWithBoolean = {};
+  private _context: ContextInterface;
+  public _remoteTags: TagsObjectForApi = {};
+
+  constructor(context: ContextInterface) {
+    this._context = context;
+  }
+
+  /**
+   * @returns Promise resolving TagsObject if successful, {} if no change detected, null if failed
+   */
+  public _sendTags(): TagsObjectForApi {
+    Log._info('Local tags:', this._tagsFromTaggingContainer);
+
+    const localTagsConvertedToApi = convertTagsBooleansToApi(this._tagsFromTaggingContainer);
+    const finalTagsObject = getObjectDifference(localTagsConvertedToApi, this._remoteTags);
+
+    const shouldSendUpdate = !isTagObjectEmpty(finalTagsObject);
+    if (shouldSendUpdate) {
+      OneSignal.User.addTags(finalTagsObject);
+      return finalTagsObject;
+    }
+    Log._warn('No tag change detected');
+    // no change detected, return {}
+    return finalTagsObject;
+  }
+
+  /**
+   * @param  {TagsObject} tags - values of type "boolean"
+   * @returns void
+   */
+  _storeTagValuesToUpdate(tags: TagsObjectWithBoolean): void {
+    this._tagsFromTaggingContainer = tags;
+  }
+
+  /**
+   * @param  {TagsObject} remoteTags - values of type "number"
+   * @returns void
+   */
+  _storeRemotePlayerTags(remoteTags: TagsObjectForApi): void {
+    this._context._tagManager._remoteTags = remoteTags;
+  }
+}

@@ -1,0 +1,129 @@
+--- components/live-feed.tsx
++++ components/live-feed.tsx
+@@ -151,33 +151,39 @@
+ }) {
+   return (
+     <div
+-      className={`shrink-0 ${horizontal ? "h-[5rem] w-[11.75rem] snap-start pr-1" : "w-full"} ${isEntering && !horizontal ? "feed-enter" : ""}`}
++      className={`shrink-0 ${horizontal ? "h-[4rem] w-[8rem] snap-start pr-1" : "w-full"} ${isEntering && !horizontal ? "feed-enter" : ""}`}
+     >
+-      <button className="group bg-card relative flex h-[5rem] w-full items-end overflow-hidden rounded-r-lg p-2">
+-        <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
+-          <div className="absolute -top-1 -left-1.5 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
+-            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+-            <span className="font-exo text-xxxs font-normal text-white">
+-              {(Math.random() * 100).toFixed(2)}%
+-            </span>
+-          </div>
+-          
+-          <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
+-            <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">
+-              {skin.name}
+-            </span>
+-            <span className="text-gray-400 font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold">
+-              {skin.weapon}
+-            </span>
+-          </div>
+-          
+-          <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+-            <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+-            <span className="font-exo text-xxs max-w-[11rem] truncate font-normal text-white">
+-              Player
+-            </span>
+-          </div>
+-        </div>
++      <button className={`group bg-card relative flex h-full w-full items-end overflow-hidden ${horizontal ? "rounded-lg" : "rounded-r-lg p-2"}`}>
++        {horizontal ? (
++          <div className="pointer-events-none absolute inset-0 z-[4] flex items-end justify-between p-1 select-none">
++            <img className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
++            <div className="flex items-center space-x-0.5 rounded bg-black/60 px-1 py-[0.125rem]">
++              <img alt="up-arrow-up" className="h-[0.4rem] w-[0.4rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
++              <span className="font-exo text-[0.4rem] font-bold text-white leading-none">{(Math.random() * 100).toFixed(2)}%</span>
++            </div>
++          </div>
++        ) : (
++          <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
++            <div className="absolute -top-1 -left-1.5 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
++              <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
++              <span className="font-exo text-xxxs font-normal text-white">
++                {(Math.random() * 100).toFixed(2)}%
++              </span>
++            </div>
++            <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
++              <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">{skin.name}</span>
++              <span className="text-gray-400 font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold">{skin.weapon}</span>
++            </div>
++            <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
++              <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
++              <span className="font-exo text-xxs max-w-[11rem] truncate font-normal text-white">Player</span>
++            </div>
++          </div>
++        )}
+         
+-        <img alt="drop-item" className="absolute top-1/2 right-0 z-[2] h-full max-h-[5.6875rem] w-full max-w-[5.8125rem] -translate-y-1/2 object-contain" src={skin.img} />
++        <img alt="drop-item" className={`absolute top-1/2 z-[2] h-full object-contain -translate-y-1/2 ${horizontal ? "left-1/2 -translate-x-1/2 max-w-[80%] max-h-[80%]" : "right-0 max-h-[5.6875rem] w-full max-w-[5.8125rem]"}`} src={skin.img} />
+         
+         <div className="absolute top-0 left-0 h-full w-0.5" style={{ background: skin.rarity }}></div>
+         <div className="absolute top-0 left-0 h-full w-full" style={{ background: `linear-gradient(270deg, rgba(35, 35, 37, 0.2) 25.06%, ${skin.rarity}4d 100%)` }}></div>
+@@ -192,23 +198,29 @@
+ function BestDropCard({ horizontal = false }: { horizontal?: boolean }) {
+   return (
+-    <div className={`shrink-0 z-10 relative ${horizontal ? "h-[5rem] w-[11.75rem] snap-start pr-1 pl-0" : "w-full"}`}>
+-      <button className="group bg-card relative flex h-[5rem] w-full items-end overflow-hidden rounded-lg p-2">
+-        <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
+-          <div className="absolute -top-1 -left-2 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
+-            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+-            <span className="font-exo text-xxxs font-normal text-white">79.07%</span>
+-          </div>
+-          
+-          <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
+-            <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">Slaughter</span>
+-            <span className="font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold text-[#FFFFFF80]">★ StatTrak™ Butterfly Knife</span>
+-          </div>
+-          
+-          <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+-            <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
+-            <span className="font-tektur text-xxs max-w-[11rem] truncate font-bold text-white uppercase">Player</span>
+-          </div>
+-        </div>
++    <div className={`shrink-0 z-10 relative ${horizontal ? "h-[4rem] w-[8.5rem] snap-start pr-1 pl-0" : "w-full"}`}>
++      <button className={`group bg-card relative flex h-full w-full items-end overflow-hidden rounded-lg ${horizontal ? "" : "p-2"}`}>
++        {horizontal ? (
++          <div className="pointer-events-none absolute inset-0 z-[4] flex items-end justify-between p-1 select-none border border-[#f0c000] rounded-lg">
++            <img className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
++            <div className="flex items-center space-x-0.5 rounded bg-black/60 px-1 py-[0.125rem]">
++              <img alt="up-arrow-up" className="h-[0.4rem] w-[0.4rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
++              <span className="font-exo text-[0.4rem] font-bold text-[#f0c000] leading-none">57.02%</span>
++            </div>
++          </div>
++        ) : (
++          <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
++            <div className="absolute -top-1 -left-2 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
++              <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
++              <span className="font-exo text-xxxs font-normal text-white">79.07%</span>
++            </div>
++            <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
++              <span className="font-tektur text-xxs max-w-[4.875rem] truncate font-bold uppercase text-white">Slaughter</span>
++              <span className="font-exo text-xxxs max-w-[5.8125rem] truncate font-semibold text-[#FFFFFF80]">★ StatTrak™ Butterfly Knife</span>
++            </div>
++            <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
++              <img className="h-6 w-6 cursor-pointer rounded-full object-cover" src="/assets/images/game/unknown-item-2.svg" alt="Аватар пользователя" />
++              <span className="font-tektur text-xxs max-w-[11rem] truncate font-bold text-white uppercase">Player</span>
++            </div>
++          </div>
++        )}
+         
+-        <div className="absolute top-2 right-2 z-[3] flex translate-y-[-50%] items-center justify-center space-x-0.5 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
+-          <span className="text-[0.625rem] leading-none font-semibold text-white">128099.22</span>
+-          <img alt="" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+-        </div>
++        {!horizontal && (
++          <div className="absolute top-2 right-2 z-[3] flex translate-y-[-50%] items-center justify-center space-x-0.5 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
++            <span className="text-[0.625rem] leading-none font-semibold text-white">128099.22</span>
++            <img alt="" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
++          </div>
++        )}
+         
+-        <img alt="drop-item" className="absolute top-1/2 right-0 z-[2] h-full max-h-[5.6875rem] w-full max-w-[5.8125rem] -translate-y-1/2 object-contain" src="/assets/images/game/butterfly.avif" />
++        <img alt="drop-item" className={`absolute top-1/2 z-[2] h-full object-contain -translate-y-1/2 ${horizontal ? "left-1/2 -translate-x-1/2 max-w-[80%] max-h-[80%]" : "right-0 max-h-[5.6875rem] w-full max-w-[5.8125rem]"}`} src="/assets/images/game/butterfly.avif" />
+         
