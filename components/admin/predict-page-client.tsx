@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { AdminGate } from "./admin-gate"
-import { ArrowLeft } from "lucide-react"
-import { SettingsModal } from "@/components/settings-modal"
 
 function PredictContent() {
   const { state } = useStore()
@@ -14,7 +12,6 @@ function PredictContent() {
   const [rotation, setRotation] = useState(0)
   const [dots, setDots] = useState(1)
   const [randomHint, setRandomHint] = useState<string>("")
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   useEffect(() => {
     if (phase === "analyzing") {
@@ -34,19 +31,14 @@ function PredictContent() {
     }
   }, [phase])
 
-  useEffect(() => {
-    if (phase === "result") {
-      const timer = setTimeout(() => {
-        setPhase("idle")
-        setRotation(0)
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [phase])
-
   const handleClick = () => {
     if (phase === "idle" || phase === "result") {
       setPhase("analyzing")
+      
+      if (state.soundMode === "on") {
+        const audio = new Audio("/sounds/longSpin.mp3")
+        audio.play().catch(() => {})
+      }
       
       // Generate random hint based on fastMultipliers range
       const minMult = Math.min(...state.fastMultipliers)
@@ -81,37 +73,25 @@ function PredictContent() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0f1013" }}>
       {/* Header */}
       <header
-        className="sticky top-0 z-40 flex h-14 items-center justify-between px-5 shrink-0"
+        className="sticky top-0 z-40 flex h-14 items-center justify-center px-5 shrink-0"
         style={{ background: "#17181c", borderBottom: "1px solid #232325" }}
       >
         <div className="flex items-center gap-3">
           <img src="/assets/images/header/logo.svg" alt="Logo" className="h-7 w-7" />
           <span className="font-tektur font-extrabold tracking-wide text-white">UPGRADER</span>
           <span
-            className="font-tektur rounded px-2 py-0.5 text-xs font-bold"
+            className="font-tektur rounded px-3 py-1 text-sm font-bold"
             style={{ background: "#f0c000", color: "#111" }}
           >
-            PREDICT
+            AI PREDICT
           </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a
-            href="/admin"
-            className="flex items-center gap-1.5 text-sm transition-colors"
-            style={{ color: "#a7a7a7" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#f0c000")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#a7a7a7")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Админка
-          </a>
         </div>
       </header>
 
       {/* Main Area: Centered Wheel */}
       <main className="flex-1 flex flex-col items-center justify-center relative w-full overflow-hidden">
         <div 
-          className="relative flex items-center justify-center cursor-pointer transform scale-[1.3] lg:scale-[1.8] transition-transform" 
+          className="relative flex items-center justify-center cursor-pointer transform scale-[1.6] lg:scale-[1.8] transition-transform" 
           onClick={handleClick}
         >
           <div className="relative flex h-[13.75rem] w-[13.75rem] items-center justify-center lg:h-[21.75rem] lg:w-[21.75rem]">
@@ -156,7 +136,7 @@ function PredictContent() {
             {/* Слой 4: Внутренние элементы и указатель */}
             <div className="absolute top-[0.45rem] left-[0.45rem] h-[12.8125rem] w-[12.8125rem] rounded-full border-[3px] border-[#101012] lg:top-[0.875rem] lg:left-[0.875rem] lg:h-80 lg:w-80 lg:border-4 z-[4]"></div>
             
-            <div className="absolute top-1/2 left-1/2 z-[4] h-0 w-0" style={{ transform: `translate(-50%, -50%) rotate(${rotation + 180}deg)`, transformOrigin: "center center", transition: phase === "analyzing" ? `transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)` : "none" }}>
+            <div className="absolute top-1/2 left-1/2 z-[5] h-0 w-0" style={{ transform: `translate(-50%, -50%) rotate(${rotation + 180}deg)`, transformOrigin: "center center", transition: phase === "analyzing" ? `transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)` : "none" }}>
               <img alt="" className="absolute top-[-6.6875rem] left-[-1.0625rem] h-[2.125rem] w-[2.125rem] max-w-none lg:top-[-10.125rem] lg:left-[-1.46875rem] lg:h-[2.9375rem] lg:w-[2.9375rem]" src="/assets/images/game/pointer.png" />
             </div>
 
@@ -172,11 +152,11 @@ function PredictContent() {
                   
                   {phase === "analyzing" && (
                     <div className="flex items-center justify-center w-full">
-                      <span className="font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] transition-all duration-300"> 
+                      <span className="relative font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] transition-all duration-300"> 
                         анализ
-                      </span>
-                      <span className="font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] text-left inline-block w-[1.5em]">
-                        {dotsString}
+                        <span className="absolute left-full font-sans font-medium lg:text-[1.35rem] text-[0.85rem] text-[#a4e57e] text-left inline-block whitespace-nowrap tracking-widest">
+                          {dotsString}
+                        </span>
                       </span>
                     </div>
                   )}
@@ -204,23 +184,7 @@ function PredictContent() {
             <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
           </div>
         </div>
-
-        {/* Планка с кнопками, как на главной */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 lg:max-w-xl">
-          <div className="flex h-full w-full items-center justify-center space-x-1">
-            {state.fastMultipliers.map((mult, idx) => (
-              <button key={`mult-${idx}`} className="bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border border-white/10 transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem]" disabled>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
-              </button>
-            ))}
-            <button onClick={() => setIsSettingsOpen(true)} className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]">
-              <img alt="settings" className="h-3.5 w-3.5 skew-x-6 transform lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" />
-            </button>
-          </div>
-        </div>
       </main>
-      
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   )
 }
