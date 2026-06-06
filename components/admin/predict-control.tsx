@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store"
 import type { PredictOutcome, PredictHint } from "@/lib/types"
-import { Target, Check, X, Shuffle, ExternalLink } from "lucide-react"
+import { Target, Check, X, Shuffle, ExternalLink, ListOrdered, Eye, EyeOff } from "lucide-react"
 
 const HINT_OPTIONS: { value: PredictHint; label: string }[] = [
   { value: "x2",  label: "×2" },
@@ -28,10 +28,15 @@ export function PredictControl() {
     { value: "off",  label: "Авто (честно)",        desc: "Результат по реальному шансу",    icon: Shuffle, tone: "border-border" },
     { value: "win",  label: "Всегда победа",         desc: "Следующий апгрейд выигрывает",   icon: Check,   tone: "border-green-500/60" },
     { value: "lose", label: "Всегда поражение",      desc: "Следующий апгрейд проигрывает",  icon: X,       tone: "border-destructive/60" },
+    { value: "win_after_losses", label: "Победа после N", desc: "Победа после N поражений", icon: ListOrdered, tone: "border-blue-500/60" },
   ]
 
   const outcome = state.predict.outcome
   const hint = state.predict.hint
+  const targetLosses = state.predict.targetLosses || 3
+  const currentLosses = state.predict.currentLosses || 0
+  const showPercentages = state.predict.showPercentages ?? true
+  const showMultipliers = state.predict.showMultipliers ?? true
 
   return (
     <section className="rounded-xl border border-border bg-card p-5">
@@ -75,6 +80,52 @@ export function PredictControl() {
         })}
       </div>
 
+      {outcome === "win_after_losses" && (
+        <div className="mt-4 flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-muted-foreground">Поражений до победы</label>
+            <input 
+              type="number" 
+              min={1} 
+              className="h-9 w-24 rounded-md border border-border bg-background px-3 text-sm"
+              value={targetLosses}
+              onChange={(e) => setState((p) => ({ ...p, predict: { ...p.predict, targetLosses: parseInt(e.target.value) || 1 } }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-muted-foreground">Счетчик поражений</label>
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 items-center justify-center rounded-md border border-border bg-secondary/50 px-3 text-sm font-bold text-primary">
+                {currentLosses} / {targetLosses}
+              </span>
+              <button 
+                onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: 0 } }))}
+                className="text-xs text-muted-foreground underline hover:text-foreground"
+              >
+                Сброс
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex gap-4">
+        <button
+          onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, showPercentages: !showPercentages } }))}
+          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showPercentages ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
+        >
+          {showPercentages ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          Отображение %
+        </button>
+        <button
+          onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, showMultipliers: !showMultipliers } }))}
+          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showMultipliers ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
+        >
+          {showMultipliers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          Отображение x
+        </button>
+      </div>
+
       {/* Hint selector — shown only when win/lose */}
       {outcome !== "off" && (
         <div className="mt-4">
@@ -109,7 +160,9 @@ export function PredictControl() {
             ? "Честный (по шансу)"
             : outcome === "win"
               ? `Победа · подсказка: ${hint}`
-              : `Поражение · подсказка: ${hint}`}
+              : outcome === "win_after_losses"
+                ? `Победа после ${targetLosses} поражений (сейчас ${currentLosses})`
+                : `Поражение · подсказка: ${hint}`}
         </span>
       </div>
     </section>

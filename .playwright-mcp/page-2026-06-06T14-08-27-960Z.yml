@@ -1,0 +1,495 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - link "Logo" [ref=e16] [cursor=pointer]:
+            - /url: /
+            - img "Logo" [ref=e17]
+          - generic [ref=e18]:
+            - generic [ref=e20]:
+              - img "Online" [ref=e21]
+              - generic [ref=e22]:
+                - generic [ref=e23]: Онлайн
+                - generic [ref=e24]: 2 122
+            - generic [ref=e26]:
+              - img "Upgrades" [ref=e27]
+              - generic [ref=e28]:
+                - generic [ref=e29]: Апгрейдов
+                - generic [ref=e30]: 132 875 076
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - button "1 500" [ref=e34]:
+              - generic [ref=e35]: 1 500
+            - button "top-up-mobile-icon" [ref=e36]:
+              - img "top-up-mobile-icon" [ref=e38]
+          - button [ref=e40]
+          - button "Открыть профиль" [ref=e42] [cursor=pointer]:
+            - img "Аватар пользователя" [ref=e43]
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: Лучший дроп
+        - generic [ref=e48]:
+          - button "Аватар пользователя up-arrow-up 25.07% drop-item" [ref=e51]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 25.07%
+            - img "drop-item" [ref=e52]
+            - img [ref=e53]
+          - button "Аватар пользователя up-arrow-up 53.68% drop-item" [ref=e646]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.68%
+            - img "drop-item" [ref=e647]
+          - button "Аватар пользователя up-arrow-up 36.67% drop-item" [ref=e648]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.67%
+            - img "drop-item" [ref=e649]
+          - button "Аватар пользователя up-arrow-up 78.20% drop-item" [ref=e650]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.20%
+            - img "drop-item" [ref=e651]
+          - button "Аватар пользователя up-arrow-up 53.82% drop-item" [ref=e652]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.82%
+            - img "drop-item" [ref=e653]
+          - button "Аватар пользователя up-arrow-up 78.92% drop-item" [ref=e654]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.92%
+            - img "drop-item" [ref=e655]
+          - button "Аватар пользователя up-arrow-up 57.33% drop-item" [ref=e656]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 57.33%
+            - img "drop-item" [ref=e657]
+          - button "Аватар пользователя up-arrow-up 74.99% drop-item" [ref=e322]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 74.99%
+            - img "drop-item" [ref=e323]
+          - button "Аватар пользователя up-arrow-up 8.15% drop-item" [ref=e324]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 8.15%
+            - img "drop-item" [ref=e325]
+          - button "Аватар пользователя up-arrow-up 36.22% drop-item" [ref=e326]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.22%
+            - img "drop-item" [ref=e327]
+          - button "Аватар пользователя up-arrow-up 21.50% drop-item" [ref=e328]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 21.50%
+            - img "drop-item" [ref=e329]
+          - button "Аватар пользователя up-arrow-up 28.45% drop-item" [ref=e330]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 28.45%
+            - img "drop-item" [ref=e331]
+          - button "Аватар пользователя up-arrow-up 54.53% drop-item" [ref=e332]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 54.53%
+            - img "drop-item" [ref=e333]
+          - button "Аватар пользователя up-arrow-up 35.01% drop-item" [ref=e334]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.01%
+            - img "drop-item" [ref=e335]
+          - button "Аватар пользователя up-arrow-up 78.77% drop-item" [ref=e336]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.77%
+            - img "drop-item" [ref=e337]
+          - button "Аватар пользователя up-arrow-up 37.00% drop-item" [ref=e338]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 37.00%
+            - img "drop-item" [ref=e339]
+          - button "Аватар пользователя up-arrow-up 13.47% drop-item" [ref=e340]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 13.47%
+            - img "drop-item" [ref=e341]
+          - button "Аватар пользователя up-arrow-up 36.69% drop-item" [ref=e342]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.69%
+            - img "drop-item" [ref=e343]
+          - button "Аватар пользователя up-arrow-up 36.98% drop-item" [ref=e344]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.98%
+            - img "drop-item" [ref=e345]
+          - button "Аватар пользователя up-arrow-up 14.24% drop-item" [ref=e346]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 14.24%
+            - img "drop-item" [ref=e347]
+          - button "Аватар пользователя up-arrow-up 35.55% drop-item" [ref=e56]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.55%
+            - img "drop-item" [ref=e57]
+      - generic [ref=e96]:
+        - main [ref=e97]:
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - img [ref=e101]
+                - generic [ref=e104]: UPGRADER
+              - generic [ref=e105]:
+                - generic [ref=e106]:
+                  - button "Информация" [ref=e107]
+                  - button "Настройки" [ref=e108]
+                  - button "Звук" [ref=e109]:
+                    - img [ref=e110]
+                  - button "Быстрый режим" [ref=e112]:
+                    - img [ref=e113]
+                - generic [ref=e119]:
+                  - img [ref=e123]
+                  - img [ref=e126]
+                  - generic [ref=e131]:
+                    - generic [ref=e132]: 50.00%
+                    - generic [ref=e133]: средний шанс
+                  - generic [ref=e134]: 100%
+                  - generic [ref=e135]: 50%
+                  - generic [ref=e136]: 50%
+                  - generic [ref=e137]: 0%
+                - generic [ref=e139]:
+                  - button "Close" [ref=e348] [cursor=pointer]:
+                    - img "Close" [ref=e349]
+                  - generic [ref=e350]:
+                    - generic [ref=e351]:
+                      - generic [ref=e352]: Desert Eagle
+                      - generic [ref=e353]: Crimson Web
+                    - img "CRIMSON WEB" [ref=e355]
+                  - generic [ref=e356]:
+                    - generic [ref=e357]: 14 500,00
+                    - img "coin" [ref=e358]
+                - generic [ref=e146]:
+                  - generic [ref=e147]:
+                    - generic [ref=e148]: "Сумма баланса:"
+                    - generic [ref=e149]:
+                      - generic [ref=e151]: 0,00
+                      - generic [ref=e152]: (max 1 500,00)
+                  - slider [ref=e153]: "0"
+                - generic [ref=e155]:
+                  - heading "Выберите предмет для апгрейда" [level=3] [ref=e157]
+                  - img "Unknown item" [ref=e159]
+                - generic [ref=e161]:
+                  - button "x2" [ref=e162] [cursor=pointer]:
+                    - generic [ref=e163]: x2
+                  - button "x4" [ref=e164] [cursor=pointer]:
+                    - generic [ref=e165]: x4
+                  - button "x8" [ref=e166] [cursor=pointer]:
+                    - generic [ref=e167]: x8
+                  - button "35%" [ref=e168] [cursor=pointer]:
+                    - generic [ref=e169]: 35%
+                  - button "55%" [ref=e170] [cursor=pointer]:
+                    - generic [ref=e171]: 55%
+                  - button "75%" [ref=e172] [cursor=pointer]:
+                    - generic [ref=e173]: 75%
+                  - button "settings" [ref=e174] [cursor=pointer]:
+                    - img "settings" [ref=e175]
+                - button "Прокачать" [ref=e177]:
+                  - generic: Прокачать
+            - generic [ref=e178]:
+              - generic [ref=e180]:
+                - button "Мои предметы" [ref=e181]
+                - button "Желаемые предметы" [ref=e182]
+              - generic [ref=e360]:
+                - generic [ref=e363]:
+                  - generic [ref=e365]:
+                    - generic [ref=e366]: Выберите скин
+                    - img [ref=e367]
+                  - generic [ref=e370]:
+                    - button "Сортировка по возрастанию Сортировка по убыванию" [ref=e371] [cursor=pointer]:
+                      - img "Сортировка по возрастанию" [ref=e372]
+                      - img "Сортировка по убыванию" [ref=e373]
+                    - generic [ref=e374]:
+                      - generic [ref=e375]:
+                        - generic [ref=e377]: Цена
+                        - textbox "от" [ref=e379]
+                        - textbox "до" [ref=e381]
+                      - textbox "Поиск..." [ref=e382]
+                      - button "Поиск" [ref=e383] [cursor=pointer]:
+                        - img "Поиск" [ref=e384]
+                - generic [ref=e385]:
+                  - generic [ref=e386]:
+                    - button "НОВЫЕ СКИНЫ уже здесь" [ref=e387] [cursor=pointer]:
+                      - generic [ref=e389]:
+                        - generic [ref=e390]: НОВЫЕ СКИНЫ
+                        - generic [ref=e391]: уже здесь
+                    - button "18 700,00 FN NEON RIDER M4A1-S Neon Rider" [ref=e394]:
+                      - generic [ref=e395]:
+                        - generic [ref=e396]:
+                          - generic [ref=e398]: 18 700,00
+                          - generic [ref=e399]: FN
+                        - img "NEON RIDER" [ref=e400]
+                        - generic [ref=e401]:
+                          - generic [ref=e402]: M4A1-S
+                          - generic [ref=e403]: Neon Rider
+                    - button "14 500,00 MW CRIMSON WEB Desert Eagle Crimson Web" [ref=e407]:
+                      - generic [ref=e408]:
+                        - generic [ref=e409]:
+                          - generic [ref=e411]: 14 500,00
+                          - generic [ref=e412]: MW
+                        - img "CRIMSON WEB" [ref=e413]
+                        - generic [ref=e414]:
+                          - generic [ref=e415]: Desert Eagle
+                          - generic [ref=e416]: Crimson Web
+                    - button "12 400,00 FN VULCAN AK-47 Vulcan" [ref=e420]:
+                      - generic [ref=e421]:
+                        - generic [ref=e422]:
+                          - generic [ref=e424]: 12 400,00
+                          - generic [ref=e425]: FN
+                        - img "VULCAN" [ref=e426]
+                        - generic [ref=e427]:
+                          - generic [ref=e428]: AK-47
+                          - generic [ref=e429]: Vulcan
+                    - button "7 800,00 FN PHOENIX BLACKLIGHT Desert Eagle Phoenix Blacklight" [ref=e433]:
+                      - generic [ref=e434]:
+                        - generic [ref=e435]:
+                          - generic [ref=e437]: 7 800,00
+                          - generic [ref=e438]: FN
+                        - img "PHOENIX BLACKLIGHT" [ref=e439]
+                        - generic [ref=e440]:
+                          - generic [ref=e441]: Desert Eagle
+                          - generic [ref=e442]: Phoenix Blacklight
+                    - button "6 300,00 MW FLASHBACK AWP Flashback" [ref=e446]:
+                      - generic [ref=e447]:
+                        - generic [ref=e448]:
+                          - generic [ref=e450]: 6 300,00
+                          - generic [ref=e451]: MW
+                        - img "FLASHBACK" [ref=e452]
+                        - generic [ref=e453]:
+                          - generic [ref=e454]: AWP
+                          - generic [ref=e455]: Flashback
+                    - button "5 400,00 FN VOGUE Glock-18 Vogue" [ref=e459]:
+                      - generic [ref=e460]:
+                        - generic [ref=e461]:
+                          - generic [ref=e463]: 5 400,00
+                          - generic [ref=e464]: FN
+                        - img "VOGUE" [ref=e465]
+                        - generic [ref=e466]:
+                          - generic [ref=e467]: Glock-18
+                          - generic [ref=e468]: Vogue
+                    - button "3 200,00 FN COLD FUSION Souvenir Galil Ar Cold Fusion" [ref=e472]:
+                      - generic [ref=e473]:
+                        - generic [ref=e474]:
+                          - generic [ref=e476]: 3 200,00
+                          - generic [ref=e477]: FN
+                        - img "COLD FUSION" [ref=e478]
+                        - generic [ref=e479]:
+                          - generic [ref=e480]: Souvenir Galil Ar
+                          - generic [ref=e481]: Cold Fusion
+                    - button "2 850,00 FN TRIUMVIRATE Five-Seven Triumvirate" [ref=e485]:
+                      - generic [ref=e486]:
+                        - generic [ref=e487]:
+                          - generic [ref=e489]: 2 850,00
+                          - generic [ref=e490]: FN
+                        - img "TRIUMVIRATE" [ref=e491]
+                        - generic [ref=e492]:
+                          - generic [ref=e493]: Five-Seven
+                          - generic [ref=e494]: Triumvirate
+                    - button "2 100,00 MW WASTELAND REBEL M4A1-S Wasteland Rebel" [ref=e498]:
+                      - generic [ref=e499]:
+                        - generic [ref=e500]:
+                          - generic [ref=e502]: 2 100,00
+                          - generic [ref=e503]: MW
+                        - img "WASTELAND REBEL" [ref=e504]
+                        - generic [ref=e505]:
+                          - generic [ref=e506]: M4A1-S
+                          - generic [ref=e507]: Wasteland Rebel
+                    - button "1 800,00 FN HIEROGLYPH XM1014 Hieroglyph" [ref=e511]:
+                      - generic [ref=e512]:
+                        - generic [ref=e513]:
+                          - generic [ref=e515]: 1 800,00
+                          - generic [ref=e516]: FN
+                        - img "HIEROGLYPH" [ref=e517]
+                        - generic [ref=e518]:
+                          - generic [ref=e519]: XM1014
+                          - generic [ref=e520]: Hieroglyph
+                    - button "1 200,00 FN NIGHTMODE Music Kit Nightmode" [ref=e524]:
+                      - generic [ref=e525]:
+                        - generic [ref=e526]:
+                          - generic [ref=e528]: 1 200,00
+                          - generic [ref=e529]: FN
+                        - img "NIGHTMODE" [ref=e530]
+                        - generic [ref=e531]:
+                          - generic [ref=e532]: Music Kit
+                          - generic [ref=e533]: Nightmode
+                    - button "1 100,00 FN AXIA Glock-18 Axia" [ref=e537]:
+                      - generic [ref=e538]:
+                        - generic [ref=e539]:
+                          - generic [ref=e541]: 1 100,00
+                          - generic [ref=e542]: FN
+                        - img "AXIA" [ref=e543]
+                        - generic [ref=e544]:
+                          - generic [ref=e545]: Glock-18
+                          - generic [ref=e546]: Axia
+                    - button "950,00 MW NAVY MURANO AUG Navy Murano" [ref=e550]:
+                      - generic [ref=e551]:
+                        - generic [ref=e552]:
+                          - generic [ref=e554]: 950,00
+                          - generic [ref=e555]: MW
+                        - img "NAVY MURANO" [ref=e556]
+                        - generic [ref=e557]:
+                          - generic [ref=e558]: AUG
+                          - generic [ref=e559]: Navy Murano
+                    - button "890,00 MW LUSH RUINS SG 553 Lush Ruins" [ref=e563]:
+                      - generic [ref=e564]:
+                        - generic [ref=e565]:
+                          - generic [ref=e567]: 890,00
+                          - generic [ref=e568]: MW
+                        - img "LUSH RUINS" [ref=e569]
+                        - generic [ref=e570]:
+                          - generic [ref=e571]: SG 553
+                          - generic [ref=e572]: Lush Ruins
+                    - button "720,00 FN SERGEANT StatTrak™ Famas Sergeant" [ref=e576]:
+                      - generic [ref=e577]:
+                        - generic [ref=e578]:
+                          - generic [ref=e580]: 720,00
+                          - generic [ref=e581]: FN
+                        - img "SERGEANT" [ref=e582]
+                        - generic [ref=e583]:
+                          - generic [ref=e584]: StatTrak™ Famas
+                          - generic [ref=e585]: Sergeant
+                    - button "650,00 FN POLYSOUP M4A4 Polysoup" [ref=e589]:
+                      - generic [ref=e590]:
+                        - generic [ref=e591]:
+                          - generic [ref=e593]: 650,00
+                          - generic [ref=e594]: FN
+                        - img "POLYSOUP" [ref=e595]
+                        - generic [ref=e596]:
+                          - generic [ref=e597]: M4A4
+                          - generic [ref=e598]: Polysoup
+                    - button "430,00 FN AERIAL SG 553 Aerial" [ref=e602]:
+                      - generic [ref=e603]:
+                        - generic [ref=e604]:
+                          - generic [ref=e606]: 430,00
+                          - generic [ref=e607]: FN
+                        - img "AERIAL" [ref=e608]
+                        - generic [ref=e609]:
+                          - generic [ref=e610]: SG 553
+                          - generic [ref=e611]: Aerial
+                    - button "380,00 FT MIDNIGHT PALM CZ75-AUTO Midnight Palm" [ref=e615]:
+                      - generic [ref=e616]:
+                        - generic [ref=e617]:
+                          - generic [ref=e619]: 380,00
+                          - generic [ref=e620]: FT
+                        - img "MIDNIGHT PALM" [ref=e621]
+                        - generic [ref=e622]:
+                          - generic [ref=e623]: CZ75-AUTO
+                          - generic [ref=e624]: Midnight Palm
+                    - button "310,00 FT FOREST DDPAT AK-47 Forest Ddpat" [ref=e628]:
+                      - generic [ref=e629]:
+                        - generic [ref=e630]:
+                          - generic [ref=e632]: 310,00
+                          - generic [ref=e633]: FT
+                        - img "FOREST DDPAT" [ref=e634]
+                        - generic [ref=e635]:
+                          - generic [ref=e636]: AK-47
+                          - generic [ref=e637]: Forest Ddpat
+                  - generic [ref=e639]:
+                    - button [disabled] [ref=e640]:
+                      - img [ref=e641]
+                    - button [ref=e643]:
+                      - img [ref=e644]
+        - contentinfo [ref=e280]:
+          - generic [ref=e281]:
+            - link "Logo UPGRADER" [ref=e282] [cursor=pointer]:
+              - /url: /
+              - img "Logo" [ref=e283]
+              - generic [ref=e284]: UPGRADER
+            - generic [ref=e286]:
+              - link "telegram" [ref=e287] [cursor=pointer]:
+                - /url: https://t.me/upgraderCS
+                - img "telegram" [ref=e288]
+              - link "vk" [ref=e289] [cursor=pointer]:
+                - /url: https://vk.com/upgraderCS2
+                - img "vk" [ref=e290]
+          - generic [ref=e291]:
+            - generic [ref=e292]:
+              - generic [ref=e293]:
+                - generic [ref=e294]:
+                  - paragraph [ref=e295]: Поддержка
+                  - link "support@upgrader.pro" [ref=e296] [cursor=pointer]:
+                    - /url: mailto:support@upgrader.pro
+                - generic [ref=e297]:
+                  - paragraph [ref=e298]: Сотрудничество
+                  - link "marketing@upgrader.pro" [ref=e299] [cursor=pointer]:
+                    - /url: mailto:marketing@upgrader.pro
+              - button "Language selection" [ref=e302] [cursor=pointer]:
+                - generic [ref=e303]:
+                  - img "flag" [ref=e304]
+                  - generic [ref=e305]: RUS
+                - img "arrow-down" [ref=e306]
+            - generic [ref=e307]:
+              - paragraph [ref=e308]: Общие положения
+              - link "Пользовательское соглашение" [ref=e309] [cursor=pointer]:
+                - /url: /ru/tos
+              - link "Политика использования Cookie" [ref=e310] [cursor=pointer]:
+                - /url: /ru/cookie-policy
+              - link "Политика конфиденциальности" [ref=e311] [cursor=pointer]:
+                - /url: /ru/privacy-policy
+              - link "Публичная оферта" [ref=e312] [cursor=pointer]:
+                - /url: /assets/files/offer_uzum.pdf
+          - generic [ref=e313]:
+            - paragraph [ref=e314]: UPGRADER © 2026
+            - generic [ref=e315]:
+              - paragraph [ref=e316]: "LLC «Transtrade», Company address: Kyrgyz Republic, Bishkek, Leninsky District, 66 Kalyk Akiev Street, Registration number (OGRN): 310961-3301-LLC, Tax ID (INN): 9909710251"
+              - paragraph [ref=e317]: На нашем сайте вы можете улучшить CS2 предметы.
+    - button "Поддержка" [ref=e318]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e8] [cursor=pointer]:
+    - img [ref=e9]
+  - alert [ref=e321]

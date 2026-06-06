@@ -7,7 +7,7 @@ import { LoginButton } from "./login-button"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
-import { Backpack, Store } from "lucide-react"
+import { Backpack, Store, ChevronLeft, ChevronRight } from "lucide-react"
 
 export function InventoryPanel({
   selectedUids,
@@ -18,7 +18,8 @@ export function InventoryPanel({
   onToggleShopItem,
   onAddShopItem,
   onRemoveShopItem,
-  onOpenCart
+  onOpenCart,
+  onQuickBuy
 }: {
   selectedUids: string[]
   onToggle: (uid: string) => void
@@ -29,9 +30,16 @@ export function InventoryPanel({
   onAddShopItem?: (id: string) => void
   onRemoveShopItem?: (id: string) => void
   onOpenCart?: () => void
+  onQuickBuy?: () => void
 }) {
   const { state } = useStore()
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Reset page when mode or sortOrder changes
+  useMemo(() => {
+    setCurrentPage(1)
+  }, [mode, sortOrder])
 
   const displayedSkins = useMemo(() => {
     const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
@@ -43,12 +51,17 @@ export function InventoryPanel({
     })
   }, [state.skins, state.inventory, mode, sortOrder])
 
+  const ITEMS_PER_PAGE = 20
+  const totalPages = Math.max(1, Math.ceil(displayedSkins.length / ITEMS_PER_PAGE))
+  const validCurrentPage = Math.min(currentPage, totalPages)
+  
+  const currentItems = displayedSkins.slice((validCurrentPage - 1) * ITEMS_PER_PAGE, validCurrentPage * ITEMS_PER_PAGE)
+
   return (
     <div className="h-full flex flex-col">
       {/* Header separated with mb-2 */}
       <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
-        <div className="flex min-h-[2.125rem] w-full flex-wrap items-center justify-between lg:flex-row lg:space-x-2">
-          <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:w-auto lg:flex-row lg:flex-wrap">
+        <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:flex-row lg:flex-nowrap">
             <div className="flex w-full flex-none items-center justify-start gap-2 lg:w-auto">
               {/* Icon tabs: Мои скины / Магазин */}
               <div className="flex h-[2.375rem] flex-none items-center justify-center gap-1 rounded-[6.25rem] bg-[#17181C] p-[0.25rem] lg:rounded-[0.625rem]">
@@ -164,7 +177,6 @@ export function InventoryPanel({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Body */}
       <div className="relative flex-1 p-3 rounded-b-xl bg-[#16171a] overflow-hidden min-h-[500px] lg:min-h-[560px] flex flex-col">
@@ -196,8 +208,8 @@ export function InventoryPanel({
             {mode === "inventory" ? "Инвентарь пуст" : "Магазин пуст"}
           </div>
         ) : (
-          <div className="z-[1] custom-scroll grid max-h-[500px] w-full grid-cols-3 gap-1 overflow-x-hidden overflow-y-auto px-1.5 py-1.5 lg:max-h-[540px] lg:grid-cols-5 lg:gap-1.5 content-start">
-            {displayedSkins.map((item, index) => {
+          <div className="z-[1] grid w-full grid-cols-3 gap-1 px-1.5 py-1.5 lg:grid-cols-5 lg:gap-1.5 content-start overflow-hidden">
+            {currentItems.map((item, index) => {
               const skin = mode === "shop" ? (item as any) : getSkin(state.skins, (item as any).skinId)
               const id = mode === "shop" ? skin.id : (item as any).uid
               if (!skin) return null
@@ -272,7 +284,7 @@ export function InventoryPanel({
                 </div>
               )
             })}
-            {Array.from({ length: Math.max(0, 20 - displayedSkins.length) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, 20 - currentItems.length) }).map((_, i) => (
               <div key={`empty-${i}`} className="flex h-[5rem] w-full items-center justify-center overflow-visible rounded-md border-[1px] border-solid border-[rgba(255,255,255,0.10)] bg-[#17181C] py-[1.125rem] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] lg:h-[6.75rem]">
                 <img alt="" className="max-h-full w-auto" src="/assets/item-shadow/usp.png" />
               </div>
@@ -280,23 +292,34 @@ export function InventoryPanel({
           </div>
         )}
 
-        {mode === "shop" && selectedShopIds.length > 0 && (
-          <div className="relative mt-auto pt-2 flex min-h-[2rem] w-full items-center justify-center lg:pt-3 lg:min-h-[2.375rem] shrink-0 animate-in fade-in duration-200">
+        <div className="relative mt-auto pt-2 mb-2 flex min-h-[2rem] w-full items-center justify-center lg:mb-3 lg:pt-3 lg:min-h-[2.375rem] shrink-0">
+          {totalPages > 1 && (
             <div className="w-full absolute !w-auto animate-in slide-in-from-left duration-200">
-              <div className="flex w-full items-center justify-center space-x-1.5 px-4 lg:w-auto">
-                <button className="flex h-[2rem] w-auto flex-1 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] px-3 transition-colors duration-200 lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem] !cursor-default bg-[#FFFFFF05]" disabled>
-                  <img alt="Previous" className="h-[1rem] lg:h-[1.25rem] lg:w-[1.25rem] opacity-30 rotate-90 w-[1rem]" src="/assets/arrow.svg" />
+              <div className="flex w-full items-center justify-center gap-2 px-4 lg:w-auto">
+                <button
+                  disabled={validCurrentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#212125] text-white/50 transition-colors hover:text-white disabled:opacity-50 disabled:hover:text-white/50"
+                >
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
-                <button className="flex h-[2rem] w-auto flex-1 flex-shrink-0 flex-col items-center justify-center gap-1 rounded-[0.375rem] px-3 transition-colors duration-200 lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem] cursor-pointer bg-[#FFFFFF0D] hover:bg-[#FFFFFF1A]">
-                  <img alt="Next" className="-rotate-90 h-[1rem] lg:h-[1.25rem] lg:w-[1.25rem] w-[1rem]" src="/assets/arrow.svg" />
+                <button
+                  disabled={validCurrentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#212125] text-white/50 transition-colors hover:text-white disabled:opacity-50 disabled:hover:text-white/50"
+                >
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
             </div>
+          )}
+
+          {mode === "shop" && selectedShopIds.length > 0 && (
             <div className="absolute z-[3] right-0 mr-3 flex items-center space-x-1.5 animate-in slide-in-from-right duration-200">
               <button onClick={() => selectedShopIds.forEach(id => onRemoveShopItem?.(id))} className="flex h-[2rem] w-auto flex-1 flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-[0.375rem] bg-[#FFFFFF0D] px-3 transition-colors duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:flex-none lg:rounded-[0.625rem]">
                 <img alt="trash" className="h-[1rem] w-[1rem] lg:h-[1.25rem] lg:w-[1.25rem]" src="/assets/trash.svg" />
               </button>
-              <button onClick={onOpenCart} className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] cursor-pointer relative flex h-[2rem] w-auto items-center justify-center gap-3 rounded-[0.375rem] px-3 transition-all duration-200 select-none focus:outline-none lg:h-[2.375rem] lg:rounded-[0.625rem]">
+              <button onClick={onQuickBuy} className="bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] cursor-pointer relative flex h-[2rem] w-auto items-center justify-center gap-3 rounded-[0.375rem] px-3 transition-all duration-200 select-none focus:outline-none lg:h-[2.375rem] lg:rounded-[0.625rem]">
                 <span className="flex items-center justify-center gap-1">
                   <img alt="coin" className="h-4 w-4" src="/assets/coin-black.svg" />
                   <span className="font-tektur text-[0.875rem] leading-normal font-semibold text-black">{formatPrice(selectedShopIds.reduce((sum, id) => sum + (getSkin(state.skins, id)?.price || 0), 0))}</span>
@@ -307,8 +330,8 @@ export function InventoryPanel({
                 </div>
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

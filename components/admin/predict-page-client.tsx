@@ -12,6 +12,8 @@ function PredictContent() {
   const [rotation, setRotation] = useState(0)
   const [dots, setDots] = useState(1)
   const [randomHint, setRandomHint] = useState<string>("")
+  const showPercentages = state.predict.showPercentages ?? true
+  const showMultipliers = state.predict.showMultipliers ?? true
 
   useEffect(() => {
     if (phase === "analyzing") {
@@ -51,7 +53,7 @@ function PredictContent() {
 
       setTimeout(() => {
         setPhase("result")
-      }, 5000)
+      }, 7300)
     }
   }
 
@@ -67,7 +69,9 @@ function PredictContent() {
   // Render dots for analyzing
   const dotsString = ".".repeat(dots)
 
-  const formattedHint = randomHint.toUpperCase()
+  const formattedHint = showMultipliers 
+    ? randomHint.toUpperCase() 
+    : randomHint.replace(/x/i, '').toUpperCase()
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0f1013" }}>
@@ -77,10 +81,10 @@ function PredictContent() {
         style={{ background: "#17181c", borderBottom: "1px solid #232325" }}
       >
         <div className="flex items-center gap-3">
-          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-7 w-7" />
-          <span className="font-tektur font-extrabold tracking-wide text-white">UPGRADER</span>
+          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-8 w-8" />
+          <span className="font-tektur text-xl lg:text-2xl font-extrabold tracking-wide text-white">UPGRADER</span>
           <span
-            className="font-tektur rounded px-3 py-1 text-sm font-bold"
+            className="font-tektur rounded px-4 py-1.5 text-base lg:text-lg font-bold"
             style={{ background: "#f0c000", color: "#111" }}
           >
             AI PREDICT
@@ -136,7 +140,7 @@ function PredictContent() {
             {/* Слой 4: Внутренние элементы и указатель */}
             <div className="absolute top-[0.45rem] left-[0.45rem] h-[12.8125rem] w-[12.8125rem] rounded-full border-[3px] border-[#101012] lg:top-[0.875rem] lg:left-[0.875rem] lg:h-80 lg:w-80 lg:border-4 z-[4]"></div>
             
-            <div className="absolute top-1/2 left-1/2 z-[5] h-0 w-0" style={{ transform: `translate(-50%, -50%) rotate(${rotation + 180}deg)`, transformOrigin: "center center", transition: phase === "analyzing" ? `transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)` : "none" }}>
+            <div className="absolute top-1/2 left-1/2 z-[5] h-0 w-0" style={{ transform: `translate(-50%, -50%) rotate(${rotation + 180}deg)`, transformOrigin: "center center", transition: phase === "analyzing" ? `transform 7.3s cubic-bezier(0.25, 0.1, 0.25, 1)` : "none" }}>
               <img alt="" className="absolute top-[-6.6875rem] left-[-1.0625rem] h-[2.125rem] w-[2.125rem] max-w-none lg:top-[-10.125rem] lg:left-[-1.46875rem] lg:h-[2.9375rem] lg:w-[2.9375rem]" src="/assets/images/game/pointer.png" />
             </div>
 
@@ -178,10 +182,14 @@ function PredictContent() {
               </div>
             </div>
             
-            <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-[#a4e57e] lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
-            <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
-            <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
-            <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
+            {showPercentages && (
+              <>
+                <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-[#a4e57e] lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
+                <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
+                <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
+                <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
+              </>
+            )}
           </div>
         </div>
       </main>

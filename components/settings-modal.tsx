@@ -22,7 +22,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setSoundMode(state.soundMode)
       setScrollType(state.fastMode ? "fast" : "normal")
     }
-  }, [isOpen, state])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   const handleSave = () => {
     setState((p) => ({

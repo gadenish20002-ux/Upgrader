@@ -33,6 +33,7 @@ function loadState(): AppState {
       ...DEFAULT_STATE,
       ...parsed,
       skins: DEFAULT_STATE.skins,  // always use latest skins list
+      upgradeSkins: DEFAULT_STATE.skins, // DO NOT cache upgrade skins
     }
   } catch {
     return DEFAULT_STATE

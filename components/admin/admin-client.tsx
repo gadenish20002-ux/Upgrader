@@ -2,11 +2,7 @@
 
 import { AdminGate } from "./admin-gate"
 import { PredictControl } from "./predict-control"
-import { BalanceControl } from "./balance-control"
 import { InventoryControl } from "./inventory-control"
-import { SkinsControl } from "./skins-control"
-import { UpgradeSkinsControl } from "./upgrade-skins-control"
-import { SettingsControl } from "./settings-control"
 import { Logo } from "@/components/logo"
 import { ArrowLeft } from "lucide-react"
 
@@ -30,13 +26,7 @@ export function AdminClient() {
 
         <main className="mx-auto max-w-5xl space-y-5 px-4 py-6 md:px-6">
           <PredictControl />
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <BalanceControl />
-            <SettingsControl />
-          </div>
           <InventoryControl />
-          <UpgradeSkinsControl />
-          <SkinsControl />
         </main>
       </div>
     </AdminGate>

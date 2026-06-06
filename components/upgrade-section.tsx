@@ -71,6 +71,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   const multiplier = targetSkin && inputValue > 0 ? targetSkin.price / inputValue : 0
   const isBothSelected = !!targetSkin && selectedItems.length > 0
+  const isReadyForTarget = !targetSkin && inputValue > 0
 
   function toggleItem(uid: string) {
     setSelectedUids((prev) => {
@@ -218,6 +219,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       win = true
     } else if (state.predict.outcome === "lose") {
       win = false
+    } else if (state.predict.outcome === "win_after_losses") {
+      const current = state.predict.currentLosses || 0
+      const target = state.predict.targetLosses || 3
+      if (current >= target) {
+        win = true
+        setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: 0 } }))
+      } else {
+        win = false
+        setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: current + 1 } }))
+      }
     } else {
       win = Math.random() < chance
     }
@@ -499,12 +510,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center mt-2 lg:mt-6 w-full h-12 lg:h-14">
           <div className="flex h-full w-full items-center justify-center space-x-1">
             {state.fastMultipliers.map((mult, idx) => (
-              <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isBothSelected ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
+              <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
                 <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
               </button>
             ))}
             {state.fastPercentages.map((perc, idx) => (
-              <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isBothSelected ? 'animate-pulse-border-glow border-[#f7d324]' : `border-white/10 btn-gradient-${idx + 1}`}`}>
+              <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : `border-white/10 btn-gradient-${idx + 1}`}`}>
                 <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">{perc}%</span>
               </button>
             ))}
@@ -572,6 +583,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onAddShopItem={addShopItem}
               onRemoveShopItem={removeShopItem}
               onOpenCart={() => setIsCartOpen(true)}
+              onQuickBuy={handleBuyCartItems}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>

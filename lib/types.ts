@@ -15,7 +15,7 @@ export interface InventoryItem {
   skinId: string
 }
 
-export type PredictOutcome = "win" | "lose" | "off"
+export type PredictOutcome = "win" | "lose" | "off" | "win_after_losses"
 
 export type PredictHint = "x2" | "x4" | "x8" | "35%" | "55%" | "75%"
 
@@ -25,6 +25,10 @@ export interface Predict {
   targetSkinId: string | null
   // hint shown on the predict page — which bet to make
   hint: PredictHint
+  targetLosses: number
+  currentLosses: number
+  showPercentages: boolean
+  showMultipliers: boolean
 }
 
 export interface AppState {

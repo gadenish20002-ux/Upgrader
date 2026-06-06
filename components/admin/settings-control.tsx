@@ -62,6 +62,48 @@ export function SettingsControl() {
             inputMode="numeric"
           />
         </div>
+        <div className="rounded-lg bg-secondary/40 px-4 py-3 col-span-1 sm:col-span-2">
+          <div className="text-xs text-muted-foreground mb-1">Множители (x2, x4, x8)</div>
+          <div className="flex gap-2">
+            {[0, 1, 2].map((idx) => (
+              <Input
+                key={`mult-${idx}`}
+                className="h-8"
+                value={state.fastMultipliers[idx]}
+                onChange={(e) => {
+                  const val = Number(e.target.value.replace(/\D/g, "")) || 0;
+                  setState((p) => {
+                    const newMults = [...p.fastMultipliers] as [number, number, number];
+                    newMults[idx] = val;
+                    return { ...p, fastMultipliers: newMults };
+                  });
+                }}
+                inputMode="numeric"
+              />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg bg-secondary/40 px-4 py-3 col-span-1 sm:col-span-2">
+          <div className="text-xs text-muted-foreground mb-1">Проценты (25%, 55%, 75%)</div>
+          <div className="flex gap-2">
+            {[0, 1, 2].map((idx) => (
+              <Input
+                key={`perc-${idx}`}
+                className="h-8"
+                value={state.fastPercentages[idx]}
+                onChange={(e) => {
+                  const val = Number(e.target.value.replace(/\D/g, "")) || 0;
+                  setState((p) => {
+                    const newPercs = [...p.fastPercentages] as [number, number, number];
+                    newPercs[idx] = val;
+                    return { ...p, fastPercentages: newPercs };
+                  });
+                }}
+                inputMode="numeric"
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 border-t border-border pt-4">

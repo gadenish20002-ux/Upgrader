@@ -106,7 +106,7 @@ export function CatalogPanel({
               </button>
 
               <div className="relative flex h-[2rem] w-full items-center justify-end select-none lg:h-[2.375rem] lg:min-w-[18.125rem]">
-                <div className="relative z-[1] flex h-full flex-row items-center justify-end transition-all duration-200 mr-2 w-full lg:w-auto">
+                <div className={`relative z-[1] flex h-full flex-row items-center justify-end transition-all duration-200 ${searchOpen ? 'w-[0] overflow-hidden' : 'w-full'}`}>
                   <div className="mr-[0.375rem] flex h-full w-full flex-1 items-center rounded-[0.375rem] border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] lg:min-w-[5rem] lg:rounded-[0.625rem] lg:px-3">
                     <span className="opacity-50"> Цена </span>
                   </div>
@@ -135,14 +135,14 @@ export function CatalogPanel({
                 <input 
                   value={query} 
                   onChange={(e) => setQuery(e.target.value)} 
-                  className={`absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] px-3 ${searchOpen ? 'w-full lg:w-[15rem]' : 'w-0 px-0 opacity-0'}`}
-                  placeholder="Поиск..." 
+                  className={`absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] ${searchOpen ? 'w-full px-2 lg:px-3' : 'w-[0] px-0 opacity-0 overflow-hidden'}`}
+                  placeholder="Название" 
                   type="text" 
                 />
                 
                 <button 
                   onClick={() => setSearchOpen(!searchOpen)} 
-                  className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]"
+                  className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] bg-transparent"
                 >
                   <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
                 </button>
