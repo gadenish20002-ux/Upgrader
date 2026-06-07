@@ -1,16 +1,18 @@
 import { Logo } from "./logo"
 import Image from "next/image"
 
+import Link from "next/link"
+
 export function SiteFooter() {
   return (
     <footer className="bg-[#17181C] lg:rounded-tl-xl lg:px-10 lg:pt-10 lg:pb-6 flex flex-col gap-6 px-6 pt-6 pb-10">
       
       {/* Mobile Top */}
-      <div className="lg:hidden flex items-center justify-between gap-4">
-        <a href="/" className="flex cursor-pointer items-center gap-[0.3125rem] my-auto select-none">
-          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.5125rem] w-[1.5125rem]" />
-          <span className="font-tektur text-xl font-extrabold"> UPGRADER </span>
-        </a>
+      <div className="relative z-10 flex w-[calc(100%-1.5rem)] max-w-7xl flex-col items-center justify-between rounded-xl bg-[#1C1D20] px-4 py-6 md:w-[calc(100%-3rem)] md:flex-row md:px-8">
+        <Link href="/" className="flex cursor-pointer items-center gap-[0.3125rem] my-auto select-none">
+          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.875rem] w-[1.875rem]" />
+          <span className="font-tektur text-2xl font-extrabold text-white"> UPGRADER </span>
+        </Link>
         <div className="my-auto select-none">
           <div className="flex gap-2">
             <a target="_blank" className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:brightness-150 bg-[#232325]" href="https://t.me/upgraderCS">
@@ -24,11 +26,11 @@ export function SiteFooter() {
       </div>
 
       {/* Desktop Top */}
-      <div className="hidden lg:flex w-full flex-wrap items-start justify-between gap-6">
-        <a href="/" className="flex cursor-pointer items-center gap-2 my-auto select-none !my-0 mr-6">
-          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-8 w-8" />
-          <span className="font-tektur text-2xl font-extrabold"> UPGRADER </span>
-        </a>
+      <div className="hidden w-full max-w-7xl flex-row items-center justify-between border-t border-[#313338] px-8 py-6 md:flex">
+        <Link href="/" className="flex cursor-pointer items-center gap-2 my-auto select-none !my-0 mr-6">
+          <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.875rem] w-[1.875rem]" />
+          <span className="font-tektur text-2xl font-extrabold text-white"> UPGRADER </span>
+        </Link>
 
         <div className="flex flex-col gap-2">
           <p className="font-tektur text-white/50 text-[0.7rem] xl:text-[1rem]"> Поддержка </p>

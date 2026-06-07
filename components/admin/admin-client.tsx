@@ -4,6 +4,7 @@ import { PredictControl } from "./predict-control"
 import { SettingsControl } from "./settings-control"
 import { Logo } from "@/components/logo"
 import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
 
 export function AdminClient() {
   return (
@@ -16,10 +17,10 @@ export function AdminClient() {
             ADMIN
           </span>
         </div>
-        <a href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="h-4 w-4" />
           На сайт
-        </a>
+        </Link>
       </header>
 
       <main className="mx-auto max-w-5xl space-y-5 px-4 py-6 md:px-6">

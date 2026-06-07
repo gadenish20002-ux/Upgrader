@@ -7,6 +7,7 @@ import { LogOut, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoginButton } from "./login-button"
 import Image from "next/image"
+import Link from "next/link"
 
 
 export function SiteHeader() {
@@ -62,10 +63,10 @@ export function SiteHeader() {
       <div className="flex h-[3.25rem] w-full items-center justify-start space-x-3 md:h-[4.25rem] md:space-x-5">
         <div className="flex h-full w-full flex-1 shrink flex-nowrap items-center justify-start space-x-3 md:space-x-5">
           <div className="my-auto select-none shrink-0">
-            <a className="flex cursor-pointer items-center gap-[0.3125rem] lg:gap-2" href="/">
+            <Link className="flex cursor-pointer items-center gap-[0.3125rem] lg:gap-2" href="/">
               <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.25rem] w-[1.25rem] lg:h-8 lg:w-8" />
               <span className="font-tektur text-xl font-extrabold text-white hidden lg:block lg:text-2xl"> UPGRADER </span>
-            </a>
+            </Link>
           </div>
 
           <div className="tablet:flex hidden items-center justify-start space-x-3">
