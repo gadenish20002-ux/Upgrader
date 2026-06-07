@@ -192,21 +192,18 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
     >
       {/* Layer 0: Салют (fireworks) — fullscreen behind other layers */}
       <img
-        key={`s1-${salut1Idx}`}
         src={salut1Urls[salut1Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
       <img
-        key={`s2-${salut2Idx}`}
         src={salut2Urls[salut2Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
       <img
-        key={`s3-${salut3Idx}`}
         src={salut3Urls[salut3Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
@@ -215,28 +212,24 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
 
       {/* Layer 0.1: Дым */}
       <img
-        key={`sm1-${smoke1Idx}`}
         src={smoke1Urls[smoke1Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
       <img
-        key={`sm2-${smoke2Idx}`}
         src={smoke2Urls[smoke2Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
       <img
-        key={`sm3-${smoke3Idx}`}
         src={smoke3Urls[smoke3Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
       <img
-        key={`sm4-${smoke4Idx}`}
         src={smoke4Urls[smoke4Idx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
@@ -245,7 +238,6 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
 
       {/* Layer 1: Рамка (animated glowing border) */}
       <img
-        key={`f${frameIdx}`}
         src={frameUrls[frameIdx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
@@ -254,7 +246,6 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
 
       {/* Layer 2: Стрелка (animated arrows/chevrons) — loops */}
       <img
-        key={`a${arrowIdx}`}
         src={arrowUrls[arrowIdx]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
