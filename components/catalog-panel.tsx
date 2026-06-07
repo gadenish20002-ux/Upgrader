@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import type { Skin } from "@/lib/types"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
@@ -28,6 +29,15 @@ export function CatalogPanel({
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
   const [searchOpen, setSearchOpen] = useState(false)
   const [showNewItems, setShowNewItems] = useState(false)
+  const [randomNewSkins, setRandomNewSkins] = useState<Skin[]>([])
+
+  // On mount, select 50 random skins to act as "New Skins"
+  useEffect(() => {
+    if (state.upgradeSkins.length > 0 && randomNewSkins.length === 0) {
+      const shuffled = [...state.upgradeSkins].sort(() => 0.5 - Math.random());
+      setRandomNewSkins(shuffled.slice(0, 50));
+    }
+  }, [state.upgradeSkins])
 
   // Sync external price range into the filter inputs
   useEffect(() => {
@@ -36,13 +46,18 @@ export function CatalogPanel({
   }, [priceMin, priceMax])
 
   const filtered = useMemo(() => {
-    const base = state.upgradeSkins
+    // If we are looking at new items, show randomNewSkins. Otherwise show the rest.
+    const baseSkins = showNewItems 
+      ? randomNewSkins 
+      : state.upgradeSkins.filter(s => !randomNewSkins.some(rn => rn.id === s.id));
+
+    const base = baseSkins
       .filter((s) => `${s.weapon} ${s.name}`.toLowerCase().includes(query.toLowerCase()))
       .filter((s) => (min ? s.price >= Number(min) : true))
       .filter((s) => (max ? s.price <= Number(max) : true))
 
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
-  }, [state.upgradeSkins, query, min, max, sortOrder])
+  }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder])
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 20
