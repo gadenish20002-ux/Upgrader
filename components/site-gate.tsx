@@ -1,25 +1,47 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, useEffect, type ReactNode } from "react"
 import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Lock } from "lucide-react"
 import { Logo } from "@/components/logo"
 
-export function AdminGate({ children }: { children: ReactNode }) {
+export function SiteGate({ children }: { children: ReactNode }) {
   const { state, ready } = useStore()
   const [authed, setAuthed] = useState(false)
   const [value, setValue] = useState("")
   const [error, setError] = useState(false)
 
+  useEffect(() => {
+    if (ready) {
+      if (!state.adminPassword) {
+        setAuthed(true)
+        return
+      }
+
+      const lastAuthStr = window.localStorage.getItem("site_auth_time")
+      if (lastAuthStr) {
+        const lastAuth = parseInt(lastAuthStr, 10)
+        if (Date.now() - lastAuth < 24 * 60 * 60 * 1000) {
+          setAuthed(true)
+        } else {
+          setAuthed(false)
+        }
+      } else {
+        setAuthed(false)
+      }
+    }
+  }, [ready, state.adminPassword])
+
   if (!ready) return <div className="min-h-screen bg-background" />
 
-  if (authed) return <>{children}</>
+  if (authed || !state.adminPassword) return <>{children}</>
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (value === state.adminPassword) {
+      window.localStorage.setItem("site_auth_time", Date.now().toString())
       setAuthed(true)
       setError(false)
     } else {
@@ -36,9 +58,9 @@ export function AdminGate({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <Logo className="h-6 w-6 text-primary" />
-            <span className="font-tektur font-extrabold tracking-wide">UPGRADER ADMIN</span>
+            <span className="font-tektur font-extrabold tracking-wide">UPGRADER</span>
           </div>
-          <p className="text-sm text-muted-foreground">Введите пароль для доступа к панели</p>
+          <p className="text-sm text-muted-foreground">Введите пароль для доступа к сайту</p>
         </div>
         <Input
           type="password"

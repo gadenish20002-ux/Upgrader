@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Tektur, Exo_2 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
+import { SiteGate } from '@/components/site-gate'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -49,8 +50,10 @@ export default function RootLayout({
     <html lang="ru">
       <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg-PEFHGDDX.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
         <StoreProvider>
-          {children}
-          <Toaster position="top-center" theme="dark" richColors />
+          <SiteGate>
+            {children}
+            <Toaster position="top-center" theme="dark" richColors />
+          </SiteGate>
         </StoreProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

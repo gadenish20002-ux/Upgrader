@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
 import type { AppState, Skin, InventoryItem } from "./types"
 import { DEFAULT_STATE } from "./default-data"
 
@@ -43,6 +43,7 @@ function loadState(): AppState {
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setInternal] = useState<AppState>(DEFAULT_STATE)
   const [ready, setReady] = useState(false)
+  const lastSyncTime = useRef<number>(0)
 
   useEffect(() => {
     // Clean up old cache keys from previous versions
@@ -52,16 +53,58 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {}
     setInternal(loadState())
     setReady(true)
+
+    // Fetch global state from server
+    async function fetchState() {
+      // Prevent fetching if we just updated the state locally
+      if (Date.now() - lastSyncTime.current < 1500) return
+      
+      try {
+        const res = await fetch("/api/state")
+        if (res.ok) {
+          const serverState = await res.json()
+          setInternal((prev) => {
+            const next = { 
+              ...DEFAULT_STATE, 
+              ...serverState, 
+              skins: DEFAULT_STATE.skins, 
+              upgradeSkins: DEFAULT_STATE.skins 
+            }
+            try {
+              window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+            } catch {}
+            return next
+          })
+        }
+      } catch (err) {
+        console.error("Failed to fetch state", err)
+      }
+    }
+
+    fetchState()
+    const interval = setInterval(fetchState, 2000)
+    return () => clearInterval(interval)
   }, [])
 
 
-  // persist + broadcast across tabs
+  // persist + broadcast across tabs and sync to server
   const setState = useCallback((updater: (prev: AppState) => AppState) => {
     setInternal((prev) => {
       const next = updater(prev)
       try {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       } catch {}
+      
+      // Update the server state (strip large skin arrays)
+      const { skins, upgradeSkins, ...strippedNext } = next
+      lastSyncTime.current = Date.now()
+      
+      fetch("/api/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(strippedNext)
+      }).catch(err => console.error("Failed to sync state", err))
+      
       return next
     })
   }, [])

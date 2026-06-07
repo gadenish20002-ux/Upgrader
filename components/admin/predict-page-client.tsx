@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
-import { AdminGate } from "./admin-gate"
 
 function PredictContent() {
   const { state } = useStore()
@@ -198,9 +197,5 @@ function PredictContent() {
 }
 
 export function PredictPageClient() {
-  return (
-    <AdminGate>
-      <PredictContent />
-    </AdminGate>
-  )
+  return <PredictContent />
 }
