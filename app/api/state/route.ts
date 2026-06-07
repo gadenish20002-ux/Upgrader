@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
-import { promises as fs } from "fs"
-import path from "path"
+import { kv } from "@vercel/kv"
 import { DEFAULT_STATE } from "@/lib/default-data"
 
-const stateFilePath = path.join(process.cwd(), "app-state.json")
+const KV_KEY = "upgrader_global_state"
 
 // Helper to remove skins arrays to save bandwidth/storage
 function stripSkins(state: any) {
@@ -13,16 +12,17 @@ function stripSkins(state: any) {
 
 export async function GET() {
   try {
-    const fileContent = await fs.readFile(stateFilePath, "utf8")
-    const parsedState = JSON.parse(fileContent)
-    return NextResponse.json(parsedState)
-  } catch (error: any) {
-    // If file doesn't exist, return default state stripped of skins
-    if (error.code === "ENOENT") {
+    const data = await kv.get(KV_KEY)
+    if (!data) {
       const defaultStripped = stripSkins(DEFAULT_STATE)
       return NextResponse.json(defaultStripped)
     }
-    return NextResponse.json({ error: "Failed to read state" }, { status: 500 })
+    return NextResponse.json(data)
+  } catch (error: any) {
+    console.error("KV GET Error:", error)
+    // Fallback to default state if KV fails or isn't configured yet
+    const defaultStripped = stripSkins(DEFAULT_STATE)
+    return NextResponse.json(defaultStripped)
   }
 }
 
@@ -30,9 +30,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const strippedState = stripSkins(body)
-    await fs.writeFile(stateFilePath, JSON.stringify(strippedState), "utf8")
+    await kv.set(KV_KEY, strippedState)
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error("KV POST Error:", error)
     return NextResponse.json({ error: "Failed to save state" }, { status: 500 })
   }
 }
