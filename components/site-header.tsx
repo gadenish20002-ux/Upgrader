@@ -15,25 +15,32 @@ export function SiteHeader() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarMenu, setAvatarMenu] = useState(false)
 
+  // Локальные счетчики, чтобы не дергать базу данных каждые 1.5 секунды
+  const [localOnline, setLocalOnline] = useState(state.online)
+  const [localUpgrades, setLocalUpgrades] = useState(state.upgrades)
+
+  // Обновляем локальные счетчики, если они сильно отстают или при загрузке
+  useEffect(() => {
+    setLocalOnline(state.online)
+    setLocalUpgrades(state.upgrades)
+  }, [state.online, state.upgrades])
+
   // Имитация изменения онлайна и количества апгрейдов
   useEffect(() => {
     const interval = setInterval(() => {
-      setState((p) => {
-        // Онлайн может немного падать или расти (-5 до +5)
+      setLocalOnline((prev) => {
         const onlineChange = Math.floor(Math.random() * 11) - 5
-        let newOnline = p.online + onlineChange
-        if (newOnline < 0) newOnline = 0
-        
-        // Апгрейды растут десятками (от +10 до +50)
+        const newOnline = prev + onlineChange
+        return newOnline < 0 ? 0 : newOnline
+      })
+      setLocalUpgrades((prev) => {
         const upgradesChange = Math.floor(Math.random() * 41) + 10
-        const newUpgrades = p.upgrades + upgradesChange
-
-        return { ...p, online: newOnline, upgrades: newUpgrades }
+        return prev + upgradesChange
       })
     }, 1500) // каждые 1.5 секунды
 
     return () => clearInterval(interval)
-  }, [setState])
+  }, [])
 
   function handleAvatarClick() {
     setAvatarMenu((v) => !v)
@@ -77,7 +84,7 @@ export function SiteHeader() {
                 <div className="flex flex-col">
                   <span className="text-gray tablet:block hidden text-sm"> Онлайн </span>
                   <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
-                    {formatNumber(state.online)}
+                    {formatNumber(localOnline)}
                   </span>
                 </div>
               </div>
@@ -90,7 +97,7 @@ export function SiteHeader() {
                 <div className="flex flex-col">
                   <span className="text-gray tablet:block hidden text-sm">Апгрейдов</span>
                   <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
-                    {formatNumber(state.upgrades)}
+                    {formatNumber(localUpgrades)}
                   </span>
                 </div>
               </div>
