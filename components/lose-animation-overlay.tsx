@@ -29,7 +29,13 @@ const TAPE_LENGTH = 58
 const CASE_OPEN_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
 const CASE_FRAME_COUNT = 81
 const CASE_DROP_FRAME = 10
-const CASE_FRAME_MS = 1000 / 24
+const CASE_DROP_MS = 820
+const CASE_OPEN_MS = 4100
+const CASE_TO_ROULETTE_GAP_MS = 120
+const ROULETTE_SPIN_MS = 10000
+const ROULETTE_REVEAL_MS = 450
+const CASE_FRAME_MS = CASE_OPEN_MS / (CASE_FRAME_COUNT - CASE_DROP_FRAME - 1)
+const WEAPON_CHANCE = 0.9
 const caseFrameUrls = Array.from({ length: CASE_FRAME_COUNT }, (_, index) =>
   `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`,
 )
@@ -62,15 +68,41 @@ function preloadCaseFrames() {
   window.setTimeout(warmNextBatch, 300)
 }
 
+function isStickerSkin(skin: Skin) {
+  const weapon = skin.weapon.toLowerCase()
+  const name = skin.name.toLowerCase()
+  return weapon.includes("sticker") || name.includes("sticker") || weapon.includes("наклей") || name.includes("наклей")
+}
+
+function isWeaponSkin(skin: Skin) {
+  const weapon = skin.weapon.toLowerCase()
+  return (
+    !isStickerSkin(skin) &&
+    !weapon.includes("graffiti") &&
+    !weapon.includes("граффити") &&
+    !weapon.includes("charm") &&
+    !weapon.includes("брел")
+  )
+}
+
+function pickWeightedSkin(weapons: Skin[], otherItems: Skin[], fallback: Skin[]) {
+  const weaponPool = weapons.length > 0 ? weapons : fallback
+  const otherPool = otherItems.length > 0 ? otherItems : fallback
+  const pool = Math.random() < WEAPON_CHANCE ? weaponPool : otherPool
+  return pool[Math.floor(Math.random() * pool.length)] ?? fallback[0]
+}
+
 function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
   if (skins.length === 0) return { items: [], winner: null }
 
   const cheapSkins = skins.filter((skin) => skin.price > 0 && skin.price <= 1000)
   const pool = cheapSkins.length >= 4 ? cheapSkins : skins
-  const winner = pool[Math.floor(Math.random() * pool.length)] ?? pool[0] ?? skins[0]
+  const weapons = pool.filter(isWeaponSkin)
+  const otherItems = pool.filter((skin) => !isWeaponSkin(skin))
+  const winner = pickWeightedSkin(weapons, otherItems, pool) ?? pool[0] ?? skins[0]
 
   const items = Array.from({ length: TAPE_LENGTH }, (_, index) => {
-    const skin = index === TARGET_INDEX ? winner : pool[Math.floor(Math.random() * pool.length)] ?? winner
+    const skin = index === TARGET_INDEX ? winner : pickWeightedSkin(weapons, otherItems, pool) ?? winner
     return {
       key: `${skin.id}-${index}-${Math.random().toString(36).slice(2, 7)}`,
       skin,
@@ -180,14 +212,14 @@ function HorizontalDropRoulette({
       const target =
         winner.offsetLeft + winner.offsetWidth / 2 - viewport.clientWidth / 2 + (Math.random() * 16 - 8)
 
-      tape.style.transition = "transform 6100ms cubic-bezier(0.12, 0.72, 0.08, 1)"
+      tape.style.transition = `transform ${ROULETTE_SPIN_MS}ms cubic-bezier(0.5, 0, 0.1, 1)`
       tape.style.transform = `translate3d(${-target}px, 0, 0)`
     })
 
     const done = window.setTimeout(() => {
       setSpinFinished(true)
-      window.setTimeout(onFinished, 650)
-    }, 6300)
+      window.setTimeout(onFinished, ROULETTE_REVEAL_MS)
+    }, ROULETTE_SPIN_MS + 160)
 
     return () => {
       window.cancelAnimationFrame(raf)
@@ -196,23 +228,23 @@ function HorizontalDropRoulette({
   }, [active, items, onFinished])
 
   return (
-    <div className="relative w-full max-w-[760px] px-2">
+    <div className="relative min-h-[6.75rem] w-full overflow-hidden lg:min-h-[12.5rem]">
+      <img
+        alt=""
+        className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
+        src="https://s3.upgrader.pro/cdn/fa/images/game/carousel-line.png"
+        draggable={false}
+      />
       <div
         ref={viewportRef}
-        className="relative h-[8.75rem] overflow-hidden rounded-lg border border-white/10 bg-[#0f1014]/95 shadow-[0_24px_70px_rgba(0,0,0,0.45)] md:h-[10.25rem] lg:h-[14rem]"
+        className="relative min-h-[6.75rem] w-full overflow-hidden lg:min-h-[12.5rem]"
       >
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-[#0f1014] to-transparent lg:w-24" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-[#0f1014] to-transparent lg:w-24" />
-        <div className="pointer-events-none absolute left-1/2 top-0 z-30 h-full w-px -translate-x-1/2 bg-[#fbd506] shadow-[0_0_18px_rgba(251,213,6,0.9)]" />
-        <div className="pointer-events-none absolute left-1/2 top-0 z-30 h-3 w-5 -translate-x-1/2 bg-[#fbd506] [clip-path:polygon(50%_100%,0_0,100%_0)] lg:h-4 lg:w-7" />
-        <div className="pointer-events-none absolute bottom-0 left-1/2 z-30 h-3 w-5 -translate-x-1/2 bg-[#fbd506] [clip-path:polygon(50%_0,0_100%,100%_100%)] lg:h-4 lg:w-7" />
-
-        <div ref={tapeRef} className="flex h-full w-max items-center gap-4 px-[50%] will-change-transform">
+        <div ref={tapeRef} className="absolute left-0 top-0 flex min-h-[6.75rem] w-max items-center gap-4 px-[50%] will-change-transform lg:min-h-[12.5rem]">
           {items.map((entry) => (
             <div
               key={entry.key}
               ref={entry.isWinner ? winnerRef : undefined}
-              className={`h-[6.75rem] w-[7.3125rem] flex-shrink-0 transition-all duration-500 md:w-[9.5rem] lg:h-[12.5rem] lg:w-[13.5625rem] ${
+              className={`pointer-events-none relative h-[6.75rem] w-[7.3125rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[9.5rem] lg:h-[12.5rem] lg:w-[13.5625rem] ${
                 entry.isWinner && spinFinished ? "z-20 scale-[1.08]" : ""
               }`}
             >
@@ -279,7 +311,7 @@ function CaseScene({
   const showImpact = phase === "open"
 
   return (
-    <div className="relative flex h-full min-h-[27rem] w-full flex-1 flex-col items-center justify-center overflow-hidden">
+    <div className="relative flex h-full min-h-[20rem] w-full flex-1 flex-col items-center justify-center overflow-hidden lg:min-h-[25rem]">
       <div className="bonus-case-shadow" />
       <div className="bonus-stage-glow" />
 
@@ -288,7 +320,7 @@ function CaseScene({
         <img src="/assets/smoke.webp" alt="" draggable={false} />
       </div>
 
-      <div className="relative z-10 flex h-[17rem] w-full items-center justify-center lg:h-[21rem]">
+      <div className="relative z-10 flex h-[15rem] w-full items-center justify-center sm:h-[17rem] lg:h-[20rem]">
         <ReferenceCase phase={phase} />
       </div>
 
@@ -489,11 +521,11 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     schedule(() => {
       setPhase("open")
       playCaseSound()
-    }, 820)
+    }, CASE_DROP_MS)
 
     schedule(() => {
       setPhase("roulette")
-    }, 3450)
+    }, CASE_DROP_MS + CASE_OPEN_MS + CASE_TO_ROULETTE_GAP_MS)
 
     return () => clearRunning()
   }, [clearRunning, playCaseSound, playing, resetVisualState, schedule, state.skins])
@@ -510,7 +542,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-3 py-4 transition-opacity duration-300 ease-out"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-hidden px-3 pb-4 pt-[4.25rem] transition-opacity duration-300 ease-out lg:pt-[5rem]"
       style={{ opacity: visible ? 1 : 0 }}
       role="dialog"
       aria-modal="true"
@@ -525,7 +557,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
         <X size={16} />
       </button>
 
-      <div className="relative z-[110] flex h-[min(43rem,calc(100vh-2rem))] w-full max-w-[58rem] flex-col items-center justify-between overflow-hidden rounded-xl border border-white/10 bg-[#111216]/95 p-4 shadow-[0_30px_120px_rgba(0,0,0,0.65)] lg:p-8">
+      <div className="relative z-[110] flex h-[min(43rem,calc(100vh-5.5rem))] w-full max-w-[76rem] flex-col items-center justify-between overflow-hidden rounded-xl border border-white/10 bg-[#111216]/95 p-4 shadow-[0_30px_120px_rgba(0,0,0,0.65)] lg:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(251,213,6,0.13),transparent_34%),radial-gradient(circle_at_15%_80%,rgba(211,44,230,0.12),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_25%)]" />
 
         {panelTitle ? (

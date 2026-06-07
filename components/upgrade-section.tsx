@@ -53,13 +53,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     [selectedShopIds, state.skins],
   )
 
-  const inputValue = useMemo(() => {
-    const inventorySum = selectedItems.reduce((sum, item) => {
+  const selectedInventoryValue = useMemo(() => {
+    return selectedItems.reduce((sum, item) => {
       const skin = getSkin(state.skins, item!.skinId)
       return sum + (skin?.price ?? 0)
     }, 0)
-    return inventorySum + balanceInput
-  }, [selectedItems, state.skins, balanceInput])
+  }, [selectedItems, state.skins])
+
+  const inputValue = useMemo(() => selectedInventoryValue + balanceInput, [selectedInventoryValue, balanceInput])
 
   const targetSkin = effectiveTarget ? getSkin(state.skins, effectiveTarget) : undefined
 
@@ -251,7 +252,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setWinAnimating(true)
       setWinAnimKey((k) => k + 1)
     } else {
-      const shouldShowLoseAnim = inputValue > 50
+      const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim) {
         setLoseAnimating(true)
       } else {
@@ -469,7 +470,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               <div className="relative w-full flex-1 min-h-0 my-1 lg:my-2">
                 <img
                   key={`weapon-${winAnimKey}`}
-                  className={`absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl${winAnimating ? " animate-win-rock" : ""}`}
+                  className={`absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl${winAnimating ? " animate-win-rock will-change-transform" : ""}`}
                   src={targetSkin.image || "/placeholder.svg"}
                   alt={targetSkin.name}
                 />
@@ -615,4 +616,3 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     </div>
   )
 }
-

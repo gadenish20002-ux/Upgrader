@@ -142,33 +142,28 @@ export function WinAnimationOverlay({ playing, onComplete }: WinAnimationOverlay
     setSmoke4Idx(0)
     setVisible(true)
 
-    // Helper to run a sequence
-    const runSequence = (count: number, setter: (idx: number) => void, name: string, loop: boolean = false) => {
-      let i = 0
-      timersRef.current[name] = setInterval(() => {
-        i++
-        if (i >= count) {
-          if (loop) {
-            i = 0
-          } else {
-            clearInterval(timersRef.current[name]!)
-            timersRef.current[name] = null
-            return
-          }
-        }
-        setter(i)
-      }, FRAME_INTERVAL)
-    }
+    // Helper to calculate frame based on elapsed ticks
+    let ticks = 0
+    timersRef.current.main = setInterval(() => {
+      ticks++
+      
+      if (ticks < FRAME_COUNT) setFrameIdx(ticks)
+      if (ticks < SALUT1_COUNT) setSalut1Idx(ticks)
+      if (ticks < SALUT2_COUNT) setSalut2Idx(ticks)
+      if (ticks < SALUT3_COUNT) setSalut3Idx(ticks)
+      setArrowIdx(ticks % ARROW_COUNT) // arrow loops
+      if (ticks < SMOKE1_COUNT) setSmoke1Idx(ticks)
+      if (ticks < SMOKE2_COUNT) setSmoke2Idx(ticks)
+      if (ticks < SMOKE3_COUNT) setSmoke3Idx(ticks)
+      if (ticks < SMOKE4_COUNT) setSmoke4Idx(ticks)
 
-    runSequence(FRAME_COUNT, setFrameIdx, 'frame')
-    runSequence(SALUT1_COUNT, setSalut1Idx, 'salut1')
-    runSequence(SALUT2_COUNT, setSalut2Idx, 'salut2')
-    runSequence(SALUT3_COUNT, setSalut3Idx, 'salut3')
-    runSequence(ARROW_COUNT, setArrowIdx, 'arrow', true) // loops
-    runSequence(SMOKE1_COUNT, setSmoke1Idx, 'smoke1')
-    runSequence(SMOKE2_COUNT, setSmoke2Idx, 'smoke2')
-    runSequence(SMOKE3_COUNT, setSmoke3Idx, 'smoke3')
-    runSequence(SMOKE4_COUNT, setSmoke4Idx, 'smoke4')
+      // Total duration based on the longest layer
+      const maxTicks = Math.max(SALUT1_COUNT, SMOKE4_COUNT)
+      if (ticks >= maxTicks) {
+        clearInterval(timersRef.current.main!)
+        timersRef.current.main = null
+      }
+    }, FRAME_INTERVAL)
 
     // Total duration based on the longest layer (salut)
     const totalDuration = Math.max(SALUT1_COUNT, SMOKE4_COUNT) * FRAME_INTERVAL
