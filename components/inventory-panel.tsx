@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useStore, getSkin, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { LoginButton } from "./login-button"
@@ -35,21 +35,39 @@ export function InventoryPanel({
   const { state } = useStore()
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
   const [currentPage, setCurrentPage] = useState(1)
+  const [minPrice, setMinPrice] = useState("")
+  const [maxPrice, setMaxPrice] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  // Reset page when mode or sortOrder changes
-  useMemo(() => {
+  // Reset page when the active list changes so newly added inventory is visible.
+  useEffect(() => {
     setCurrentPage(1)
-  }, [mode, sortOrder])
+  }, [mode, sortOrder, minPrice, maxPrice, searchQuery, state.inventory.length])
 
   const displayedSkins = useMemo(() => {
     const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
-    return [...skins].sort((a, b) => {
+    return [...skins].filter((a) => {
+      const skin = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
+      if (!skin) return false
+      
+      if (minPrice && skin.price < parseFloat(minPrice)) return false
+      if (maxPrice && skin.price > parseFloat(maxPrice)) return false
+      
+      if (searchQuery) {
+        const nameMatch = skin.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        const weaponMatch = skin.weapon?.toLowerCase().includes(searchQuery.toLowerCase())
+        if (!nameMatch && !weaponMatch) return false
+      }
+      
+      return true
+    }).sort((a, b) => {
       const skinA = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
       const skinB = mode === "shop" ? (b as any) : getSkin(state.skins, (b as any).skinId)
       if (!skinA || !skinB) return 0
       return sortOrder === "desc" ? skinB.price - skinA.price : skinA.price - skinB.price
     })
-  }, [state.skins, state.inventory, mode, sortOrder])
+  }, [state.skins, state.inventory, mode, sortOrder, minPrice, maxPrice, searchQuery])
 
   const ITEMS_PER_PAGE = 20
   const totalPages = Math.max(1, Math.ceil(displayedSkins.length / ITEMS_PER_PAGE))
@@ -152,15 +170,15 @@ export function InventoryPanel({
                       </div>
                       <div className="relative h-full flex-1">
                         <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
-                        <input name="priceFrom" className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6" placeholder="от" type="number" />
+                        <input name="priceFrom" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6" placeholder="от" type="number" />
                       </div>
                       <div className="relative h-full flex-1">
                         <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
-                        <input name="priceTo" className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6" placeholder="до" type="number" />
+                        <input name="priceTo" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6" placeholder="до" type="number" />
                       </div>
                     </div>
-                    <input name="itemName" className="absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#FFFFFF0D] font-exo text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] w-[0]" placeholder="" type="text" />
-                    <button className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
+                    <input name="itemName" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#1E1F23] font-exo text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] pl-3 pr-10 ${isSearchOpen ? 'w-full border-[1px] border-[#FFFFFF1A]' : 'w-[0] opacity-0 pointer-events-none'}`} placeholder="Поиск по названию..." type="text" />
+                    <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
                       <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
                     </button>
                   </div>

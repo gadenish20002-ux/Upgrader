@@ -26,7 +26,8 @@ type CssVars = CSSProperties & Record<`--${string}`, string | number>
 
 const TARGET_INDEX = 42
 const TAPE_LENGTH = 58
-const CASE_OPEN_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
+const CASE_SEQUENCE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
+const CASE_SEQUENCE_SOUND_RATE = 0.96
 const CASE_FRAME_COUNT = 81
 const CASE_DROP_FRAME = 10
 const CASE_DROP_MS = 820
@@ -35,10 +36,93 @@ const CASE_TO_ROULETTE_GAP_MS = 120
 const ROULETTE_SPIN_MS = 10000
 const ROULETTE_REVEAL_MS = 450
 const CASE_FRAME_MS = CASE_OPEN_MS / (CASE_FRAME_COUNT - CASE_DROP_FRAME - 1)
-const WEAPON_CHANCE = 0.9
+const STICKER_CHANCE = 0.95
 const caseFrameUrls = Array.from({ length: CASE_FRAME_COUNT }, (_, index) =>
   `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`,
 )
+
+const COMPENSATION_BONUS_ITEMS: Skin[] = [
+  {
+    id: "bonus-sticker-ihc-rio-2022",
+    weapon: "Sticker",
+    name: "IHC Esports | Rio 2022",
+    wear: "",
+    price: 2.36,
+    rarity: "rare",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjNioOinHtwQ6_Y_3pA3iQk6mmsCw-HECtqX9MaA4IaHLC2XEw7Zw5bZvHX7kxhh1tmrUnIm3MSXAZ4Xje8k/360fx360f",
+  },
+  {
+    id: "bonus-sticker-g2-austin-2025",
+    weapon: "Sticker",
+    name: "G2 Esports | Austin 2025",
+    wear: "",
+    price: 2.74,
+    rarity: "rare",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMu0JinHtwM689W6vVjjER-ims6y-HQNu_H8avBuJKnLDzPAkr8k6OdtFnvhwE9zsG_UwsHpLywUtj0iGw/360fx360f",
+  },
+  {
+    id: "bonus-graffiti-rage-mode",
+    weapon: "Sealed Graffiti",
+    name: "Rage Mode",
+    wear: "",
+    price: 3.46,
+    rarity: "common",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/IzMF03bi9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdB2ozio1RrlIWFK3UfvMYB8UsvjiMXojflsZalyxSh31CIyHz2GZ-KuFpPsrTzBG0pPSEEEvycTKKdnKIHV0wHOdYYz3b-Tuls-3AFDudFOEqQQsGKfQFoWZKbMuLahE615lLpWL-lEtxEQQlZ8lSeR-30ykXZb58nSNwEqb_cg/360fx360f",
+  },
+  {
+    id: "bonus-sticker-electronic-stockholm-2021",
+    weapon: "Sticker",
+    name: "electroNic | Stockholm 2021",
+    wear: "",
+    price: 1.51,
+    rarity: "rare",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjNm1Onic7QQlpta7-VDgfhj9m5X07y1V5vHgMKBpdfHGCjXElLgi5rQ4HS_jwh4ltm6Ew4ygJSjCbg52ApYmQeUD5g74zIN7Cxi4Yw/360fx360f",
+  },
+  {
+    id: "bonus-sticker-cadian-paris-2023",
+    weapon: "Sticker",
+    name: "cadiaN (Glitter) | Paris 2023",
+    wear: "",
+    price: 3.61,
+    rarity: "mythical",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjNqgJ3KEtwYnp8jn417YQhz1l5fuwiVX5ua6bbYjd_bAXWWRmbgi4rk4HijrwR4k5GSDzYn8cS6WbwIhXMYhQ-4DsUHrlMqnab38mVd6ng/360fx360f",
+  },
+  {
+    id: "bonus-sticker-skullz-budapest-2025",
+    weapon: "Sticker",
+    name: "skullz (Embroidered) | Budapest 2025",
+    wear: "",
+    price: 6.24,
+    rarity: "mythical",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM6547z1UrsVBH9hKnl8CBJ4PuqbbZoJL6WDGLFlux14Oc5S33mlx90tWWEmNutci7GOlIkXJdyQ-UOuxi_k4bmKaq8sAE_Zr6K/360fx360f",
+  },
+  {
+    id: "bonus-sticker-mercury-austin-2025",
+    weapon: "Sticker",
+    name: "Mercury | Austin 2025",
+    wear: "",
+    price: 7.75,
+    rarity: "rare",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMu0JinHtwM6547z1VTiUx7kjI-uqnYPvqL-bf01dqPKC2WUx7ch4Lg4Fnzqwx8itWSHz479cimXZgcmD4wwG7B7VYiwng/360fx360f",
+  },
+  {
+    id: "bonus-charm-mezii-budapest-2025",
+    weapon: "Souvenir Charm",
+    name: "Budapest 2025 Highlight | mezii vs FaZe on Inferno",
+    wear: "",
+    price: 15.67,
+    rarity: "rare",
+    image:
+      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGI6zwki4Uf_a0IWjIH_FtQQgu4z31VvyRU-hzMOurHcDvfOrOPFucfWWDDaTxbwl5LBvSnrgxhsk4TjSn437J3zGOFcmCYwwG7A7om1dgw/360fx360f",
+  },
+]
 
 let caseFramesPreloaded = false
 function preloadCaseFrames() {
@@ -71,24 +155,22 @@ function preloadCaseFrames() {
 function isStickerSkin(skin: Skin) {
   const weapon = skin.weapon.toLowerCase()
   const name = skin.name.toLowerCase()
-  return weapon.includes("sticker") || name.includes("sticker") || weapon.includes("наклей") || name.includes("наклей")
-}
-
-function isWeaponSkin(skin: Skin) {
-  const weapon = skin.weapon.toLowerCase()
   return (
-    !isStickerSkin(skin) &&
-    !weapon.includes("graffiti") &&
-    !weapon.includes("граффити") &&
-    !weapon.includes("charm") &&
-    !weapon.includes("брел")
+    weapon.includes("sticker") ||
+    name.includes("sticker") ||
+    weapon.includes("graffiti") ||
+    weapon.includes("charm") ||
+    weapon.includes("наклей") ||
+    name.includes("наклей") ||
+    weapon.includes("граффити") ||
+    weapon.includes("брел")
   )
 }
 
-function pickWeightedSkin(weapons: Skin[], otherItems: Skin[], fallback: Skin[]) {
-  const weaponPool = weapons.length > 0 ? weapons : fallback
+function pickWeightedSkin(stickerItems: Skin[], otherItems: Skin[], fallback: Skin[]) {
+  const stickerPool = stickerItems.length > 0 ? stickerItems : fallback
   const otherPool = otherItems.length > 0 ? otherItems : fallback
-  const pool = Math.random() < WEAPON_CHANCE ? weaponPool : otherPool
+  const pool = Math.random() < STICKER_CHANCE ? stickerPool : otherPool
   return pool[Math.floor(Math.random() * pool.length)] ?? fallback[0]
 }
 
@@ -97,12 +179,13 @@ function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
 
   const cheapSkins = skins.filter((skin) => skin.price > 0 && skin.price <= 1000)
   const pool = cheapSkins.length >= 4 ? cheapSkins : skins
-  const weapons = pool.filter(isWeaponSkin)
-  const otherItems = pool.filter((skin) => !isWeaponSkin(skin))
-  const winner = pickWeightedSkin(weapons, otherItems, pool) ?? pool[0] ?? skins[0]
+  const stickerItems = [...COMPENSATION_BONUS_ITEMS, ...pool.filter(isStickerSkin)]
+  const otherItems = pool.filter((skin) => !isStickerSkin(skin) && skin.price <= 80)
+  const fallback = stickerItems.length > 0 ? stickerItems : pool
+  const winner = pickWeightedSkin(stickerItems, otherItems, fallback) ?? pool[0] ?? skins[0]
 
   const items = Array.from({ length: TAPE_LENGTH }, (_, index) => {
-    const skin = index === TARGET_INDEX ? winner : pickWeightedSkin(weapons, otherItems, pool) ?? winner
+    const skin = index === TARGET_INDEX ? winner : pickWeightedSkin(stickerItems, otherItems, fallback) ?? winner
     return {
       key: `${skin.id}-${index}-${Math.random().toString(36).slice(2, 7)}`,
       skin,
@@ -228,7 +311,7 @@ function HorizontalDropRoulette({
   }, [active, items, onFinished])
 
   return (
-    <div className="relative min-h-[6.75rem] w-full overflow-hidden lg:min-h-[12.5rem]">
+    <div className="relative w-full overflow-hidden" style={{ minHeight: "10rem" }}>
       <img
         alt=""
         className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
@@ -237,14 +320,15 @@ function HorizontalDropRoulette({
       />
       <div
         ref={viewportRef}
-        className="relative min-h-[6.75rem] w-full overflow-hidden lg:min-h-[12.5rem]"
+        className="relative w-full overflow-hidden"
+        style={{ minHeight: "10rem" }}
       >
-        <div ref={tapeRef} className="absolute left-0 top-0 flex min-h-[6.75rem] w-max items-center gap-4 px-[50%] will-change-transform lg:min-h-[12.5rem]">
+        <div ref={tapeRef} className="absolute left-0 top-0 flex w-max items-center gap-4 px-[50%] will-change-transform" style={{ minHeight: "10rem" }}>
           {items.map((entry) => (
             <div
               key={entry.key}
               ref={entry.isWinner ? winnerRef : undefined}
-              className={`pointer-events-none relative h-[6.75rem] w-[7.3125rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[9.5rem] lg:h-[12.5rem] lg:w-[13.5625rem] ${
+              className={`pointer-events-none relative h-[6.75rem] w-[7.3125rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[9.5rem] lg:h-[8.75rem] lg:w-[9.5rem] ${
                 entry.isWinner && spinFinished ? "z-20 scale-[1.08]" : ""
               }`}
             >
@@ -289,6 +373,8 @@ function ReferenceCase({ phase }: { phase: Phase }) {
   return (
     <div
       className={`bonus-reference-case ${phase === "drop" ? "is-dropping" : ""} ${
+        phase === "open" ? "is-opening" : ""
+      } ${
         phase === "roulette" || phase === "result" ? "is-cleared" : ""
       }`}
       aria-hidden="true"
@@ -311,31 +397,32 @@ function CaseScene({
   const showImpact = phase === "open"
 
   return (
-    <div className="relative flex h-full min-h-[20rem] w-full flex-1 flex-col items-center justify-center overflow-hidden lg:min-h-[25rem]">
-      <div className="bonus-case-shadow" />
-      <div className="bonus-stage-glow" />
+    <div
+      className={`relative flex h-full w-full flex-1 flex-col items-center justify-center ${
+        showRoulette ? "min-h-0" : "min-h-[18rem] lg:min-h-[22rem]"
+      }`}
+    >
+      {!showRoulette ? <div className="bonus-case-shadow" /> : null}
+      {!showRoulette ? <div className="bonus-stage-glow" /> : null}
 
-      <div className={`bonus-impact-dust ${showImpact ? "is-active" : ""}`}>
-        <div />
-        <img src="/assets/smoke.webp" alt="" draggable={false} />
-      </div>
+      {!showRoulette ? (
+        <div className={`bonus-impact-dust ${showImpact ? "is-active" : ""}`}>
+          <div />
+          <img src="/assets/smoke.webp" alt="" draggable={false} />
+        </div>
+      ) : null}
 
-      <div className="relative z-10 flex h-[15rem] w-full items-center justify-center sm:h-[17rem] lg:h-[20rem]">
-        <ReferenceCase phase={phase} />
-      </div>
+      {!showRoulette ? (
+        <div className="relative z-10 flex h-[14rem] w-full items-center justify-center sm:h-[16rem] lg:h-[19rem]">
+          <ReferenceCase phase={phase} />
+        </div>
+      ) : null}
 
-      <div
-        className="absolute left-1/2 top-1/2 z-30 w-full transition-all duration-700 ease-out"
-        style={{
-          opacity: showRoulette ? 1 : 0,
-          pointerEvents: showRoulette ? "auto" : "none",
-          transform: showRoulette
-            ? "translate(-50%, -50%) scale(1)"
-            : "translate(-50%, calc(-50% + 2rem)) scale(0.96)",
-        }}
-      >
-        <HorizontalDropRoulette active={showRoulette} items={tapeItems} onFinished={onRouletteFinished} />
-      </div>
+      {showRoulette ? (
+        <div className="w-full transition-all duration-700 ease-out">
+          <HorizontalDropRoulette active={showRoulette} items={tapeItems} onFinished={onRouletteFinished} />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -398,8 +485,11 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
   const [winningSkin, setWinningSkin] = useState<Skin | null>(null)
   const [sold, setSold] = useState(false)
 
+  // Capture skins at animation start to avoid re-triggering when inventory changes
+  const capturedSkinsRef = useRef<Skin[]>([])
+
   const timersRef = useRef<number[]>([])
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioRefs = useRef<HTMLAudioElement[]>([])
   const onCompleteRef = useRef(onComplete)
   const soundEnabledRef = useRef(soundEnabled)
   const awardedRef = useRef(false)
@@ -421,10 +511,8 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
   const clearRunning = useCallback(() => {
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current = null
-    }
+    audioRefs.current.forEach((audio) => audio.pause())
+    audioRefs.current = []
   }, [])
 
   const schedule = useCallback((fn: () => void, delay: number) => {
@@ -443,17 +531,25 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     closingRef.current = false
   }, [])
 
-  const playCaseSound = useCallback(() => {
+  const playSound = useCallback((src: string, volume = 0.75, playbackRate = 1) => {
     if (soundEnabledRef.current === false) return
     try {
-      const audio = new Audio(encodeURI(CASE_OPEN_SOUND))
-      audio.volume = 0.75
+      const audio = new Audio(encodeURI(src))
+      audio.volume = volume
+      audio.playbackRate = playbackRate
+      audio.addEventListener("ended", () => {
+        audioRefs.current = audioRefs.current.filter((item) => item !== audio)
+      })
       audio.play().catch(() => {})
-      audioRef.current = audio
+      audioRefs.current.push(audio)
     } catch {
-      audioRef.current = null
+      audioRefs.current = []
     }
   }, [])
+
+  const playCaseSequenceSound = useCallback(() => {
+    playSound(CASE_SEQUENCE_SOUND, 0.78, CASE_SEQUENCE_SOUND_RATE)
+  }, [playSound])
 
   const finish = useCallback(() => {
     if (closingRef.current) return
@@ -467,10 +563,27 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
 
   const awardDrop = useCallback(() => {
     if (!winningSkin || awardedRef.current) return
-    const uid = addToInventory(winningSkin.id)
+    let uid: string
+    const isCatalogSkin = state.skins.some((skin) => skin.id === winningSkin.id)
+
+    if (isCatalogSkin) {
+      uid = addToInventory(winningSkin.id)
+    } else {
+      uid = `bonus-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+      setState((prev) => ({
+        ...prev,
+        skins: prev.skins.some((skin) => skin.id === winningSkin.id) ? prev.skins : [winningSkin, ...prev.skins],
+        upgradeSkins: prev.upgradeSkins.some((skin) => skin.id === winningSkin.id)
+          ? prev.upgradeSkins
+          : [winningSkin, ...prev.upgradeSkins],
+        inventory: [{ uid, skinId: winningSkin.id }, ...prev.inventory],
+        upgrades: prev.upgrades + 1,
+      }))
+    }
+
     awardedRef.current = true
     awardedUidRef.current = uid
-  }, [addToInventory, winningSkin])
+  }, [addToInventory, setState, state.skins, winningSkin])
 
   const handleRouletteFinished = useCallback(() => {
     if (closingRef.current) return
@@ -502,7 +615,10 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
       return
     }
 
-    const next = pickTape(state.skins)
+    // Capture current skins once at animation start — do NOT include state.skins
+    // in the dependency array to avoid re-triggering when inventory changes.
+    capturedSkinsRef.current = state.skins
+    const next = pickTape(capturedSkinsRef.current)
     if (!next.winner) {
       onCompleteRef.current?.()
       return
@@ -517,10 +633,10 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     setWinningSkin(next.winner)
     setPhase("drop")
     setVisible(true)
+    playCaseSequenceSound()
 
     schedule(() => {
       setPhase("open")
-      playCaseSound()
     }, CASE_DROP_MS)
 
     schedule(() => {
@@ -528,7 +644,8 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     }, CASE_DROP_MS + CASE_OPEN_MS + CASE_TO_ROULETTE_GAP_MS)
 
     return () => clearRunning()
-  }, [clearRunning, playCaseSound, playing, resetVisualState, schedule, state.skins])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearRunning, playCaseSequenceSound, playing, resetVisualState, schedule])
 
   const showResult = phase === "result" && winningSkin
 
@@ -540,27 +657,37 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
 
   if (!visible && !playing) return null
 
+  const isRoulettePanel = phase === "roulette"
+
+  const panelSizeClass = showResult
+    ? "h-[min(30rem,calc(100vh-6rem))] max-w-[46rem] p-4 lg:p-6"
+    : "p-4 lg:p-5"
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-hidden px-3 pb-4 pt-[4.25rem] transition-opacity duration-300 ease-out lg:pt-[5rem]"
+      className="pointer-events-none absolute -top-4 lg:-top-6 bottom-[4.5rem] lg:bottom-[5.5rem] -left-2 -right-2 z-[100] flex items-center justify-center transition-opacity duration-300 ease-out"
       style={{ opacity: visible ? 1 : 0 }}
       role="dialog"
       aria-modal="true"
     >
-      <div className="absolute inset-0 bg-[rgba(8,9,13,0.92)] backdrop-blur-lg" />
-      <button
-        type="button"
-        aria-label="Закрыть"
-        className="absolute right-4 top-4 z-[120] flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] text-[#A7A7A7] transition-colors hover:bg-[#2a2b30] hover:text-white lg:right-6 lg:top-6"
-        onClick={finish}
+      <div className="pointer-events-none absolute inset-0 bg-[rgba(5,6,9,0.55)]" />
+
+      <div
+        className={`pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden bg-[#111216]/95 rounded-xl lg:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.48)] ${
+          showResult ? "max-w-[46rem] h-auto border border-white/10 p-4 lg:p-6" : ""
+        }`}
       >
-        <X size={16} />
-      </button>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(251,213,6,0.1),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(211,44,230,0.1),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent_25%)]" />
+        <button
+          type="button"
+          aria-label="Закрыть"
+          className="absolute right-2 top-2 z-[120] flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] text-[#A7A7A7] transition-colors hover:bg-[#2a2b30] hover:text-white"
+          onClick={finish}
+        >
+          <X size={12} />
+        </button>
 
-      <div className="relative z-[110] flex h-[min(43rem,calc(100vh-5.5rem))] w-full max-w-[76rem] flex-col items-center justify-between overflow-hidden rounded-xl border border-white/10 bg-[#111216]/95 p-4 shadow-[0_30px_120px_rgba(0,0,0,0.65)] lg:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(251,213,6,0.13),transparent_34%),radial-gradient(circle_at_15%_80%,rgba(211,44,230,0.12),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_25%)]" />
-
-        {panelTitle ? (
+        {!showResult && !isRoulettePanel ? (
           <div className="relative z-10 flex flex-col items-center space-y-1 text-center transition-all duration-500 ease-out lg:space-y-2">
             <h2 className="text-xl font-bold text-white lg:text-2xl">{panelTitle}</h2>
             <span className="text-xs text-gray-400 lg:text-sm">Бонус выдается случайным образом</span>

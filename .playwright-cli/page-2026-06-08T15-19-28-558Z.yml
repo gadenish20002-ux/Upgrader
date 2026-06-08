@@ -1,0 +1,680 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e8] [cursor=pointer]:
+    - img [ref=e9]
+  - alert [ref=e26]
+  - generic [ref=e27]:
+    - banner [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - link "Logo UPGRADER" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - img "Logo" [ref=e33]
+            - generic [ref=e34]: UPGRADER
+          - generic [ref=e35]:
+            - generic [ref=e37]:
+              - img "Online" [ref=e38]
+              - generic [ref=e39]:
+                - generic [ref=e40]: Онлайн
+                - generic [ref=e41]: 2 054
+            - generic [ref=e43]:
+              - img "Upgrades" [ref=e44]
+              - generic [ref=e45]:
+                - generic [ref=e46]: Апгрейдов
+                - generic [ref=e47]: 132 900 131
+        - generic [ref=e48]:
+          - generic [ref=e50]:
+            - link "telegram" [ref=e51] [cursor=pointer]:
+              - /url: https://t.me/upgraderCS
+              - img "telegram" [ref=e52]
+            - link "vk" [ref=e53] [cursor=pointer]:
+              - /url: https://vk.com/upgraderCS2
+              - img "vk" [ref=e54]
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - button "10 212" [ref=e57]:
+                - generic [ref=e58]: 10 212
+              - button "top-up-mobile-icon Пополнить" [ref=e59]:
+                - img "top-up-mobile-icon" [ref=e61]
+                - generic [ref=e62]: Пополнить
+            - button [ref=e64]
+            - button "Открыть профиль" [ref=e66] [cursor=pointer]:
+              - img "Аватар пользователя" [ref=e67]
+    - generic [ref=e68]:
+      - complementary [ref=e70]:
+        - button "up-arrow-up 5.16% Gungnir AWP Аватар пользователя bigPenis 999547.78 drop-item" [ref=e74]:
+          - generic:
+            - generic:
+              - img "up-arrow-up"
+              - generic: 5.16%
+            - generic:
+              - generic: Gungnir
+              - generic: AWP
+            - generic:
+              - img "Аватар пользователя"
+              - generic: bigPenis
+          - generic [ref=e76]: "999547.78"
+          - img "drop-item" [ref=e77]
+          - img [ref=e78]
+          - generic:
+            - img
+        - generic [ref=e81]:
+          - button "up-arrow-up 78.20% Tropical Storm Souvenir SSG 08 Аватар пользователя ultraseks drop-item" [ref=e1043]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.20%
+              - generic:
+                - generic: Tropical Storm
+                - generic: Souvenir SSG 08
+              - generic:
+                - img "Аватар пользователя"
+                - generic: ultraseks
+            - img "drop-item" [ref=e1044]
+          - button "up-arrow-up 53.82% Kiss♥Love Sawed-Off Аватар пользователя The Celestial </3 drop-item" [ref=e1047]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.82%
+              - generic:
+                - generic: Kiss♥Love
+                - generic: Sawed-Off
+              - generic:
+                - img "Аватар пользователя"
+                - generic: The Celestial </3
+            - img "drop-item" [ref=e1048]
+          - button "up-arrow-up 78.92% Moonrise Glock-18 Аватар пользователя Litschi-ω- drop-item" [ref=e1051]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.92%
+              - generic:
+                - generic: Moonrise
+                - generic: Glock-18
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Litschi-ω-
+            - img "drop-item" [ref=e1052]
+          - button "up-arrow-up 57.33% Gold Toof Glock-18 Аватар пользователя Hom1k drop-item" [ref=e1055]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 57.33%
+              - generic:
+                - generic: Gold Toof
+                - generic: Glock-18
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Hom1k
+            - img "drop-item" [ref=e1056]
+          - button "up-arrow-up 74.99% Magmatude Charm Аватар пользователя Vazik.prime drop-item" [ref=e1059]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 74.99%
+              - generic:
+                - generic: Magmatude
+                - generic: Charm
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Vazik.prime
+            - img "drop-item" [ref=e1060]
+          - button "up-arrow-up 8.15% Recoil XM1014 Sealed Graffiti Аватар пользователя whease drop-item" [ref=e1063]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 8.15%
+              - generic:
+                - generic: Recoil XM1014
+                - generic: Sealed Graffiti
+              - generic:
+                - img "Аватар пользователя"
+                - generic: whease
+            - img "drop-item" [ref=e1064]
+          - button "up-arrow-up 36.22% Sand Dune P250 Аватар пользователя Na1za_riO drop-item" [ref=e1067]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.22%
+              - generic:
+                - generic: Sand Dune
+                - generic: P250
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Na1za_riO
+            - img "drop-item" [ref=e1068]
+          - button "up-arrow-up 21.50% Red Stone SSG 08 Аватар пользователя Bedoch drop-item" [ref=e1071]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 21.50%
+              - generic:
+                - generic: Red Stone
+                - generic: SSG 08
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Bedoch
+            - img "drop-item" [ref=e1072]
+          - button "up-arrow-up 28.45% Slate AK-47 Аватар пользователя MUERTE™ drop-item" [ref=e1075]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 28.45%
+              - generic:
+                - generic: Slate
+                - generic: AK-47
+              - generic:
+                - img "Аватар пользователя"
+                - generic: MUERTE™
+            - img "drop-item" [ref=e1076]
+          - button "up-arrow-up 54.53% Weasel Glock-18 Аватар пользователя Kres drop-item" [ref=e1079]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 54.53%
+              - generic:
+                - generic: Weasel
+                - generic: Glock-18
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Kres
+            - img "drop-item" [ref=e1080]
+          - button "up-arrow-up 35.01% Falcons (Foil) | Austin 2025 Sticker Slab Аватар пользователя 𝘦𝘤𝘴𝘵𝘢𝘴𝘺 drop-item" [ref=e1083]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.01%
+              - generic:
+                - generic: Falcons (Foil) | Austin 2025
+                - generic: Sticker Slab
+              - generic:
+                - img "Аватар пользователя"
+                - generic: 𝘦𝘤𝘴𝘵𝘢𝘴𝘺
+            - img "drop-item" [ref=e1084]
+          - button "up-arrow-up 78.77% Wild Child UMP-45 Аватар пользователя Dabs drop-item" [ref=e1087]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.77%
+              - generic:
+                - generic: Wild Child
+                - generic: UMP-45
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Dabs
+            - img "drop-item" [ref=e1088]
+          - button "up-arrow-up 37.00% Chopper P90 Аватар пользователя gorilla_7777_ drop-item" [ref=e1091]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 37.00%
+              - generic:
+                - generic: Chopper
+                - generic: P90
+              - generic:
+                - img "Аватар пользователя"
+                - generic: gorilla_7777_
+            - img "drop-item" [ref=e1092]
+          - button "up-arrow-up 13.47% Skadoodle Sticker Аватар пользователя filayka +WW drop-item" [ref=e1095]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 13.47%
+              - generic:
+                - generic: Skadoodle
+                - generic: Sticker
+              - generic:
+                - img "Аватар пользователя"
+                - generic: filayka +WW
+            - img "drop-item" [ref=e1096]
+          - button "up-arrow-up 36.69% Autumn Twilly MP5-SD Аватар пользователя SVINKA PEPE drop-item" [ref=e1099]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.69%
+              - generic:
+                - generic: Autumn Twilly
+                - generic: MP5-SD
+              - generic:
+                - img "Аватар пользователя"
+                - generic: SVINKA PEPE
+            - img "drop-item" [ref=e1100]
+          - button "up-arrow-up 36.98% Ace Devil Sticker Аватар пользователя LA drop-item" [ref=e1103]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.98%
+              - generic:
+                - generic: Ace Devil
+                - generic: Sticker
+              - generic:
+                - img "Аватар пользователя"
+                - generic: LA
+            - img "drop-item" [ref=e1104]
+          - button "up-arrow-up 14.24% USTILO (Foil) Sticker Аватар пользователя nastya.dust2.раза drop-item" [ref=e1107]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 14.24%
+              - generic:
+                - generic: USTILO (Foil)
+                - generic: Sticker
+              - generic:
+                - img "Аватар пользователя"
+                - generic: nastya.dust2.раза
+            - img "drop-item" [ref=e1108]
+          - button "up-arrow-up 35.55% Half Sleeve FAMAS Аватар пользователя milfanyaa drop-item" [ref=e1111]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.55%
+              - generic:
+                - generic: Half Sleeve
+                - generic: FAMAS
+              - generic:
+                - img "Аватар пользователя"
+                - generic: milfanyaa
+            - img "drop-item" [ref=e1112]
+          - button "up-arrow-up 53.68% Liquidation M4A1-S Аватар пользователя Glebik_pro777 drop-item" [ref=e1115]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.68%
+              - generic:
+                - generic: Liquidation
+                - generic: M4A1-S
+              - generic:
+                - img "Аватар пользователя"
+                - generic: Glebik_pro777
+            - img "drop-item" [ref=e1116]
+          - button "up-arrow-up 36.67% Faulty Wiring FAMAS Аватар пользователя бурмалда drop-item" [ref=e1119]:
+            - generic:
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.67%
+              - generic:
+                - generic: Faulty Wiring
+                - generic: FAMAS
+              - generic:
+                - img "Аватар пользователя"
+                - generic: бурмалда
+            - img "drop-item" [ref=e1120]
+      - generic [ref=e134]:
+        - main [ref=e135]:
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]:
+                - img [ref=e139]
+                - generic [ref=e142]: UPGRADER
+              - generic [ref=e143]:
+                - generic [ref=e144]:
+                  - button "Информация" [ref=e145]
+                  - button "Настройки" [ref=e146]
+                  - button "Звук" [ref=e147]:
+                    - img [ref=e148]
+                  - button "Быстрый режим" [ref=e150]:
+                    - img [ref=e151]
+                - generic [ref=e157]:
+                  - img [ref=e161]
+                  - img [ref=e164]
+                  - generic [ref=e169]:
+                    - generic [ref=e170]: 35.31%
+                    - generic [ref=e171]: средний шанс
+                  - generic [ref=e172]: 100%
+                  - generic [ref=e173]: 50%
+                  - generic [ref=e174]: 50%
+                  - generic [ref=e175]: 0%
+                - generic [ref=e177]:
+                  - button "Close" [ref=e875] [cursor=pointer]:
+                    - img "Close" [ref=e876]
+                  - generic [ref=e877]:
+                    - generic [ref=e878]:
+                      - generic [ref=e879]: Dual Berettas
+                      - generic [ref=e880]: Silver Pour
+                    - img "Silver Pour" [ref=e882]
+                  - generic [ref=e883]:
+                    - generic [ref=e884]: 13,12
+                    - img "coin" [ref=e885]
+                - generic [ref=e184]:
+                  - generic [ref=e185]:
+                    - generic [ref=e186]: "Сумма баланса:"
+                    - generic [ref=e187]:
+                      - generic [ref=e189]: 0,00
+                      - generic [ref=e190]: (max 10 211,54)
+                  - slider [ref=e191]: "0"
+                - generic [ref=e193]:
+                  - button "Close" [ref=e886] [cursor=pointer]:
+                    - img "Close" [ref=e887]
+                  - generic [ref=e196]:
+                    - generic [ref=e888]: PP-BIZON
+                    - generic [ref=e889]: Space Cat
+                  - img "Space Cat" [ref=e1122]
+                  - generic [ref=e892]:
+                    - generic [ref=e893]: 34,18
+                    - img "coin" [ref=e894]
+                - generic [ref=e199]:
+                  - button "x2" [ref=e200] [cursor=pointer]:
+                    - generic [ref=e201]: x2
+                  - button "x4" [ref=e202] [cursor=pointer]:
+                    - generic [ref=e203]: x4
+                  - button "x8" [ref=e204] [cursor=pointer]:
+                    - generic [ref=e205]: x8
+                  - button "35%" [active] [ref=e206] [cursor=pointer]:
+                    - generic [ref=e207]: 35%
+                  - button "55%" [ref=e208] [cursor=pointer]:
+                    - generic [ref=e209]: 55%
+                  - button "75%" [ref=e210] [cursor=pointer]:
+                    - generic [ref=e211]: 75%
+                  - button "settings" [ref=e212] [cursor=pointer]:
+                    - img "settings" [ref=e213]
+                - button "Прокачать" [ref=e215]:
+                  - generic: Прокачать
+            - generic [ref=e217]:
+              - generic [ref=e219]:
+                - generic [ref=e221]:
+                  - generic [ref=e222]:
+                    - generic [ref=e223]:
+                      - button "Мои скины" [ref=e224]:
+                        - img [ref=e225]
+                      - button "Магазин" [ref=e228]:
+                        - img [ref=e229]
+                    - generic [ref=e233]: Мои скины
+                  - generic [ref=e234]:
+                    - button "Сортировка по возрастанию Сортировка по убыванию" [ref=e235] [cursor=pointer]:
+                      - img "Сортировка по возрастанию" [ref=e236]
+                      - img "Сортировка по убыванию" [ref=e237]
+                    - generic [ref=e238]:
+                      - generic [ref=e239]: Всего скинов
+                      - generic [ref=e240]:
+                        - text: 14 452,06
+                        - img "coin-icon" [ref=e241]
+                - generic [ref=e243]:
+                  - button "1 492,59 Minimal Wear Case Hardened Stiletto Knife Case Hardened" [ref=e246]:
+                    - generic [ref=e247]:
+                      - generic [ref=e248]:
+                        - generic [ref=e250]: 1 492,59
+                        - generic [ref=e251]: Minimal Wear
+                      - img "Case Hardened" [ref=e252]
+                      - generic [ref=e253]:
+                        - generic [ref=e254]: Stiletto Knife
+                        - generic [ref=e255]: Case Hardened
+                  - button "1 492,59 Minimal Wear Case Hardened Stiletto Knife Case Hardened" [ref=e259]:
+                    - generic [ref=e260]:
+                      - generic [ref=e261]:
+                        - generic [ref=e263]: 1 492,59
+                        - generic [ref=e264]: Minimal Wear
+                      - img "Case Hardened" [ref=e265]
+                      - generic [ref=e266]:
+                        - generic [ref=e267]: Stiletto Knife
+                        - generic [ref=e268]: Case Hardened
+                  - button "1 492,59 Minimal Wear Case Hardened Stiletto Knife Case Hardened" [ref=e272]:
+                    - generic [ref=e273]:
+                      - generic [ref=e274]:
+                        - generic [ref=e276]: 1 492,59
+                        - generic [ref=e277]: Minimal Wear
+                      - img "Case Hardened" [ref=e278]
+                      - generic [ref=e279]:
+                        - generic [ref=e280]: Stiletto Knife
+                        - generic [ref=e281]: Case Hardened
+                  - button "1 476,60 Factory New Smoke Out Moto Gloves Smoke Out" [ref=e285]:
+                    - generic [ref=e286]:
+                      - generic [ref=e287]:
+                        - generic [ref=e289]: 1 476,60
+                        - generic [ref=e290]: Factory New
+                      - img "Smoke Out" [ref=e291]
+                      - generic [ref=e292]:
+                        - generic [ref=e293]: Moto Gloves
+                        - generic [ref=e294]: Smoke Out
+                  - button "1 423,54 Field-Tested Ultraviolet Talon Knife Ultraviolet" [ref=e298]:
+                    - generic [ref=e299]:
+                      - generic [ref=e300]:
+                        - generic [ref=e302]: 1 423,54
+                        - generic [ref=e303]: Field-Tested
+                      - img "Ultraviolet" [ref=e304]
+                      - generic [ref=e305]:
+                        - generic [ref=e306]: Talon Knife
+                        - generic [ref=e307]: Ultraviolet
+                  - button "1 423,54 Field-Tested Ultraviolet Talon Knife Ultraviolet" [ref=e311]:
+                    - generic [ref=e312]:
+                      - generic [ref=e313]:
+                        - generic [ref=e315]: 1 423,54
+                        - generic [ref=e316]: Field-Tested
+                      - img "Ultraviolet" [ref=e317]
+                      - generic [ref=e318]:
+                        - generic [ref=e319]: Talon Knife
+                        - generic [ref=e320]: Ultraviolet
+                  - button "1 423,54 Field-Tested Ultraviolet Talon Knife Ultraviolet" [ref=e324]:
+                    - generic [ref=e325]:
+                      - generic [ref=e326]:
+                        - generic [ref=e328]: 1 423,54
+                        - generic [ref=e329]: Field-Tested
+                      - img "Ultraviolet" [ref=e330]
+                      - generic [ref=e331]:
+                        - generic [ref=e332]: Talon Knife
+                        - generic [ref=e333]: Ultraviolet
+                  - button "1 397,34 Battle-Scarred Ocean Drive Desert Eagle Ocean Drive" [ref=e337]:
+                    - generic [ref=e338]:
+                      - generic [ref=e339]:
+                        - generic [ref=e341]: 1 397,34
+                        - generic [ref=e342]: Battle-Scarred
+                      - img "Ocean Drive" [ref=e343]
+                      - generic [ref=e344]:
+                        - generic [ref=e345]: Desert Eagle
+                        - generic [ref=e346]: Ocean Drive
+                  - button "1 397,34 Battle-Scarred Ocean Drive Desert Eagle Ocean Drive" [ref=e350]:
+                    - generic [ref=e351]:
+                      - generic [ref=e352]:
+                        - generic [ref=e354]: 1 397,34
+                        - generic [ref=e355]: Battle-Scarred
+                      - img "Ocean Drive" [ref=e356]
+                      - generic [ref=e357]:
+                        - generic [ref=e358]: Desert Eagle
+                        - generic [ref=e359]: Ocean Drive
+                  - button "1 397,34 Battle-Scarred Ocean Drive Desert Eagle Ocean Drive" [ref=e363]:
+                    - generic [ref=e364]:
+                      - generic [ref=e365]:
+                        - generic [ref=e367]: 1 397,34
+                        - generic [ref=e368]: Battle-Scarred
+                      - img "Ocean Drive" [ref=e369]
+                      - generic [ref=e370]:
+                        - generic [ref=e371]: Desert Eagle
+                        - generic [ref=e372]: Ocean Drive
+                  - button "13,12 Battle-Scarred Silver Pour Dual Berettas Silver Pour" [ref=e376]:
+                    - generic [ref=e377]:
+                      - generic [ref=e378]:
+                        - generic [ref=e380]: 13,12
+                        - generic [ref=e381]: Battle-Scarred
+                      - img "Silver Pour" [ref=e382]
+                      - generic [ref=e383]:
+                        - generic [ref=e384]: Dual Berettas
+                        - generic [ref=e385]: Silver Pour
+                  - button "12,98 Battle-Scarred Flame Jörmungandr AUG Flame JöRmungandr" [ref=e389]:
+                    - generic [ref=e390]:
+                      - generic [ref=e391]:
+                        - generic [ref=e393]: 12,98
+                        - generic [ref=e394]: Battle-Scarred
+                      - img "Flame Jörmungandr" [ref=e395]
+                      - generic [ref=e396]:
+                        - generic [ref=e397]: AUG
+                        - generic [ref=e398]: Flame JöRmungandr
+                  - button "6,73 Well-Worn Modern Hunter Nova Modern Hunter" [ref=e402]:
+                    - generic [ref=e403]:
+                      - generic [ref=e404]:
+                        - generic [ref=e406]: 6,73
+                        - generic [ref=e407]: Well-Worn
+                      - img "Modern Hunter" [ref=e408]
+                      - generic [ref=e409]:
+                        - generic [ref=e410]: Nova
+                        - generic [ref=e411]: Modern Hunter
+                  - button "0,74 Factory New Rust Coat Sawed-Off Rust Coat" [ref=e415]:
+                    - generic [ref=e416]:
+                      - generic [ref=e417]:
+                        - generic [ref=e419]: 0,74
+                        - generic [ref=e420]: Factory New
+                      - img "Rust Coat" [ref=e421]
+                      - generic [ref=e422]:
+                        - generic [ref=e423]: Sawed-Off
+                        - generic [ref=e424]: Rust Coat
+                  - button "0,74 Factory New Rust Coat Sawed-Off Rust Coat" [ref=e428]:
+                    - generic [ref=e429]:
+                      - generic [ref=e430]:
+                        - generic [ref=e432]: 0,74
+                        - generic [ref=e433]: Factory New
+                      - img "Rust Coat" [ref=e434]
+                      - generic [ref=e435]:
+                        - generic [ref=e436]: Sawed-Off
+                        - generic [ref=e437]: Rust Coat
+                  - button "0,74 Factory New Rust Coat Sawed-Off Rust Coat" [ref=e441]:
+                    - generic [ref=e442]:
+                      - generic [ref=e443]:
+                        - generic [ref=e445]: 0,74
+                        - generic [ref=e446]: Factory New
+                      - img "Rust Coat" [ref=e447]
+                      - generic [ref=e448]:
+                        - generic [ref=e449]: Sawed-Off
+                        - generic [ref=e450]: Rust Coat
+              - generic [ref=e458]:
+                - generic [ref=e461]:
+                  - generic [ref=e463]:
+                    - img [ref=e464]
+                    - generic [ref=e467]: Выберите скин
+                  - generic [ref=e468]:
+                    - button "Сортировка по возрастанию Сортировка по убыванию" [ref=e469] [cursor=pointer]:
+                      - img "Сортировка по возрастанию" [ref=e470]
+                      - img "Сортировка по убыванию" [ref=e471]
+                    - generic [ref=e472]:
+                      - generic [ref=e473]:
+                        - generic [ref=e475]: Цена
+                        - generic [ref=e476]:
+                          - img "coin" [ref=e477]
+                          - textbox "от" [ref=e478]: "30"
+                        - generic [ref=e479]:
+                          - img "coin" [ref=e480]
+                          - textbox "до" [ref=e481]: "39"
+                      - textbox "Название"
+                      - button "Поиск" [ref=e482] [cursor=pointer]:
+                        - img "Поиск" [ref=e483]
+                - generic [ref=e485]:
+                  - button "НОВЫЕ СКИНЫ уже здесь" [ref=e486] [cursor=pointer]:
+                    - generic [ref=e488]:
+                      - generic [ref=e489]: НОВЫЕ СКИНЫ
+                      - generic [ref=e490]: уже здесь
+                  - button "35,57 Well-Worn Toy Soldier Nova Toy Soldier" [ref=e1125]:
+                    - generic [ref=e1126]:
+                      - generic [ref=e1127]:
+                        - generic [ref=e1129]: 35,57
+                        - generic [ref=e1130]: Well-Worn
+                      - img "Toy Soldier" [ref=e1131]
+                      - generic [ref=e1132]:
+                        - generic [ref=e1133]: Nova
+                        - generic [ref=e1134]: Toy Soldier
+                  - button "34,18 Factory New Space Cat PP-BIZON Space Cat" [ref=e1138]:
+                    - generic [ref=e1141]:
+                      - generic [ref=e1142]:
+                        - generic [ref=e1144]: 34,18
+                        - generic [ref=e1145]: Factory New
+                      - img "Space Cat" [ref=e1146]
+                      - generic [ref=e1147]:
+                        - generic [ref=e1148]: PP-BIZON
+                        - generic [ref=e1149]: Space Cat
+                  - button "34,11 Field-Tested Dream Glade G3SG1 Dream Glade" [ref=e1153]:
+                    - generic [ref=e1154]:
+                      - generic [ref=e1155]:
+                        - generic [ref=e1157]: 34,11
+                        - generic [ref=e1158]: Field-Tested
+                      - img "Dream Glade" [ref=e1159]
+                      - generic [ref=e1160]:
+                        - generic [ref=e1161]: G3SG1
+                        - generic [ref=e1162]: Dream Glade
+                  - button "34,04 Well-Worn Bulldozer SG 553 Bulldozer" [ref=e1166]:
+                    - generic [ref=e1167]:
+                      - generic [ref=e1168]:
+                        - generic [ref=e1170]: 34,04
+                        - generic [ref=e1171]: Well-Worn
+                      - img "Bulldozer" [ref=e1172]
+                      - generic [ref=e1173]:
+                        - generic [ref=e1174]: SG 553
+                        - generic [ref=e1175]: Bulldozer
+                  - button "31,17 Battle-Scarred Aztec M249 Aztec" [ref=e1179]:
+                    - generic [ref=e1180]:
+                      - generic [ref=e1181]:
+                        - generic [ref=e1183]: 31,17
+                        - generic [ref=e1184]: Battle-Scarred
+                      - img "Aztec" [ref=e1185]
+                      - generic [ref=e1186]:
+                        - generic [ref=e1187]: M249
+                        - generic [ref=e1188]: Aztec
+                  - button "30,58 Factory New Sheet Lightning M4A4 Sheet Lightning" [ref=e1192]:
+                    - generic [ref=e1193]:
+                      - generic [ref=e1194]:
+                        - generic [ref=e1196]: 30,58
+                        - generic [ref=e1197]: Factory New
+                      - img "Sheet Lightning" [ref=e1198]
+                      - generic [ref=e1199]:
+                        - generic [ref=e1200]: M4A4
+                        - generic [ref=e1201]: Sheet Lightning
+                  - button "30,27 Factory New Berries And Cherries Five-Seven Berries And Cherries" [ref=e1205]:
+                    - generic [ref=e1206]:
+                      - generic [ref=e1207]:
+                        - generic [ref=e1209]: 30,27
+                        - generic [ref=e1210]: Factory New
+                      - img "Berries And Cherries" [ref=e1211]
+                      - generic [ref=e1212]:
+                        - generic [ref=e1213]: Five-Seven
+                        - generic [ref=e1214]: Berries And Cherries
+        - contentinfo [ref=e745]:
+          - generic [ref=e746]:
+            - link "Logo UPGRADER" [ref=e747] [cursor=pointer]:
+              - /url: /
+              - img "Logo" [ref=e748]
+              - generic [ref=e749]: UPGRADER
+            - generic [ref=e751]:
+              - link "telegram" [ref=e752] [cursor=pointer]:
+                - /url: https://t.me/upgraderCS
+                - img "telegram" [ref=e753]
+              - link "vk" [ref=e754] [cursor=pointer]:
+                - /url: https://vk.com/upgraderCS2
+                - img "vk" [ref=e755]
+          - generic [ref=e756]:
+            - link "Logo UPGRADER" [ref=e757] [cursor=pointer]:
+              - /url: /
+              - img "Logo" [ref=e758]
+              - generic [ref=e759]: UPGRADER
+            - generic [ref=e760]:
+              - paragraph [ref=e761]: Поддержка
+              - link "support@upgrader.pro" [ref=e762] [cursor=pointer]:
+                - /url: mailto:support@upgrader.pro
+            - generic [ref=e763]:
+              - paragraph [ref=e764]: Сотрудничество
+              - link "marketing@upgrader.pro" [ref=e765] [cursor=pointer]:
+                - /url: mailto:marketing@upgrader.pro
+            - generic [ref=e766]:
+              - paragraph [ref=e767]: Общие положения
+              - generic [ref=e768]:
+                - link "Пользовательское соглашение" [ref=e769] [cursor=pointer]:
+                  - /url: /ru/tos
+                - link "Политика использования Cookie" [ref=e770] [cursor=pointer]:
+                  - /url: /ru/cookie-policy
+                - link "Политика конфиденциальности" [ref=e771] [cursor=pointer]:
+                  - /url: /ru/privacy-policy
+                - link "Публичная оферта" [ref=e772] [cursor=pointer]:
+                  - /url: /assets/files/offer_uzum.pdf
+            - generic [ref=e773]:
+              - generic [ref=e775]:
+                - link "telegram" [ref=e776] [cursor=pointer]:
+                  - /url: https://t.me/upgraderCS
+                  - img "telegram" [ref=e777]
+                - link "vk" [ref=e778] [cursor=pointer]:
+                  - /url: https://vk.com/upgraderCS2
+                  - img "vk" [ref=e779]
+              - button "Language selection" [ref=e782] [cursor=pointer]:
+                - generic [ref=e783]:
+                  - img "flag" [ref=e784]
+                  - generic [ref=e785]: RUS
+                - img "arrow-down" [ref=e786]
+          - generic [ref=e787]:
+            - paragraph [ref=e788]: UPGRADER © 2026
+            - generic [ref=e789]:
+              - paragraph [ref=e790]: "LLC «Transtrade», Company address: Kyrgyz Republic, Bishkek, Leninsky District, 66 Kalyk Akiev Street, Registration number (OGRN): 310961-3301-LLC, Tax ID (INN): 9909710251"
+              - paragraph [ref=e791]: На нашем сайте вы можете улучшить CS2 предметы.
+    - button "Поддержка" [ref=e792]
+  - region "Notifications alt+T"

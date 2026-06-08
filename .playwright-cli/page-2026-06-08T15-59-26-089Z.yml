@@ -1,0 +1,488 @@
+- generic [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "Logo" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Logo" [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - button "1 000" [ref=e13]:
+              - generic [ref=e14]: 1 000
+            - button "top-up-mobile-icon" [ref=e15]:
+              - img "top-up-mobile-icon" [ref=e17]
+          - button [ref=e19]
+          - button "Открыть профиль" [ref=e21] [cursor=pointer]:
+            - img "Аватар пользователя" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e25]:
+        - generic [ref=e26]: Лучший дроп
+        - generic [ref=e27]:
+          - button "Аватар пользователя up-arrow-up 5.16% drop-item" [ref=e30]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 5.16%
+            - img "drop-item" [ref=e31]
+            - img [ref=e32]
+          - button "Аватар пользователя up-arrow-up 36.22% drop-item" [ref=e424]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.22%
+            - img "drop-item" [ref=e425]
+          - button "Аватар пользователя up-arrow-up 21.50% drop-item" [ref=e426]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 21.50%
+            - img "drop-item" [ref=e427]
+          - button "Аватар пользователя up-arrow-up 28.45% drop-item" [ref=e428]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 28.45%
+            - img "drop-item" [ref=e429]
+          - button "Аватар пользователя up-arrow-up 54.53% drop-item" [ref=e280]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 54.53%
+            - img "drop-item" [ref=e281]
+          - button "Аватар пользователя up-arrow-up 35.01% drop-item" [ref=e282]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.01%
+            - img "drop-item" [ref=e283]
+          - button "Аватар пользователя up-arrow-up 78.77% drop-item" [ref=e284]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.77%
+            - img "drop-item" [ref=e285]
+          - button "Аватар пользователя up-arrow-up 37.00% drop-item" [ref=e286]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 37.00%
+            - img "drop-item" [ref=e287]
+          - button "Аватар пользователя up-arrow-up 13.47% drop-item" [ref=e288]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 13.47%
+            - img "drop-item" [ref=e289]
+          - button "Аватар пользователя up-arrow-up 36.69% drop-item" [ref=e290]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.69%
+            - img "drop-item" [ref=e291]
+          - button "Аватар пользователя up-arrow-up 36.98% drop-item" [ref=e292]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.98%
+            - img "drop-item" [ref=e293]
+          - button "Аватар пользователя up-arrow-up 14.24% drop-item" [ref=e264]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 14.24%
+            - img "drop-item" [ref=e265]
+          - button "Аватар пользователя up-arrow-up 35.55% drop-item" [ref=e266]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 35.55%
+            - img "drop-item" [ref=e267]
+          - button "Аватар пользователя up-arrow-up 53.68% drop-item" [ref=e268]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.68%
+            - img "drop-item" [ref=e269]
+          - button "Аватар пользователя up-arrow-up 36.67% drop-item" [ref=e270]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 36.67%
+            - img "drop-item" [ref=e271]
+          - button "Аватар пользователя up-arrow-up 78.20% drop-item" [ref=e272]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.20%
+            - img "drop-item" [ref=e273]
+          - button "Аватар пользователя up-arrow-up 53.82% drop-item" [ref=e274]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 53.82%
+            - img "drop-item" [ref=e275]
+          - button "Аватар пользователя up-arrow-up 78.92% drop-item" [ref=e276]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 78.92%
+            - img "drop-item" [ref=e277]
+          - button "Аватар пользователя up-arrow-up 57.33% drop-item" [ref=e278]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 57.33%
+            - img "drop-item" [ref=e279]
+          - button "Аватар пользователя up-arrow-up 74.99% drop-item" [ref=e35]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 74.99%
+            - img "drop-item" [ref=e36]
+          - button "Аватар пользователя up-arrow-up 8.15% drop-item" [ref=e37]:
+            - generic:
+              - img "Аватар пользователя"
+              - generic:
+                - img "up-arrow-up"
+                - generic: 8.15%
+            - img "drop-item" [ref=e38]
+      - generic [ref=e75]:
+        - main [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e83]: UPGRADER
+              - generic [ref=e84]:
+                - generic [ref=e85]:
+                  - button "Информация" [ref=e86]
+                  - button "Настройки" [ref=e87]
+                  - button "Звук" [ref=e88]:
+                    - img [ref=e89]
+                  - button "Быстрый режим" [ref=e91]:
+                    - img [ref=e92]
+                - generic [ref=e98]:
+                  - img [ref=e102]
+                  - img [ref=e105]
+                  - generic [ref=e110]:
+                    - generic [ref=e111]: 45.49%
+                    - generic [ref=e112]: средний шанс
+                  - generic [ref=e113]: 100%
+                  - generic [ref=e114]: 50%
+                  - generic [ref=e115]: 50%
+                  - generic [ref=e116]: 0%
+                - generic [ref=e118]:
+                  - button "Close" [ref=e294] [cursor=pointer]:
+                    - img "Close" [ref=e295]
+                  - generic [ref=e296]:
+                    - generic [ref=e297]:
+                      - generic [ref=e298]: P250
+                      - generic [ref=e299]: Copper Oxide
+                    - img "Copper Oxide" [ref=e301]
+                  - generic [ref=e302]:
+                    - generic [ref=e303]: 5,40
+                    - img "coin" [ref=e304]
+                - generic [ref=e125]:
+                  - generic [ref=e126]:
+                    - generic [ref=e127]: "Сумма баланса:"
+                    - generic [ref=e128]:
+                      - generic [ref=e130]: 0,00
+                      - generic [ref=e131]: (max 1 000,00)
+                  - slider [ref=e132]: "0"
+                - generic [ref=e134]:
+                  - button "Close" [ref=e305] [cursor=pointer]:
+                    - img "Close" [ref=e306]
+                  - generic [ref=e137]:
+                    - generic [ref=e307]: AUG
+                    - generic [ref=e308]: Carved Jade
+                  - img "Carved Jade" [ref=e430]
+                  - generic [ref=e311]:
+                    - generic [ref=e312]: 10,92
+                    - img "coin" [ref=e313]
+                - generic [ref=e140]:
+                  - button "x2" [active] [ref=e141] [cursor=pointer]:
+                    - generic [ref=e142]: x2
+                  - button "x4" [ref=e143] [cursor=pointer]:
+                    - generic [ref=e144]: x4
+                  - button "x8" [ref=e145] [cursor=pointer]:
+                    - generic [ref=e146]: x8
+                  - button "35%" [ref=e147] [cursor=pointer]:
+                    - generic [ref=e148]: 35%
+                  - button "55%" [ref=e149] [cursor=pointer]:
+                    - generic [ref=e150]: 55%
+                  - button "75%" [ref=e151] [cursor=pointer]:
+                    - generic [ref=e152]: 75%
+                  - button "settings" [ref=e153] [cursor=pointer]:
+                    - img "settings" [ref=e154]
+                - button "Прокачать" [ref=e156]:
+                  - generic: Прокачать
+            - generic [ref=e157]:
+              - generic [ref=e159]:
+                - button "Мои предметы" [ref=e160]
+                - button "Желаемые предметы" [ref=e161]
+              - generic [ref=e315]:
+                - generic [ref=e318]:
+                  - generic [ref=e320]:
+                    - generic [ref=e321]: Выберите скин
+                    - img [ref=e322]
+                  - generic [ref=e325]:
+                    - button "Сортировка по возрастанию Сортировка по убыванию" [ref=e326] [cursor=pointer]:
+                      - img "Сортировка по возрастанию" [ref=e327]
+                      - img "Сортировка по убыванию" [ref=e328]
+                    - generic [ref=e329]:
+                      - generic [ref=e330]:
+                        - generic [ref=e332]: Цена
+                        - textbox "от" [ref=e334]: "9.72"
+                        - textbox "до" [ref=e336]: "11.88"
+                      - textbox "Название"
+                      - button "Поиск" [ref=e337] [cursor=pointer]:
+                        - img "Поиск" [ref=e338]
+                - generic [ref=e339]:
+                  - generic [ref=e340]:
+                    - button "НОВЫЕ СКИНЫ уже здесь" [ref=e341] [cursor=pointer]:
+                      - generic [ref=e343]:
+                        - generic [ref=e344]: НОВЫЕ СКИНЫ
+                        - generic [ref=e345]: уже здесь
+                    - button "11,82 Minimal Wear Facility Dark UMP-45 Facility Dark" [ref=e433]:
+                      - generic [ref=e434]:
+                        - generic [ref=e435]:
+                          - generic [ref=e437]: 11,82
+                          - generic [ref=e438]: Minimal Wear
+                        - img "Facility Dark" [ref=e439]
+                        - generic [ref=e440]:
+                          - generic [ref=e441]: UMP-45
+                          - generic [ref=e442]: Facility Dark
+                    - button "11,54 Factory New Hideout Dual Berettas Hideout" [ref=e446]:
+                      - generic [ref=e447]:
+                        - generic [ref=e448]:
+                          - generic [ref=e450]: 11,54
+                          - generic [ref=e451]: Factory New
+                        - img "Hideout" [ref=e452]
+                        - generic [ref=e453]:
+                          - generic [ref=e454]: Dual Berettas
+                          - generic [ref=e455]: Hideout
+                    - button "11,48 Battle-Scarred Sandstorm Galil Ar Sandstorm" [ref=e459]:
+                      - generic [ref=e460]:
+                        - generic [ref=e461]:
+                          - generic [ref=e463]: 11,48
+                          - generic [ref=e464]: Battle-Scarred
+                        - img "Sandstorm" [ref=e465]
+                        - generic [ref=e466]:
+                          - generic [ref=e467]: Galil Ar
+                          - generic [ref=e468]: Sandstorm
+                    - button "11,42 Factory New Ultraviolet MAC-10 Ultraviolet" [ref=e472]:
+                      - generic [ref=e473]:
+                        - generic [ref=e474]:
+                          - generic [ref=e476]: 11,42
+                          - generic [ref=e477]: Factory New
+                        - img "Ultraviolet" [ref=e478]
+                        - generic [ref=e479]:
+                          - generic [ref=e480]: MAC-10
+                          - generic [ref=e481]: Ultraviolet
+                    - button "11,24 Minimal Wear Infrastructure Negev Infrastructure" [ref=e485]:
+                      - generic [ref=e486]:
+                        - generic [ref=e487]:
+                          - generic [ref=e489]: 11,24
+                          - generic [ref=e490]: Minimal Wear
+                        - img "Infrastructure" [ref=e491]
+                        - generic [ref=e492]:
+                          - generic [ref=e493]: Negev
+                          - generic [ref=e494]: Infrastructure
+                    - button "11,19 Well-Worn Nuclear Garden MAC-10 Nuclear Garden" [ref=e498]:
+                      - generic [ref=e499]:
+                        - generic [ref=e500]:
+                          - generic [ref=e502]: 11,19
+                          - generic [ref=e503]: Well-Worn
+                        - img "Nuclear Garden" [ref=e504]
+                        - generic [ref=e505]:
+                          - generic [ref=e506]: MAC-10
+                          - generic [ref=e507]: Nuclear Garden
+                    - button "11,12 Well-Worn Amber Fade Sawed-Off Amber Fade" [ref=e511]:
+                      - generic [ref=e512]:
+                        - generic [ref=e513]:
+                          - generic [ref=e515]: 11,12
+                          - generic [ref=e516]: Well-Worn
+                        - img "Amber Fade" [ref=e517]
+                        - generic [ref=e518]:
+                          - generic [ref=e519]: Sawed-Off
+                          - generic [ref=e520]: Amber Fade
+                    - button "11,12 Minimal Wear Freight P90 Freight" [ref=e524]:
+                      - generic [ref=e525]:
+                        - generic [ref=e526]:
+                          - generic [ref=e528]: 11,12
+                          - generic [ref=e529]: Minimal Wear
+                        - img "Freight" [ref=e530]
+                        - generic [ref=e531]:
+                          - generic [ref=e532]: P90
+                          - generic [ref=e533]: Freight
+                    - button "11,00 Battle-Scarred Red Rock P250 Red Rock" [ref=e537]:
+                      - generic [ref=e538]:
+                        - generic [ref=e539]:
+                          - generic [ref=e541]: 11,00
+                          - generic [ref=e542]: Battle-Scarred
+                        - img "Red Rock" [ref=e543]
+                        - generic [ref=e544]:
+                          - generic [ref=e545]: P250
+                          - generic [ref=e546]: Red Rock
+                    - button "10,92 Field-Tested Carved Jade AUG Carved Jade" [ref=e550]:
+                      - generic [ref=e553]:
+                        - generic [ref=e554]:
+                          - generic [ref=e556]: 10,92
+                          - generic [ref=e557]: Field-Tested
+                        - img "Carved Jade" [ref=e558]
+                        - generic [ref=e559]:
+                          - generic [ref=e560]: AUG
+                          - generic [ref=e561]: Carved Jade
+                    - button "10,92 Minimal Wear Nebula Crusader M249 Nebula Crusader" [ref=e565]:
+                      - generic [ref=e566]:
+                        - generic [ref=e567]:
+                          - generic [ref=e569]: 10,92
+                          - generic [ref=e570]: Minimal Wear
+                        - img "Nebula Crusader" [ref=e571]
+                        - generic [ref=e572]:
+                          - generic [ref=e573]: M249
+                          - generic [ref=e574]: Nebula Crusader
+                    - button "10,63 Battle-Scarred Business Class USP-S Business Class" [ref=e578]:
+                      - generic [ref=e579]:
+                        - generic [ref=e580]:
+                          - generic [ref=e582]: 10,63
+                          - generic [ref=e583]: Battle-Scarred
+                        - img "Business Class" [ref=e584]
+                        - generic [ref=e585]:
+                          - generic [ref=e586]: USP-S
+                          - generic [ref=e587]: Business Class
+                    - button "10,61 Well-Worn Blaze Orange XM1014 Blaze Orange" [ref=e591]:
+                      - generic [ref=e592]:
+                        - generic [ref=e593]:
+                          - generic [ref=e595]: 10,61
+                          - generic [ref=e596]: Well-Worn
+                        - img "Blaze Orange" [ref=e597]
+                        - generic [ref=e598]:
+                          - generic [ref=e599]: XM1014
+                          - generic [ref=e600]: Blaze Orange
+                    - button "10,61 Minimal Wear Morris Sawed-Off Morris" [ref=e604]:
+                      - generic [ref=e605]:
+                        - generic [ref=e606]:
+                          - generic [ref=e608]: 10,61
+                          - generic [ref=e609]: Minimal Wear
+                        - img "Morris" [ref=e610]
+                        - generic [ref=e611]:
+                          - generic [ref=e612]: Sawed-Off
+                          - generic [ref=e613]: Morris
+                    - button "10,60 Minimal Wear Wings AUG Wings" [ref=e617]:
+                      - generic [ref=e618]:
+                        - generic [ref=e619]:
+                          - generic [ref=e621]: 10,60
+                          - generic [ref=e622]: Minimal Wear
+                        - img "Wings" [ref=e623]
+                        - generic [ref=e624]:
+                          - generic [ref=e625]: AUG
+                          - generic [ref=e626]: Wings
+                    - button "10,59 Field-Tested Dazzle Negev Dazzle" [ref=e630]:
+                      - generic [ref=e631]:
+                        - generic [ref=e632]:
+                          - generic [ref=e634]: 10,59
+                          - generic [ref=e635]: Field-Tested
+                        - img "Dazzle" [ref=e636]
+                        - generic [ref=e637]:
+                          - generic [ref=e638]: Negev
+                          - generic [ref=e639]: Dazzle
+                    - button "10,52 Well-Worn Mischief MP7 Mischief" [ref=e643]:
+                      - generic [ref=e644]:
+                        - generic [ref=e645]:
+                          - generic [ref=e647]: 10,52
+                          - generic [ref=e648]: Well-Worn
+                        - img "Mischief" [ref=e649]
+                        - generic [ref=e650]:
+                          - generic [ref=e651]: MP7
+                          - generic [ref=e652]: Mischief
+                    - button "10,49 Well-Worn Converter M4A4 Converter" [ref=e656]:
+                      - generic [ref=e657]:
+                        - generic [ref=e658]:
+                          - generic [ref=e660]: 10,49
+                          - generic [ref=e661]: Well-Worn
+                        - img "Converter" [ref=e662]
+                        - generic [ref=e663]:
+                          - generic [ref=e664]: M4A4
+                          - generic [ref=e665]: Converter
+                    - button "10,19 Minimal Wear Bamboo Shadow Sawed-Off Bamboo Shadow" [ref=e669]:
+                      - generic [ref=e670]:
+                        - generic [ref=e671]:
+                          - generic [ref=e673]: 10,19
+                          - generic [ref=e674]: Minimal Wear
+                        - img "Bamboo Shadow" [ref=e675]
+                        - generic [ref=e676]:
+                          - generic [ref=e677]: Sawed-Off
+                          - generic [ref=e678]: Bamboo Shadow
+                  - generic [ref=e680]:
+                    - button [disabled] [ref=e681]:
+                      - img [ref=e682]
+                    - button [ref=e684]:
+                      - img [ref=e685]
+        - contentinfo [ref=e223]:
+          - generic [ref=e224]:
+            - link "Logo UPGRADER" [ref=e225] [cursor=pointer]:
+              - /url: /
+              - img "Logo" [ref=e226]
+              - generic [ref=e227]: UPGRADER
+            - generic [ref=e229]:
+              - link "telegram" [ref=e230] [cursor=pointer]:
+                - /url: https://t.me/upgraderCS
+                - img "telegram" [ref=e231]
+              - link "vk" [ref=e232] [cursor=pointer]:
+                - /url: https://vk.com/upgraderCS2
+                - img "vk" [ref=e233]
+          - generic [ref=e234]:
+            - generic [ref=e235]:
+              - generic [ref=e236]:
+                - generic [ref=e237]:
+                  - paragraph [ref=e238]: Поддержка
+                  - link "support@upgrader.pro" [ref=e239] [cursor=pointer]:
+                    - /url: mailto:support@upgrader.pro
+                - generic [ref=e240]:
+                  - paragraph [ref=e241]: Сотрудничество
+                  - link "marketing@upgrader.pro" [ref=e242] [cursor=pointer]:
+                    - /url: mailto:marketing@upgrader.pro
+              - button "Language selection" [ref=e245] [cursor=pointer]:
+                - generic [ref=e246]:
+                  - img "flag" [ref=e247]
+                  - generic [ref=e248]: RUS
+                - img "arrow-down" [ref=e249]
+            - generic [ref=e250]:
+              - paragraph [ref=e251]: Общие положения
+              - link "Пользовательское соглашение" [ref=e252] [cursor=pointer]:
+                - /url: /ru/tos
+              - link "Политика использования Cookie" [ref=e253] [cursor=pointer]:
+                - /url: /ru/cookie-policy
+              - link "Политика конфиденциальности" [ref=e254] [cursor=pointer]:
+                - /url: /ru/privacy-policy
+              - link "Публичная оферта" [ref=e255] [cursor=pointer]:
+                - /url: /assets/files/offer_uzum.pdf
+          - generic [ref=e256]:
+            - paragraph [ref=e257]: UPGRADER © 2026
+            - generic [ref=e258]:
+              - paragraph [ref=e259]: "LLC «Transtrade», Company address: Kyrgyz Republic, Bishkek, Leninsky District, 66 Kalyk Akiev Street, Registration number (OGRN): 310961-3301-LLC, Tax ID (INN): 9909710251"
+              - paragraph [ref=e260]: На нашем сайте вы можете улучшить CS2 предметы.
+    - button "Поддержка" [ref=e261]
+  - region "Notifications alt+T"

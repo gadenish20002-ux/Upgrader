@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { useStore, getSkin, formatPrice } from "@/lib/store"
 import { UpgradeWheel, type UpgradeWheelHandle } from "./upgrade-wheel"
 import { InventoryPanel } from "./inventory-panel"
@@ -17,11 +17,43 @@ import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay } from "./win-animation-overlay"
 import { LoseAnimationOverlay } from "./lose-animation-overlay"
+import type { InventoryItem } from "@/lib/types"
 
 const WIN_FACTOR = 0.92 // house edge
+const DEFAULT_INVENTORY_RECOMMENDATION_PERCENT = 80
+const PERCENT_FILTER_SPREAD = 4
+const MULTIPLIER_FILTER_SPREAD = 0.1
+
+type FastFilter =
+  | { type: "multiplier"; value: number }
+  | { type: "percentage"; value: number }
+
+function getFastFilterPriceRange(filter: FastFilter, value: number) {
+  if (value <= 0) return null
+
+  if (filter.type === "multiplier") {
+    const targetPrice = value * filter.value
+    return {
+      targetPrice,
+      min: targetPrice * (1 - MULTIPLIER_FILTER_SPREAD),
+      max: targetPrice * (1 + MULTIPLIER_FILTER_SPREAD),
+    }
+  }
+
+  const targetChance = Math.min(92, Math.max(1, filter.value))
+  const minChance = Math.max(1, targetChance - PERCENT_FILTER_SPREAD)
+  const maxChance = Math.min(92, targetChance + PERCENT_FILTER_SPREAD)
+  const targetPrice = (value * WIN_FACTOR) / (targetChance / 100)
+
+  return {
+    targetPrice,
+    min: (value * WIN_FACTOR) / (maxChance / 100),
+    max: (value * WIN_FACTOR) / (minChance / 100),
+  }
+}
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, addToInventory, removeFromInventory } = useStore()
+  const { state, setState, removeFromInventory } = useStore()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
   const [selectedUids, setSelectedUids] = useState<string[]>([])
@@ -39,6 +71,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [catalogPriceMax, setCatalogPriceMax] = useState<number | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [wonItemUid, setWonItemUid] = useState<string | null>(null)
+  const [activeFastFilter, setActiveFastFilter] = useState<FastFilter | null>(null)
 
   // keep target in sync if a sidebar category was clicked
   const effectiveTarget = targetId ?? sidebarTargetId
@@ -74,6 +107,45 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const isBothSelected = !!targetSkin && selectedItems.length > 0
   const isReadyForTarget = !targetSkin && inputValue > 0
 
+  const activeFastFilterRange = useMemo(
+    () => (activeFastFilter ? getFastFilterPriceRange(activeFastFilter, inputValue) : null),
+    [activeFastFilter, inputValue],
+  )
+
+  const activeFastFilterSkins = useMemo(() => {
+    if (!activeFastFilterRange) return []
+    return state.upgradeSkins.filter((skin) => skin.price >= activeFastFilterRange.min && skin.price <= activeFastFilterRange.max)
+  }, [activeFastFilterRange, state.upgradeSkins])
+
+  useEffect(() => {
+    if (!activeFastFilter) return
+
+    if (!activeFastFilterRange) {
+      setCatalogPriceMin(null)
+      setCatalogPriceMax(null)
+      return
+    }
+
+    setCatalogPriceMin(activeFastFilterRange.min)
+    setCatalogPriceMax(activeFastFilterRange.max)
+
+    const sourceSkins = activeFastFilterSkins.length > 0 ? activeFastFilterSkins : state.upgradeSkins
+    const closest = sourceSkins.reduce((best, skin) => {
+      if (!best) return skin
+      return Math.abs(skin.price - activeFastFilterRange.targetPrice) < Math.abs(best.price - activeFastFilterRange.targetPrice)
+        ? skin
+        : best
+    }, undefined as (typeof state.upgradeSkins)[number] | undefined)
+
+    if (closest) {
+      setTargetId(closest.id)
+      setWonItemUid(null)
+      if (window.innerWidth < 1024) {
+        setMobileTab("catalog")
+      }
+    }
+  }, [activeFastFilter, activeFastFilterRange, activeFastFilterSkins, state.upgradeSkins])
+
   function toggleItem(uid: string) {
     setSelectedUids((prev) => {
       if (prev.includes(uid)) return prev.filter((u) => u !== uid)
@@ -83,6 +155,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       }
       return [...prev, uid]
     })
+    setActiveFastFilter((current) => current ?? { type: "percentage", value: DEFAULT_INVENTORY_RECOMMENDATION_PERCENT })
     setWonItemUid(null)
   }
 
@@ -112,31 +185,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setSelectedShopIds([])
     setBalanceInput(0)
     setWonItemUid(null)
+    setActiveFastFilter(null)
+    setCatalogPriceMin(null)
+    setCatalogPriceMax(null)
   }
 
   function handleAddWonItem() {
     if (wonItemUid) {
       setSelectedUids([wonItemUid])
       setWonItemUid(null)
-    }
-  }
-
-  function findClosestSkin(targetPrice: number) {
-    if (state.skins.length === 0) return
-    const sorted = [...state.skins].sort((a, b) => a.price - b.price)
-    let closest = sorted[0]
-    let minDiff = Math.abs(sorted[0].price - targetPrice)
-    for (const skin of sorted) {
-      const diff = Math.abs(skin.price - targetPrice)
-      if (diff < minDiff) {
-        minDiff = diff
-        closest = skin
-      }
-    }
-    setTargetId(closest.id)
-    setWonItemUid(null)
-    if (window.innerWidth < 1024) {
-      setMobileTab("catalog")
+      setActiveFastFilter({ type: "percentage", value: DEFAULT_INVENTORY_RECOMMENDATION_PERCENT })
     }
   }
 
@@ -145,10 +203,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Выберите предметы или укажите баланс")
       return
     }
-    const targetPrice = inputValue * multiplier
-    setCatalogPriceMin(Math.floor(targetPrice * 0.6))
-    setCatalogPriceMax(Math.ceil(targetPrice * 1.6))
-    findClosestSkin(targetPrice)
+    setActiveFastFilter({ type: "multiplier", value: multiplier })
   }
 
   function handleFastPercentage(percent: number) {
@@ -156,10 +211,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Выберите предметы или укажите баланс")
       return
     }
-    const targetPrice = (inputValue * WIN_FACTOR) / (percent / 100)
-    setCatalogPriceMin(Math.floor(targetPrice * 0.6))
-    setCatalogPriceMax(Math.ceil(targetPrice * 1.6))
-    findClosestSkin(targetPrice)
+    setActiveFastFilter({ type: "percentage", value: percent })
   }
 
   function handleBuyCartItems() {
@@ -169,15 +221,30 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     }
     if (selectedShopIds.length === 0) return
 
+    const itemsToBuy = selectedShopItems
+      .map((skin) => {
+        if (!skin) return null
+        return {
+          uid: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          skinId: skin.id,
+        } satisfies InventoryItem
+      })
+      .filter((item): item is InventoryItem => Boolean(item))
+
     const totalCartPrice = selectedShopItems.reduce((sum, skin) => sum + (skin!.price ?? 0), 0)
     
     if (totalCartPrice > state.balance) {
       toast.error("Недостаточно баланса")
       return
     }
+    if (itemsToBuy.length === 0) return
 
-    setState((p) => ({ ...p, balance: p.balance - totalCartPrice }))
-    selectedShopIds.forEach(id => addToInventory(id))
+    setState((p) => ({
+      ...p,
+      balance: Math.max(0, p.balance - totalCartPrice),
+      inventory: [...itemsToBuy, ...p.inventory],
+      upgrades: p.upgrades + itemsToBuy.length,
+    }))
     
     toast.success("Предметы успешно куплены!")
     if (state.soundMode === "on") {
@@ -236,14 +303,19 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
     const result = await wheelRef.current!.spin(win)
 
-    // settle
-    removeFromInventory(selectedUids)
-    setState((p) => ({ ...p, upgrades: p.upgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
-
     let newUid: string | null = null
 
     if (result) {
-      newUid = addToInventory(targetSkin.id)
+      newUid = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+      setState((p) => ({
+        ...p,
+        balance: Math.max(0, p.balance - balanceInput),
+        inventory: [
+          { uid: newUid!, skinId: targetSkin.id },
+          ...p.inventory.filter((i) => !selectedUids.includes(i.uid)),
+        ],
+        upgrades: p.upgrades + 1,
+      }))
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
       if (state.soundMode === "on") {
         const winAudio = new Audio("/sounds/fireworkWin.mp3")
@@ -251,7 +323,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       }
       setWinAnimating(true)
       setWinAnimKey((k) => k + 1)
+      setLeftPanelMode("inventory")
+      setMobileTab("inventory")
     } else {
+      removeFromInventory(selectedUids)
+      setState((p) => ({ ...p, upgrades: p.upgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim) {
         setLoseAnimating(true)
@@ -510,14 +586,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Upgrade Multipliers */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center mt-2 lg:mt-6 w-full h-12 lg:h-14">
           <div className="flex h-full w-full items-center justify-center space-x-1">
-            {state.predict.showMultipliers !== false && state.fastMultipliers.map((mult, idx) => (
+            {state.fastMultipliers.map((mult, idx) => (
               <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">x{mult}</span>
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">
+                  {state.predict.showMultipliers !== false ? `x${mult}` : mult}
+                </span>
               </button>
             ))}
-            {state.predict.showPercentages !== false && state.fastPercentages.map((perc, idx) => (
+            {state.fastPercentages.map((perc, idx) => (
               <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : `border-white/10 btn-gradient-${idx + 1}`}`}>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">{perc}%</span>
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">
+                  {state.predict.showPercentages !== false ? `${perc}%` : perc}
+                </span>
               </button>
             ))}
             <button onClick={() => setIsSettingsOpen(true)} className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]">
@@ -593,6 +673,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onSelect={(id) => {
                 setTargetId(effectiveTarget === id ? "" : id)
                 setWonItemUid(null)
+                setActiveFastFilter(null)
                 setCatalogPriceMin(null)
                 setCatalogPriceMax(null)
               }} 

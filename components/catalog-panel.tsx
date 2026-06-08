@@ -9,6 +9,10 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
+function formatFilterPrice(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}
+
 export function CatalogPanel({
   targetId,
   onSelect,
@@ -41,8 +45,8 @@ export function CatalogPanel({
 
   // Sync external price range into the filter inputs
   useEffect(() => {
-    if (priceMin != null) setMin(String(Math.floor(priceMin)))
-    if (priceMax != null) setMax(String(Math.ceil(priceMax)))
+    setMin(priceMin != null ? formatFilterPrice(priceMin) : "")
+    setMax(priceMax != null ? formatFilterPrice(priceMax) : "")
   }, [priceMin, priceMax])
 
   const filtered = useMemo(() => {
