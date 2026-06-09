@@ -508,6 +508,18 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     preloadCaseFrames()
   }, [])
 
+  // Add/remove body class to trigger CSS blur on the live feed sidebar
+  useEffect(() => {
+    if (visible) {
+      document.body.classList.add('lose-animating')
+    } else {
+      document.body.classList.remove('lose-animating')
+    }
+    return () => {
+      document.body.classList.remove('lose-animating')
+    }
+  }, [visible])
+
   const clearRunning = useCallback(() => {
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
@@ -670,8 +682,6 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
       role="dialog"
       aria-modal="true"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[rgba(5,6,9,0.55)]" />
-
       <div
         className={`pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden bg-[#111216]/95 rounded-xl lg:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.48)] ${
           showResult ? "max-w-[46rem] h-auto border border-white/10 p-4 lg:p-6" : ""

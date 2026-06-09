@@ -26,12 +26,12 @@ export function HomeClient() {
       <SiteHeader />
       <div className="flex flex-1 flex-col lg:flex-row pt-[3.25rem] md:pt-[4.25rem]">
         {/* Mobile: Top Live Feed */}
-        <div className="lg:hidden border-b border-border/40">
+        <div className="lg:hidden border-b border-border/40 lose-anim-blur-target">
           <LiveFeed selectedId={sidebarTargetId} onSelect={setSidebarTargetId} isMobile={true} />
         </div>
         
         {/* Desktop: Sidebar Live Feed */}
-        <div className="hidden lg:block shrink-0">
+        <div className="hidden lg:block shrink-0 lose-anim-blur-target">
           <LiveFeed selectedId={sidebarTargetId} onSelect={setSidebarTargetId} isMobile={false} />
         </div>
 
