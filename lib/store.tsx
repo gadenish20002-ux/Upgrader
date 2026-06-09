@@ -108,7 +108,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         const raw = window.localStorage.getItem(STORAGE_KEY)
         if (raw) {
-          currentLocal = { ...DEFAULT_STATE, ...JSON.parse(raw) }
+          const parsed = JSON.parse(raw)
+          currentLocal = { 
+            ...DEFAULT_STATE, 
+            ...parsed,
+            skins: DEFAULT_STATE.skins,
+            upgradeSkins: DEFAULT_STATE.skins
+          }
         }
       } catch {}
 
@@ -136,7 +142,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     function onStorage(e: StorageEvent) {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
-          setInternal({ ...DEFAULT_STATE, ...JSON.parse(e.newValue) })
+          const parsed = JSON.parse(e.newValue)
+          setInternal({ 
+            ...DEFAULT_STATE, 
+            ...parsed,
+            skins: DEFAULT_STATE.skins,
+            upgradeSkins: DEFAULT_STATE.skins
+          })
         } catch {}
       }
     }

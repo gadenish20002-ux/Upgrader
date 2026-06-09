@@ -263,7 +263,7 @@ export function CatalogPanel({
                   >
                     {isSpinning && (
                       <div className="absolute inset-0 z-[20] flex items-center justify-center rounded-md bg-[#16171a]/70">
-                        <img src="/assets/Апгрейд скинов КС2 (КС ГО)_ лучший Upgrader CS_files/lock.svg" alt="Locked" className="w-6 h-6 lg:w-8 lg:h-8" />
+                        <img src="/assets/lock.svg" alt="Locked" className="w-6 h-6 lg:w-8 lg:h-8" />
                       </div>
                     )}
                     {selected && (
