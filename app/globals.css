@@ -450,8 +450,8 @@ input[type="number"] {
   position: absolute;
   left: 50%;
   top: 56%;
-  width: min(64rem, 128vw);
-  height: min(28rem, 58vw);
+  width: min(32rem, 64vw);
+  height: min(14rem, 29vw);
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background:
@@ -467,7 +467,7 @@ input[type="number"] {
   left: 50%;
   top: 50%;
   z-index: 5;
-  width: min(82rem, 202vw);
+  width: min(41rem, 101vw);
   max-width: none;
   transform: translate(-50%, -50%) translateY(0) scale(1);
   transform-origin: center 72%;
@@ -494,7 +494,7 @@ input[type="number"] {
 
 .bonus-reference-case.is-cleared {
   opacity: 0;
-  transform: translate(-50%, -50%) translateY(-1.25rem) scale(0.96);
+  transform: translate(-50%, -50%) translateY(-0.625rem) scale(0.96);
   filter: blur(6px) brightness(1.16) drop-shadow(0 20px 28px rgba(0, 0, 0, 0.48));
 }
 
@@ -510,8 +510,8 @@ input[type="number"] {
   left: 50%;
   top: 68%;
   z-index: 1;
-  width: min(44rem, 110vw);
-  height: 5.4rem;
+  width: min(22rem, 55vw);
+  height: 2.7rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.64) 0%, rgba(0, 0, 0, 0.3) 42%, transparent 72%);
@@ -524,8 +524,8 @@ input[type="number"] {
   left: 50%;
   top: 65%;
   z-index: 2;
-  width: min(54rem, 120vw);
-  height: 12rem;
+  width: min(27rem, 60vw);
+  height: 6rem;
   transform: translate(-50%, -50%);
   opacity: 0;
   pointer-events: none;
@@ -540,7 +540,7 @@ input[type="number"] {
   left: 50%;
   bottom: 0.25rem;
   width: 96%;
-  height: 4.6rem;
+  height: 2.3rem;
   transform: translateX(-50%);
   border-radius: 9999px;
   background:
@@ -552,8 +552,8 @@ input[type="number"] {
 .bonus-impact-dust img {
   position: absolute;
   left: 50%;
-  bottom: -0.75rem;
-  width: min(34rem, 86vw);
+  bottom: -0.375rem;
+  width: min(17rem, 43vw);
   transform: translateX(-50%) scaleX(2.2);
   opacity: 0.32;
   filter: blur(1.5px) saturate(0.62);
@@ -577,7 +577,7 @@ input[type="number"] {
 
 @keyframes bonus-case-drop {
   0% {
-    transform: translate(-50%, -50%) translateY(-10rem) scale(0.98);
+    transform: translate(-50%, -50%) translateY(-5rem) scale(0.98);
     opacity: 0;
     filter:
       contrast(1.08)
@@ -586,11 +586,11 @@ input[type="number"] {
       drop-shadow(0 20px 28px rgba(0, 0, 0, 0.5));
   }
   58% {
-    transform: translate(-50%, -50%) translateY(0.45rem) scale(1.012);
+    transform: translate(-50%, -50%) translateY(0.22rem) scale(1.012);
     opacity: 1;
   }
   78% {
-    transform: translate(-50%, -50%) translateY(-0.18rem) scale(0.998);
+    transform: translate(-50%, -50%) translateY(-0.09rem) scale(0.998);
   }
   100% {
     transform: translate(-50%, -50%) translateY(0) scale(1);

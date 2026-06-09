@@ -11,10 +11,11 @@ interface UpgradeWheelProps {
   hasSelection: boolean
   fastMode?: boolean
   soundMode?: "on" | "off"
+  showPercentages?: boolean
 }
 
 export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(function UpgradeWheel(
-  { chance, hasSelection, fastMode, soundMode = "on" },
+  { chance, hasSelection, fastMode, soundMode = "on", showPercentages = true },
   ref,
 ) {
   const [rotation, setRotation] = useState(0)
@@ -191,9 +192,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
                 ) : (
                   <>
                     <span className="font-sans bg-clip-text bg-gradient-to-b font-bold from-[#FFE02D] lg:text-4xl text-2xl text-transparent to-[#53DB42] transition-all duration-500 ease-in-out"> 
-                      {(displayChance * 100).toFixed(2)}%
+                      {(displayChance * 100).toFixed(2)}{showPercentages ? "%" : ""}
                     </span>
                     <span className="font-sans bg-clip-text bg-gradient-to-b from-[#FFE02D] lg:text-sm text-transparent text-xs to-[#53DB42] transition-all duration-500 ease-in-out"> 
+
                       {getChanceText(displayChance)}
                     </span>
                   </>

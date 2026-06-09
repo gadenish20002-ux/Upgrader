@@ -11,8 +11,6 @@ function PredictContent() {
   const [rotation, setRotation] = useState(0)
   const [dots, setDots] = useState(1)
   const [randomHint, setRandomHint] = useState<string>("")
-  const showPercentages = state.predict.showPercentages ?? true
-  const showMultipliers = state.predict.showMultipliers ?? true
 
   useEffect(() => {
     if (phase === "analyzing") {
@@ -68,9 +66,7 @@ function PredictContent() {
   // Render dots for analyzing
   const dotsString = ".".repeat(dots)
 
-  const formattedHint = showMultipliers 
-    ? randomHint.toUpperCase() 
-    : randomHint.replace(/x/i, '').toUpperCase()
+  const formattedHint = randomHint.toUpperCase()
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0f1013" }}>
@@ -181,14 +177,12 @@ function PredictContent() {
               </div>
             </div>
             
-            {showPercentages && (
-              <>
-                <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-[#a4e57e] lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
-                <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
-                <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
-                <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
-              </>
-            )}
+            <>
+              <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-[#a4e57e] lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
+              <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
+              <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-[#ebd215] lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
+              <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-[#df4125] lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
+            </>
           </div>
         </div>
       </main>

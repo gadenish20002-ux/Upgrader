@@ -97,13 +97,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       
       // Update the server state (strip large skin arrays)
       const { skins, upgradeSkins, ...strippedNext } = next
-      lastSyncTime.current = Date.now()
       
-      fetch("/api/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(strippedNext)
-      }).catch(err => console.error("Failed to sync state", err))
+      const changes: Partial<AppState> = {}
+      let hasChanges = false
+      for (const key in strippedNext) {
+        if (JSON.stringify(strippedNext[key as keyof typeof strippedNext]) !== JSON.stringify(prev[key as keyof AppState])) {
+          changes[key as keyof AppState] = strippedNext[key as keyof typeof strippedNext] as any
+          hasChanges = true
+        }
+      }
+      
+      if (hasChanges) {
+        lastSyncTime.current = Date.now()
+        fetch("/api/state", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes)
+        }).catch(err => console.error("Failed to sync state", err))
+      }
       
       return next
     })

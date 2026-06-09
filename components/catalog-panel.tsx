@@ -19,12 +19,14 @@ export function CatalogPanel({
   setMobileTab,
   priceMin,
   priceMax,
+  isSpinning,
 }: {
   targetId: string | null
   onSelect: (id: string) => void
   setMobileTab?: (tab: "inventory" | "catalog") => void
   priceMin?: number | null
   priceMax?: number | null
+  isSpinning?: boolean
 }) {
   const { state } = useStore()
   const [query, setQuery] = useState("")
@@ -57,8 +59,8 @@ export function CatalogPanel({
 
     const base = baseSkins
       .filter((s) => `${s.weapon} ${s.name}`.toLowerCase().includes(query.toLowerCase()))
-      .filter((s) => (min ? s.price >= Number(min) : true))
-      .filter((s) => (max ? s.price <= Number(max) : true))
+      .filter((s) => { const minVal = parseFloat(min.replace(',', '.')); return min ? s.price >= minVal : true })
+      .filter((s) => { const maxVal = parseFloat(max.replace(',', '.')); return max ? s.price <= maxVal : true })
 
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder])
@@ -133,7 +135,11 @@ export function CatalogPanel({
                     <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
                     <input 
                       value={min} 
-                      onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} 
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d.,]/g, "")
+                        setMin(val)
+                        if (val && !max) setSortOrder("asc")
+                      }} 
                       className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 
                       placeholder="от" 
                       type="text" 
@@ -143,7 +149,11 @@ export function CatalogPanel({
                     <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
                     <input 
                       value={max} 
-                      onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} 
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d.,]/g, "")
+                        setMax(val)
+                        if (val && !min) setSortOrder("desc")
+                      }} 
                       className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-l-0 border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 
                       placeholder="до" 
                       type="text" 
@@ -241,15 +251,21 @@ export function CatalogPanel({
                 <div className="w-full h-full">
                   <button
                     onClick={() => {
+                      if (isSpinning) return
                       if (state.soundMode === "on") {
                         const audio = new Audio("/sounds/choiceSkin.mp3")
                         audio.play().catch(() => {})
                       }
                       onSelect(skin.id)
                     }}
-                    className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"}`}
+                    className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"} ${isSpinning ? "cursor-default" : ""}`}
                     style={{ background: selected ? "linear-gradient(93deg, #FBD506 1.16%, #FFDD23 50.58%, #FBD506 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                   >
+                    {isSpinning && (
+                      <div className="absolute inset-0 z-[20] flex items-center justify-center rounded-md bg-[#16171a]/70">
+                        <img src="/assets/Апгрейд скинов КС2 (КС ГО)_ лучший Upgrader CS_files/lock.svg" alt="Locked" className="w-6 h-6 lg:w-8 lg:h-8" />
+                      </div>
+                    )}
                     {selected && (
                       <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
                         <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">

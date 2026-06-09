@@ -37,3 +37,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to save state" }, { status: 500 })
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json()
+    const strippedState = stripSkins(body)
+    
+    let currentData = await kv.get<any>(KV_KEY)
+    if (!currentData) {
+      currentData = stripSkins(DEFAULT_STATE)
+    }
+    
+    const nextData = { ...currentData, ...strippedState }
+    
+    await kv.set(KV_KEY, nextData)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("KV PATCH Error:", error)
+    return NextResponse.json({ error: "Failed to patch state" }, { status: 500 })
+  }
+}

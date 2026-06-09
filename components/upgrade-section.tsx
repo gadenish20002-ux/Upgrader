@@ -379,7 +379,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Center Wheel */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
-            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} soundMode={state.soundMode} />
+            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
           </div>
         </div>
 
@@ -668,6 +668,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onRemoveShopItem={removeShopItem}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickBuy={handleBuyCartItems}
+              isSpinning={spinning || loseAnimating || winAnimating}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>
@@ -682,6 +683,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               }} 
               priceMin={catalogPriceMin}
               priceMax={catalogPriceMax}
+              isSpinning={spinning || loseAnimating || winAnimating}
             />
           </div>
         </div>

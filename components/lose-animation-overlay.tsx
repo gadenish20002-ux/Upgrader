@@ -288,7 +288,16 @@ function HorizontalDropRoulette({
 
     setSpinFinished(false)
     tape.style.transition = "none"
-    tape.style.transform = "translate3d(0, 0, 0)"
+    
+    // Start with item 10 centered so the tape is full of items initially
+    const startItem = tape.children[10] as HTMLElement
+    if (startItem && viewport.clientWidth > 0) {
+      const startOffset = startItem.offsetLeft + startItem.offsetWidth / 2 - viewport.clientWidth / 2
+      tape.style.transform = `translate3d(${-startOffset}px, 0, 0)`
+    } else {
+      tape.style.transform = "translate3d(0, 0, 0)"
+    }
+    
     void tape.offsetHeight
 
     const raf = window.requestAnimationFrame(() => {
@@ -311,7 +320,7 @@ function HorizontalDropRoulette({
   }, [active, items, onFinished])
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ minHeight: "10rem" }}>
+    <div className="relative w-full overflow-hidden h-[10.5rem] lg:h-[14rem]">
       <img
         alt=""
         className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
@@ -320,15 +329,14 @@ function HorizontalDropRoulette({
       />
       <div
         ref={viewportRef}
-        className="relative w-full overflow-hidden"
-        style={{ minHeight: "10rem" }}
+        className="relative w-full overflow-hidden h-full"
       >
-        <div ref={tapeRef} className="absolute left-0 top-0 flex w-max items-center gap-4 px-[50%] will-change-transform" style={{ minHeight: "10rem" }}>
+        <div ref={tapeRef} className="absolute left-0 top-0 flex w-max items-center gap-4 px-[50%] will-change-transform h-full">
           {items.map((entry) => (
             <div
               key={entry.key}
               ref={entry.isWinner ? winnerRef : undefined}
-              className={`pointer-events-none relative h-[6.75rem] w-[7.3125rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[9.5rem] lg:h-[8.75rem] lg:w-[9.5rem] ${
+              className={`pointer-events-none relative h-[10rem] w-[11rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[14.25rem] lg:h-[13.125rem] lg:w-[14.25rem] ${
                 entry.isWinner && spinFinished ? "z-20 scale-[1.08]" : ""
               }`}
             >
@@ -388,10 +396,12 @@ function CaseScene({
   phase,
   tapeItems,
   onRouletteFinished,
+  onSkip,
 }: {
   phase: Phase
   tapeItems: TapeEntry[]
   onRouletteFinished: () => void
+  onSkip: () => void
 }) {
   const showRoulette = phase === "roulette"
   const showImpact = phase === "open"
@@ -415,6 +425,17 @@ function CaseScene({
       {!showRoulette ? (
         <div className="relative z-10 flex h-[14rem] w-full items-center justify-center sm:h-[16rem] lg:h-[19rem]">
           <ReferenceCase phase={phase} />
+          
+          {phase !== "result" ? (
+            <div className="absolute -bottom-2 lg:-bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <button
+                onClick={onSkip}
+                className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-bold text-[#1C1C20] rounded-md px-6 py-2 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] text-[0.8125rem] lg:text-[1.125rem]"
+              >
+                <span>Пропустить</span>
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -532,6 +553,13 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     timersRef.current.push(timer)
     return timer
   }, [])
+
+  const handleSkip = useCallback(() => {
+    if (phase === "drop" || phase === "open") {
+      clearRunning()
+      setPhase("roulette")
+    }
+  }, [phase, clearRunning])
 
   const resetVisualState = useCallback(() => {
     setPhase("drop")
@@ -683,7 +711,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
       aria-modal="true"
     >
       <div
-        className={`pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden bg-[#111216]/95 rounded-xl lg:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.48)] ${
+        className={`pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden bg-[#111216] rounded-xl lg:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.48)] ${
           showResult ? "max-w-[46rem] h-auto border border-white/10 p-4 lg:p-6" : ""
         }`}
       >
@@ -712,6 +740,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
               phase={phase}
               tapeItems={tapeItems}
               onRouletteFinished={handleRouletteFinished}
+              onSkip={handleSkip}
             />
           )}
         </div>

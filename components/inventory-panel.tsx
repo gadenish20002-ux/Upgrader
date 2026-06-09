@@ -19,7 +19,8 @@ export function InventoryPanel({
   onAddShopItem,
   onRemoveShopItem,
   onOpenCart,
-  onQuickBuy
+  onQuickBuy,
+  isSpinning
 }: {
   selectedUids: string[]
   onToggle: (uid: string) => void
@@ -31,6 +32,7 @@ export function InventoryPanel({
   onRemoveShopItem?: (id: string) => void
   onOpenCart?: () => void
   onQuickBuy?: () => void
+  isSpinning?: boolean
 }) {
   const { state } = useStore()
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
@@ -246,6 +248,7 @@ export function InventoryPanel({
                   <div className="w-full h-full">
                     <button
                       onClick={() => {
+                        if (isSpinning) return
                         if (state.soundMode === "on") {
                           const audio = new Audio("/sounds/choiceSkin.mp3")
                           audio.play().catch(() => {})
@@ -256,9 +259,14 @@ export function InventoryPanel({
                           onToggle(id)
                         }
                       }}
-                      className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"}`}
+                      className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"} ${isSpinning ? "cursor-default" : ""}`}
                       style={{ background: selected ? "linear-gradient(93deg, #FBD506 1.16%, #FFDD23 50.58%, #FBD506 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                     >
+                      {isSpinning && (
+                        <div className="absolute inset-0 z-[20] flex items-center justify-center rounded-md bg-[#16171a]/70">
+                          <img src="/assets/Апгрейд скинов КС2 (КС ГО)_ лучший Upgrader CS_files/lock.svg" alt="Locked" className="w-6 h-6 lg:w-8 lg:h-8" />
+                        </div>
+                      )}
                       {selected && mode === "inventory" && (
                         <div className="absolute top-0 left-0 z-[10] flex h-full w-full items-center justify-center rounded-md">
                           <div className="group bg-[linear-gradient(93deg,#fbd506_1.16%,#ffdd23_50%,#fbd506)] transition-all hover:!bg-none hover:!bg-[#17181c] flex h-[1.3125rem] w-[1.3125rem] items-center justify-center rounded-full duration-200 lg:h-7 lg:w-7 cursor-pointer">
