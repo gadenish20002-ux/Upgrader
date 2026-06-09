@@ -450,8 +450,10 @@ input[type="number"] {
   position: absolute;
   left: 50%;
   top: 56%;
-  width: min(32rem, 64vw);
-  height: min(14rem, 29vw);
+  width: 32rem;
+  max-width: 64vw;
+  height: 14rem;
+  max-height: 29vw;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background:
@@ -467,8 +469,8 @@ input[type="number"] {
   left: 50%;
   top: 50%;
   z-index: 5;
-  width: min(41rem, 101vw);
-  max-width: none;
+  width: 41rem;
+  max-width: 101vw;
   transform: translate(-50%, -50%) translateY(0) scale(1);
   transform-origin: center 72%;
   opacity: 1;
@@ -510,7 +512,8 @@ input[type="number"] {
   left: 50%;
   top: 68%;
   z-index: 1;
-  width: min(22rem, 55vw);
+  width: 22rem;
+  max-width: 55vw;
   height: 2.7rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
@@ -524,7 +527,8 @@ input[type="number"] {
   left: 50%;
   top: 65%;
   z-index: 2;
-  width: min(27rem, 60vw);
+  width: 27rem;
+  max-width: 60vw;
   height: 6rem;
   transform: translate(-50%, -50%);
   opacity: 0;
@@ -553,7 +557,8 @@ input[type="number"] {
   position: absolute;
   left: 50%;
   bottom: -0.375rem;
-  width: min(17rem, 43vw);
+  width: 17rem;
+  max-width: 43vw;
   transform: translateX(-50%) scaleX(2.2);
   opacity: 0.32;
   filter: blur(1.5px) saturate(0.62);

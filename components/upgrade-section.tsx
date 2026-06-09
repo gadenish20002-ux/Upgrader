@@ -279,6 +279,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       return
     }
 
+    if (state.soundMode === "on") {
+      const audio = new Audio("/sounds/makeBet.mp3")
+      audio.play().catch(() => {})
+    }
+
     setSpinning(true)
 
     // determine outcome — admin predict overrides chance

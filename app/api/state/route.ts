@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { kv } from "@vercel/kv"
 import { DEFAULT_STATE } from "@/lib/default-data"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const KV_KEY = "upgrader_global_state"
 
 // Helper to remove skins arrays to save bandwidth/storage

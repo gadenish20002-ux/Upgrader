@@ -48,7 +48,10 @@ export function InventoryPanel({
   }, [mode, sortOrder, minPrice, maxPrice, searchQuery, state.inventory.length])
 
   const displayedSkins = useMemo(() => {
-    const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => getSkin(state.skins, item.skinId))
+    const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => {
+      if (isSpinning && selectedUids.includes(item.uid)) return false
+      return getSkin(state.skins, item.skinId)
+    })
     return [...skins].filter((a) => {
       const skin = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
       if (!skin) return false
@@ -69,7 +72,7 @@ export function InventoryPanel({
       if (!skinA || !skinB) return 0
       return sortOrder === "desc" ? skinB.price - skinA.price : skinA.price - skinB.price
     })
-  }, [state.skins, state.inventory, mode, sortOrder, minPrice, maxPrice, searchQuery])
+  }, [state.skins, state.inventory, mode, sortOrder, minPrice, maxPrice, searchQuery, isSpinning, selectedUids])
 
   const ITEMS_PER_PAGE = 20
   const totalPages = Math.max(1, Math.ceil(displayedSkins.length / ITEMS_PER_PAGE))

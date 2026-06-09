@@ -47,8 +47,8 @@ export function CatalogPanel({
 
   // Sync external price range into the filter inputs
   useEffect(() => {
-    setMin(priceMin != null ? formatFilterPrice(priceMin) : "")
-    setMax(priceMax != null ? formatFilterPrice(priceMax) : "")
+    if (priceMin != null) setMin(formatFilterPrice(priceMin))
+    if (priceMax != null) setMax(formatFilterPrice(priceMax))
   }, [priceMin, priceMax])
 
   const filtered = useMemo(() => {
@@ -69,7 +69,7 @@ export function CatalogPanel({
   const ITEMS_PER_PAGE = 20
 
   // Reset to first page on filter changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1)
   }, [query, min, max, sortOrder, showNewItems])
 

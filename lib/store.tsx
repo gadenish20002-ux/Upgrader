@@ -60,7 +60,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (Date.now() - lastSyncTime.current < 1500) return
       
       try {
-        const res = await fetch("/api/state")
+        const res = await fetch(`/api/state?t=${Date.now()}`)
         if (res.ok) {
           const serverState = await res.json()
           setInternal((prev) => {
