@@ -38,9 +38,12 @@ export interface AppState {
   upgradeSkins: Skin[]
   loggedIn: boolean
   username: string
+  userId: string
   avatar: string | null
   online: number
   upgrades: number
+  userUpgrades: number
+  withdrawnItems: string[]
   predict: Predict
   adminPassword: string
   fastMode: boolean

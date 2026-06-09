@@ -263,6 +263,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       balance: Math.max(0, p.balance - totalCartPrice),
       inventory: [...itemsToBuy, ...p.inventory],
       upgrades: p.upgrades + itemsToBuy.length,
+      userUpgrades: p.userUpgrades + itemsToBuy.length,
     }))
     
     toast.success("Предметы успешно куплены!")
@@ -348,6 +349,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           ...p.inventory,
         ],
         upgrades: p.upgrades + 1,
+        userUpgrades: p.userUpgrades + 1,
       }))
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
       if (state.soundMode === "on") {
@@ -360,7 +362,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setMobileTab("inventory")
     } else {
       removeFromInventory(selectedUids)
-      setState((p) => ({ ...p, upgrades: p.upgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
+      setState((p) => ({ ...p, upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim) {
         setLoseAnimating(true)
@@ -421,7 +423,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Center Wheel */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
-            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={!!targetSkin && inputValue > 0} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
+            <UpgradeWheel ref={wheelRef} chance={chance} hasSelection={spinning || (!!targetSkin && inputValue > 0)} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
           </div>
         </div>
 
@@ -805,6 +807,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               priceMin={catalogPriceMin}
               priceMax={catalogPriceMax}
               isSpinning={spinning || loseAnimating || winAnimating}
+              inputValue={inputValue}
             />
           </div>
         </div>

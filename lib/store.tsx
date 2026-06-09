@@ -169,7 +169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const uid = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       setState((p) => {
         const item: InventoryItem = { uid, skinId }
-        return { ...p, inventory: [item, ...p.inventory], upgrades: p.upgrades + 1 }
+        return { ...p, inventory: [item, ...p.inventory], upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1 }
       })
       return uid
     },

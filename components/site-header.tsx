@@ -10,10 +10,8 @@ import Image from "next/image"
 import Link from "next/link"
 
 
-export function SiteHeader() {
+export function SiteHeader({ onProfileClick }: { onProfileClick?: () => void }) {
   const { state, logout, setState } = useStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [avatarMenu, setAvatarMenu] = useState(false)
 
   // Локальные счетчики, чтобы не дергать базу данных каждые 1.5 секунды
   const [localOnline, setLocalOnline] = useState(state.online)
@@ -42,27 +40,8 @@ export function SiteHeader() {
     return () => clearInterval(interval)
   }, [])
 
-  function handleAvatarClick() {
-    setAvatarMenu((v) => !v)
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const base64 = ev.target?.result as string
-      setState((p) => ({ ...p, avatar: base64 }))
-    }
-    reader.readAsDataURL(file)
-    setAvatarMenu(false)
-    // reset so same file can be re-selected
-    e.target.value = ""
-  }
-
   function handleLogout() {
     logout()
-    setAvatarMenu(false)
   }
 
   return (
@@ -140,62 +119,10 @@ export function SiteHeader() {
                 </button>
               </div>
               <div className="relative flex shrink-0">
-                <button onClick={handleAvatarClick} className="shrink-0 cursor-pointer" aria-label="Открыть профиль">
+                <button onClick={onProfileClick} className="shrink-0 cursor-pointer" aria-label="Открыть профиль">
                   <img className="tablet:h-11 tablet:w-11 h-[2rem] w-[2rem] lg:h-[2.25rem] lg:w-[2.25rem] cursor-pointer rounded-full object-cover" src={state.avatar || "https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp"} alt="Аватар пользователя" />
                 </button>
-
-                {/* Dropdown menu */}
-                {avatarMenu && (
-                  <>
-                    {/* Backdrop */}
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setAvatarMenu(false)}
-                    />
-                    <div
-                      className="absolute right-0 top-11 z-50 min-w-[180px] overflow-hidden rounded-xl shadow-2xl"
-                      style={{
-                        background: "#1c1d21",
-                        border: "1px solid #2a2b30",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      {/* Username */}
-                      <div className="border-b border-[#2a2b30] px-4 py-3">
-                        <div className="text-xs text-[#6b6b6b]">Аккаунт</div>
-                        <div className="mt-0.5 font-semibold text-white">{state.username}</div>
-                      </div>
-
-                      {/* Change avatar */}
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-[#a7a7a7] transition-colors hover:bg-white/5 hover:text-white"
-                      >
-                        <Camera className="h-4 w-4" />
-                        Сменить аватарку
-                      </button>
-
-                      {/* Logout */}
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-2.5 border-t border-[#2a2b30] px-4 py-3 text-sm text-[#eb4b4b] transition-colors hover:bg-[#eb4b4b]/10"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Выйти
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
             </div>
           ) : (
             <div className="z-[2] !mr-0 flex h-full items-center justify-end space-x-2">

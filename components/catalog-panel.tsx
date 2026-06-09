@@ -20,6 +20,7 @@ export function CatalogPanel({
   priceMin,
   priceMax,
   isSpinning,
+  inputValue,
 }: {
   targetId: string | null
   onSelect: (id: string) => void
@@ -27,6 +28,7 @@ export function CatalogPanel({
   priceMin?: number | null
   priceMax?: number | null
   isSpinning?: boolean
+  inputValue?: number
 }) {
   const { state } = useStore()
   const [query, setQuery] = useState("")
@@ -239,29 +241,37 @@ export function CatalogPanel({
             const selected = skin.id === targetId
             const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
             
-            const hexToRgb = (hex: string) => {
-              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-              return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
-            };
-            const SHADOWS = ['usp', 'usp', 'usp', 'usp', 'usp'];
-            const shadow = SHADOWS[index % 5];
-            
-            return (
+              const hexToRgb = (hex: string) => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+              };
+              const SHADOWS = ['usp', 'usp', 'usp', 'usp', 'usp'];
+              const shadow = SHADOWS[index % 5];
+              
+              let isLockedByChance = false
+              if (inputValue && inputValue > 0) {
+                const chance = (inputValue / skin.price) * 0.92
+                if (chance < 0.01 || chance > 0.8) {
+                  isLockedByChance = true
+                }
+              }
+              
+              return (
               <div key={skin.id} className={`bg-block flex h-[5rem] items-center justify-center overflow-visible bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem] transition-all rounded-md ${selected ? "cursor-pointer" : ""}`} style={{ backgroundImage: `url('/assets/item-shadow/${shadow}.png')` }}>
                 <div className="w-full h-full">
                   <button
                     onClick={() => {
-                      if (isSpinning) return
+                      if (isSpinning || isLockedByChance) return
                       if (state.soundMode === "on") {
                         const audio = new Audio("/sounds/choiceSkin.mp3")
                         audio.play().catch(() => {})
                       }
                       onSelect(skin.id)
                     }}
-                    className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"} ${isSpinning ? "cursor-default" : ""}`}
+                    className={`group relative h-full w-full rounded-md p-[0.0625rem] transition-all ${selected ? "shadow-[0_0_12px_0_rgba(255,221,36,0.6)]" : "shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]"} ${isSpinning || isLockedByChance ? "cursor-default" : ""}`}
                     style={{ background: selected ? "linear-gradient(93deg, #FBD506 1.16%, #FFDD23 50.58%, #FBD506 100%)" : `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}
                   >
-                    {isSpinning && (
+                    {(isSpinning || isLockedByChance) && (
                       <div className="absolute inset-0 z-[20] flex items-center justify-center rounded-md bg-[#16171a]/70">
                         <img src="/assets/lock.svg" alt="Locked" className="w-6 h-6 lg:w-8 lg:h-8" />
                       </div>

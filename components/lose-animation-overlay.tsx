@@ -27,7 +27,9 @@ type CssVars = CSSProperties & Record<`--${string}`, string | number>
 const TARGET_INDEX = 42
 const TAPE_LENGTH = 58
 const CASE_SEQUENCE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
-const CASE_SEQUENCE_SOUND_RATE = 1
+// openCompensationCase.mp3 = 14.707s, full anim cycle = CASE_DROP_MS+CASE_OPEN_MS+CASE_TO_ROULETTE_GAP_MS+ROULETTE_SPIN_MS = 12200ms
+// rate = 14.707 / 12.2 ≈ 1.206 — sound ends exactly when roulette finishes
+const CASE_SEQUENCE_SOUND_RATE = 14.707 / 12.2
 const CASE_FRAME_COUNT = 81
 const CASE_DROP_FRAME = 10
 const CASE_DROP_MS = 500

@@ -8,10 +8,12 @@ import { UpgradeSection } from "./upgrade-section"
 import { SupportBubble } from "./support-bubble"
 import { useStore } from "@/lib/store"
 import { preloadWinAnimationFrames } from "./win-animation-overlay"
+import { UserProfile } from "./user-profile"
 
 export function HomeClient() {
   const { ready } = useStore()
   const [sidebarTargetId, setSidebarTargetId] = useState<string | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
 
   useEffect(() => {
     preloadWinAnimationFrames()
@@ -23,7 +25,7 @@ export function HomeClient() {
 
   return (
     <div className="min-h-screen bg-transparent text-foreground flex flex-col">
-      <SiteHeader />
+      <SiteHeader onProfileClick={() => setShowProfile((prev) => !prev)} />
       <div className="flex flex-1 flex-col lg:flex-row pt-[3.25rem] md:pt-[4.25rem]">
         {/* Mobile: Top Live Feed */}
         <div className="lg:hidden border-b border-border/40 lose-anim-blur-target">
@@ -37,7 +39,11 @@ export function HomeClient() {
 
         <div className="min-w-0 flex-1 flex flex-col">
           <main className="flex-1 px-4 pt-8 pb-3 md:px-6 flex flex-col">
-            <UpgradeSection sidebarTargetId={sidebarTargetId} />
+            {showProfile ? (
+              <UserProfile onClose={() => setShowProfile(false)} />
+            ) : (
+              <UpgradeSection sidebarTargetId={sidebarTargetId} />
+            )}
           </main>
           <SiteFooter />
         </div>
