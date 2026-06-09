@@ -25,14 +25,7 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const [resetTimer, setResetTimer] = useState<NodeJS.Timeout | null>(null)
   const [isResolving, setIsResolving] = useState(false)
 
-  const [latchedChance, setLatchedChance] = useState(0.5)
-
-  // Track chance for displaying the result after selection clears
-  useEffect(() => {
-    if (hasSelection) {
-      setLatchedChance(chance)
-    }
-  }, [hasSelection, chance])
+  const isResolvingRef = useRef(false)
 
   // Clear result and reset wheel if user makes a new selection or if selection is missing (only for 'lose')
   useEffect(() => {
@@ -59,7 +52,7 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     }
   }, [hasSelection, result, resetTimer, isResolving])
 
-  const displayChance = hasSelection ? chance : (result !== "none" ? latchedChance : 0.5)
+  const displayChance = hasSelection ? chance : 0.5
   const segAngle = Math.min(0.999, Math.max(0.0001, displayChance)) * 360
 
   const circumference = 779.115

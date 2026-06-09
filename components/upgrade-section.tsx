@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
-import { WinAnimationOverlay } from "./win-animation-overlay"
+import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
 import { LoseAnimationOverlay } from "./lose-animation-overlay"
 import type { InventoryItem } from "@/lib/types"
 
@@ -118,6 +118,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   }, [activeFastFilterRange, state.upgradeSkins])
 
   useEffect(() => {
+    preloadWinAnimationFrames()
+  }, [])
+
+  useEffect(() => {
     if (!activeFastFilter) return
 
     if (!activeFastFilterRange) {
@@ -155,7 +159,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       }
       return [...prev, uid]
     })
-    setActiveFastFilter((current) => current ?? { type: "percentage", value: DEFAULT_INVENTORY_RECOMMENDATION_PERCENT })
+    // Only auto-apply default filter if there's no target selected
+    if (!targetId && !sidebarTargetId) {
+      setActiveFastFilter((current) => current ?? { type: "percentage", value: DEFAULT_INVENTORY_RECOMMENDATION_PERCENT })
+    }
     setWonItemUid(null)
   }
 
@@ -256,6 +263,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setIsCartOpen(false)
   }
 
+  // Keep the left card locked during animations so it doesn't disappear when state updates
+  const lockedLeftCard = useRef<{ items: typeof selectedItems; balance: number; total: number } | null>(null)
+
   async function handleSpin() {
     if (!state.loggedIn) {
       toast.error("Войдите через Steam, чтобы прокачивать")
@@ -282,6 +292,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     if (state.soundMode === "on") {
       const audio = new Audio("/sounds/makeBet.mp3")
       audio.play().catch(() => {})
+    }
+
+    lockedLeftCard.current = {
+      items: selectedItems,
+      balance: balanceInput,
+      total: inputValue,
     }
 
     setSpinning(true)
@@ -348,6 +364,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setSpinning(false)
   }
 
+  // Resolved display values for the left card
+  const displayItems = lockedLeftCard.current ? lockedLeftCard.current.items : selectedItems
+  const displayBalance = lockedLeftCard.current ? lockedLeftCard.current.balance : balanceInput
+  const displayTotal = lockedLeftCard.current ? lockedLeftCard.current.total : inputValue
+  const displaySkinId = displayItems[0]?.skinId ?? ""
+  const displayHasSkin = displayItems.length > 0
+  const displayHasBalance = displayBalance > 0
+  const displayIsEmpty = !displayHasSkin && !displayHasBalance
+
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto px-2">
       {/* Relative wrapper so LoseAnimationOverlay can be absolute within it */}
@@ -391,11 +416,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Left Card */}
         <div 
           className="col-span-1 lg:col-span-1 lg:col-start-1 lg:row-start-2 order-3 flex flex-col rounded-md lg:rounded-xl bg-[#17181C] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] overflow-hidden w-full lg:self-center aspect-[10.275/9.625] lg:aspect-[23.1875/21.5] relative"
-          style={selectedItems.length === 1 ? { 
-            background: `linear-gradient(90deg, ${RARITY_COLORS[(getSkin(state.skins, selectedItems[0]!.skinId)!).rarity]}26 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C` 
+          style={displayHasSkin && displaySkinId ? { 
+            background: `linear-gradient(90deg, ${RARITY_COLORS[getSkin(state.skins, displaySkinId)?.rarity ?? ""] ?? "transparent"}26 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C` 
           } : undefined}
         >
-          {selectedItems.length === 0 && balanceInput === 0 ? (
+          {displayIsEmpty ? (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
                 <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug font-exo2">Выберите скины или скины и баланс для использования</span>
@@ -406,7 +431,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 <img src="/assets/unknown-item.svg" alt="Unknown item" className="absolute top-[52%] left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
               </div>
             </div>
-          ) : selectedItems.length >= 2 ? (
+          ) : displayItems.length >= 2 ? (
             <div className="relative flex h-full w-full flex-col items-center justify-center rounded-md bg-[#17181C] p-2">
               <button 
                 onClick={clearSelection}
@@ -415,7 +440,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 <img alt="Close" className="h-2 w-2 lg:h-4 lg:w-4" src="/assets/close-gray.svg" />
               </button>
               <div className="z-[2] grid min-w-full grid-cols-3 gap-1 lg:gap-2">
-                {selectedItems.map((item) => {
+                {displayItems.map((item) => {
                   const skin = getSkin(state.skins, item!.skinId)!
                   const rarityColor = RARITY_COLORS[skin.rarity] || "#8847ff"
                   return (
@@ -460,7 +485,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               <img alt="" className="absolute top-1/2 left-1/2 z-[0] w-full max-w-[14rem] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40" src="/assets/images/game/unknown-item-shadow.webp" />
             </div>
           ) : (
-            <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
+            <div className="relative flex h-full w-full items-center justify-center">
               <button 
                 onClick={clearSelection}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
@@ -468,37 +493,94 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 <img alt="Close" className="h-2 w-2 lg:h-4 lg:w-4" src="/assets/close-gray.svg" />
               </button>
 
-              <div className="relative w-full flex-1 flex flex-col items-center justify-center min-h-0 my-1 lg:my-2">
-                {selectedItems.length === 1 ? (
-                  (() => {
-                    const skin = getSkin(state.skins, selectedItems[0]!.skinId)!;
-                    return (
-                      <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
-                          <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(skin.weapon)} </span>
-                          <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(skin.name)} </span>
+              {displayHasSkin && displayHasBalance ? (
+                /* ── Skin + Balance: split view with "Ставка" card ── */
+                (() => {
+                  const skin = getSkin(state.skins, displaySkinId);
+                  if (!skin) return null;
+                  const skinPrice = skin.price ?? 0;
+                  return (
+                    <div className="flex h-full w-full flex-col items-center justify-between py-1 px-1 lg:py-3 lg:px-3">
+                      {/* Skin name at top */}
+                      <div className="flex flex-col items-center text-center shrink-0 mb-1">
+                        <span className="text-[#4a4852] text-xxxxs font-semibold lg:text-xs leading-none">{formatWeaponName(skin.weapon)}</span>
+                        <span className="text-[#f7f7f8] text-[0.45rem] font-bold lg:text-sm leading-tight truncate max-w-full">{formatSkinName(skin.name)}</span>
+                      </div>
+
+                      {/* Two square cards side by side */}
+                      <div className="relative flex flex-1 w-full items-center justify-center gap-1 min-h-0">
+
+                        {/* Left square: skin image */}
+                        <div className="relative aspect-square flex-1 rounded-[0.375rem] overflow-hidden bg-[#1a1b1f] border border-white/10 flex items-center justify-center">
+                          {/* Price badge top-right */}
+                          <div className="absolute top-1 right-1 z-[3] flex items-center space-x-0.5">
+                            <span className="font-tektur text-gradient-yellow text-[0.4rem] lg:text-[0.55rem] font-bold">{formatPrice(skinPrice)}</span>
+                            <img alt="" className="h-[0.45rem] w-[0.45rem] lg:h-[0.6rem] lg:w-[0.6rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                          </div>
+                          <img
+                            className="z-[2] w-[85%] h-[85%] object-contain drop-shadow-xl"
+                            src={skin.image || "/placeholder.svg"}
+                            alt={skin.name}
+                          />
                         </div>
-                        <div className="relative w-full flex-1 min-h-0">
-                          <img className="absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+
+                        {/* Right square: Ставка */}
+                        <div className="relative aspect-square flex-1 rounded-[0.375rem] bg-[#17181C] border border-white/10 shadow-[0_0_5.607px_0_rgba(255,160,0,0.08)] flex flex-col items-center justify-center space-y-1 lg:space-y-2 overflow-visible">
+                          {/* Golden profit icon — top center, half sticking out above */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-[1.5rem] w-[1.5rem] lg:h-[2.45rem] lg:w-[2.45rem] items-center justify-center rounded-full bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)] shadow-[0_0_5.607px_0_rgba(255,255,255,0.10)]">
+                            <img alt="" className="h-[0.75rem] w-[0.75rem] lg:h-[1.401rem] lg:w-[1.401rem]" src="/assets/profitBlack.svg" />
+                          </div>
+                          <span className="font-semibold text-white text-[0.5rem] lg:text-[1rem] leading-none">Ставка</span>
+                          <div className="flex items-center justify-center gap-[0.2rem] rounded-[0.3rem] border border-white/10 px-[0.4rem] py-[0.2rem] lg:px-[0.6rem] lg:py-[0.35rem]">
+                            <span className="font-semibold text-white text-[0.5rem] lg:text-[0.9rem] leading-none">{formatPrice(displayBalance)}</span>
+                            <img alt="" className="h-[0.5rem] w-[0.5rem] lg:h-[0.9rem] lg:w-[0.9rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                          </div>
                         </div>
                       </div>
-                    )
-                  })()
-                ) : (
-                  // balanceInput > 0 but no items selected
-                  <div className="flex flex-col items-center justify-center w-full h-full">
-                    <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs">Баланс</span>
+
+                      {/* Total price at bottom */}
+                      <div className="flex items-center justify-center space-x-0.5 lg:space-x-1 shrink-0 mt-1">
+                        <span className="text-gradient-yellow text-xxs font-bold lg:text-lg">{formatPrice(displayTotal)}</span>
+                        <img alt="coin" className="h-2 w-2 lg:h-3.5 lg:w-3.5" src="/assets/icons/coin.svg" />
+                      </div>
+                    </div>
+                  )
+                })() 
+              ) : displayHasSkin ? (
+                /* ── Only skin selected, no balance ── */
+                (() => {
+                  const skin = getSkin(state.skins, displaySkinId);
+                  if (!skin) return null;
+                  return (
+                    <div className="flex flex-col items-center justify-center w-full h-full px-4 py-2 lg:px-8 lg:py-6">
+                      <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
+                        <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(skin.weapon)} </span>
+                        <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(skin.name)} </span>
+                      </div>
+                      <div className="relative w-full flex-1 min-h-0">
+                        <img className="absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                      </div>
+                      <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0 mt-1">
+                        <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(displayTotal)} </span>
+                        <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
+                      </div>
+                    </div>
+                  )
+                })()
+              ) : (
+                /* ── Only balance, no skin ── */
+                <div className="flex flex-col items-center justify-center w-full h-full px-4 py-2 lg:px-8 lg:py-6">
+                  <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs">Баланс</span>
+                  <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0 mt-1">
+                    <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(displayTotal)} </span>
+                    <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
                   </div>
-                )}
-              </div>
-              
-              <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0">
-                <span className="text-gradient-yellow text-xxs font-bold lg:text-xl"> {formatPrice(inputValue)} </span>
-                <img alt="coin" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
+
 
         {/* Balance Slider */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-3 order-6 lg:order-4 w-full lg:mt-6">
@@ -526,6 +608,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onChange={(e) => {
                 setBalanceInput(Number(e.target.value))
                 setWonItemUid(null)
+                setActiveFastFilter(null)
               }}
               style={{ "--range-progress": `${(balanceInput / (state.balance > 0 ? state.balance : 100)) * 100}%` } as React.CSSProperties} 
             />
@@ -575,7 +658,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               {/* Win Animation Overlay */}
               <WinAnimationOverlay
                 playing={winAnimating}
-                onComplete={() => setWinAnimating(false)}
+                onComplete={() => {
+                  setWinAnimating(false)
+                  lockedLeftCard.current = null
+                }}
               />
             </div>
           ) : (
@@ -634,7 +720,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       {/* Lose animation overlay — absolute within this relative wrapper */}
       <LoseAnimationOverlay
         playing={loseAnimating}
-        onComplete={() => setLoseAnimating(false)}
+        onComplete={() => {
+          setLoseAnimating(false)
+          lockedLeftCard.current = null
+        }}
         soundEnabled={state.soundMode === "on"}
       />
 

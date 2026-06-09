@@ -91,11 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setState = useCallback((updater: (prev: AppState) => AppState) => {
     setInternal((prev) => {
       const next = updater(prev)
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {}
       
-      // Update the server state (strip large skin arrays)
       const { skins, upgradeSkins, ...strippedNext } = next
       
       const changes: Partial<AppState> = {}
@@ -106,17 +102,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           hasChanges = true
         }
       }
+
+      // Read latest local state to avoid overwriting with stale background tab state
+      let currentLocal = prev
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          currentLocal = { ...DEFAULT_STATE, ...JSON.parse(raw) }
+        }
+      } catch {}
+
+      const trueNext = { ...currentLocal, ...changes }
+
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trueNext))
+      } catch {}
       
       if (hasChanges) {
         lastSyncTime.current = Date.now()
-        fetch("/api/state", {
+        fetch(`/api/state?t=${Date.now()}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(changes)
         }).catch(err => console.error("Failed to sync state", err))
       }
       
-      return next
+      return trueNext
     })
   }, [])
 
