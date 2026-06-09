@@ -76,14 +76,14 @@ export function SiteHeader() {
             </Link>
           </div>
 
-          <div className="tablet:flex hidden items-center justify-start space-x-3">
+          <div className="flex items-center justify-start space-x-3">
             {/* Online counter */}
             <div className="h-full">
               <div className="flex h-full items-center gap-2">
                 <img src="/assets/images/header/online-yellow.svg" alt="Online" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-gray tablet:block hidden text-sm"> Онлайн </span>
-                  <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
+                  <span className="text-gray tablet:block hidden text-sm font-exo2"> Онлайн </span>
+                  <span className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]">
                     {formatNumber(localOnline)}
                   </span>
                 </div>
@@ -91,12 +91,12 @@ export function SiteHeader() {
             </div>
 
             {/* Upgrades counter */}
-            <div className="h-full">
+            <div className="h-full hidden tablet:block">
               <div className="flex h-full items-center gap-2">
                 <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-gray tablet:block hidden text-sm">Апгрейдов</span>
-                  <span className="tablet:text-sm text-[0.9075rem] font-semibold tracking-tight tabular-nums">
+                  <span className="text-gray tablet:block hidden text-sm font-exo2">Апгрейдов</span>
+                  <span className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]">
                     {formatNumber(localUpgrades)}
                   </span>
                 </div>

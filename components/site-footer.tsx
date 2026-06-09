@@ -8,17 +8,17 @@ export function SiteFooter() {
     <footer className="bg-[#17181C] lg:rounded-tl-xl lg:px-10 lg:pt-10 lg:pb-6 flex flex-col gap-6 px-6 pt-6 pb-10">
       
       {/* Mobile Top */}
-      <div className="relative z-10 flex w-[calc(100%-1.5rem)] max-w-7xl flex-col items-center justify-between rounded-xl bg-[#1C1D20] px-4 py-6 md:w-[calc(100%-3rem)] md:flex-row md:px-8">
+      <div className="relative z-10 flex w-full flex-row items-center justify-between md:hidden pb-2">
         <Link href="/" className="flex cursor-pointer items-center gap-[0.3125rem] my-auto select-none">
           <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.875rem] w-[1.875rem]" />
-          <span className="font-tektur text-2xl font-extrabold text-white"> UPGRADER </span>
+          <span className="font-tektur text-[1.25rem] font-extrabold text-white"> UPGRADER </span>
         </Link>
         <div className="my-auto select-none">
           <div className="flex gap-2">
-            <a target="_blank" className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:brightness-150 bg-[#232325]" href="https://t.me/upgraderCS">
+            <a target="_blank" className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:brightness-150 bg-[#232325]" href="https://t.me/upgraderCS">
               <img className="h-5 w-5" alt="telegram" src="/assets/icons/telegram.svg" />
             </a>
-            <a target="_blank" className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:brightness-150 bg-[#232325]" href="https://vk.com/upgraderCS2">
+            <a target="_blank" className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:brightness-150 bg-[#232325]" href="https://vk.com/upgraderCS2">
               <img className="h-5 w-5" alt="vk" src="/assets/icons/vk.svg" />
             </a>
           </div>
@@ -79,36 +79,36 @@ export function SiteFooter() {
       </div>
 
       {/* Mobile Links */}
-      <div className="lg:hidden flex flex-col gap-6">
+      <div className="md:hidden flex flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-1.5">
-              <p className="font-tektur text-white/50 text-sm">Поддержка</p>
-              <a href="mailto:support@upgrader.pro" className="font-tektur text-sm text-white/80">support@upgrader.pro</a>
+              <p className="font-tektur text-[#8A8E99] text-[0.875rem]">Поддержка</p>
+              <a href="mailto:support@upgrader.pro" className="font-tektur text-[0.875rem] text-[#F7F7F8]">support@upgrader.pro</a>
             </div>
             <div className="flex flex-col gap-1.5">
-              <p className="font-tektur text-white/50 text-sm">Сотрудничество</p>
-              <a href="mailto:marketing@upgrader.pro" className="font-tektur text-sm text-white/80">marketing@upgrader.pro</a>
+              <p className="font-tektur text-[#8A8E99] text-[0.875rem]">Сотрудничество</p>
+              <a href="mailto:marketing@upgrader.pro" className="font-tektur text-[0.875rem] text-[#F7F7F8]">marketing@upgrader.pro</a>
             </div>
           </div>
           <div className="my-auto !my-0 shrink-0 self-start">
             <div className="relative">
-              <button type="button" aria-haspopup="menu" aria-label="Language selection" className="flex h-8 cursor-pointer items-center gap-3 rounded-md bg-[#232325] px-2" aria-expanded="false">
+              <button type="button" aria-haspopup="menu" aria-label="Language selection" className="flex h-9 cursor-pointer items-center gap-3 rounded-md bg-[#232325] px-3" aria-expanded="false">
                 <span className="flex items-center gap-1.5">
-                  <img alt="flag" className="h-[1.0625rem] w-[1.625rem] rounded-[2px] object-cover" src="/assets/images/game/ru.png" />
-                  <span className="font-tektur text-sm font-semibold text-white/80"> RUS </span>
+                  <img alt="flag" className="h-[0.875rem] w-[1.125rem] rounded-[2px] object-cover" src="/assets/images/game/ru.png" />
+                  <span className="font-tektur text-sm font-semibold text-[#F7F7F8]"> RUS </span>
                 </span>
                 <img src="/assets/arrow-down.svg" alt="arrow-down" className="h-[0.375rem] w-[0.6875rem] opacity-80 transition-transform duration-300" />
               </button>
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <p className="font-tektur text-white/50 text-sm">Общие положения</p>
-          <a className="font-tektur text-sm text-white/50" href="/ru/tos">Пользовательское соглашение</a>
-          <a className="font-tektur text-sm text-white/50" href="/ru/cookie-policy">Политика использования Cookie</a>
-          <a className="font-tektur text-sm text-white/50" href="/ru/privacy-policy">Политика конфиденциальности</a>
-          <a href="/assets/files/offer_uzum.pdf" target="_blank" className="font-tektur text-sm text-white/50"> Публичная оферта </a>
+        <div className="flex flex-col gap-2.5">
+          <p className="font-tektur text-[#8A8E99] text-[0.875rem] mb-1">Общие положения</p>
+          <a className="font-tektur text-[0.875rem] text-[#8A8E99]" href="/ru/tos">Пользовательское соглашение</a>
+          <a className="font-tektur text-[0.875rem] text-[#8A8E99]" href="/ru/cookie-policy">Политика использования Cookie</a>
+          <a className="font-tektur text-[0.875rem] text-[#8A8E99]" href="/ru/privacy-policy">Политика конфиденциальности</a>
+          <a href="/assets/files/offer_uzum.pdf" target="_blank" className="font-tektur text-[0.875rem] text-[#8A8E99]"> Публичная оферта </a>
         </div>
       </div>
 

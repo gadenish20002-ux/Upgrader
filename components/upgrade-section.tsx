@@ -354,7 +354,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       </div>
 
       {/* Main Upgrade Interface: Unified Grid for Mobile & Desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 lg:grid-rows-[auto_auto_auto] w-full items-start gap-x-[0.4375rem] gap-y-4 lg:gap-x-5 lg:gap-y-0 lg:mt-8 transition-all duration-300 ease-out">
+      <div className="grid grid-cols-2 lg:grid-cols-3 lg:grid-rows-[auto_auto_auto] w-full items-start gap-x-[0.4375rem] gap-y-1.5 lg:gap-x-5 lg:gap-y-0 lg:mt-8 transition-all duration-300 ease-out">
         
         {/* Settings Icons */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-1 order-1 flex gap-2 lg:mb-2 self-end">
@@ -393,7 +393,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           {selectedItems.length === 0 && balanceInput === 0 ? (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
-                <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug">Выберите скины или скины и баланс для использования</span>
+                <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug font-exo2">Выберите скины или скины и баланс для использования</span>
                 <span className="lg:text-xxs text-[0.4375rem] text-[#A7A7A7]">Вы можете выбрать несколько скинов</span>
               </div>
               <div className="absolute inset-0 z-0">
@@ -496,16 +496,19 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Balance Slider */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-3 order-6 lg:order-4 w-full mt-2 lg:mt-6">
-          <div className="bg-block flex h-full w-full flex-col items-center justify-start space-y-2 rounded-md p-2 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] lg:px-3">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-3 order-6 lg:order-4 w-full lg:mt-6">
+          <div
+            className="bg-block flex h-full w-full flex-col items-center justify-start space-y-2 rounded-md p-2 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] lg:px-3 transition-opacity duration-200"
+            style={{ opacity: selectedItems.length === 0 ? 0.4 : 1, pointerEvents: selectedItems.length === 0 ? "none" : "auto" }}
+          >
             <div className="flex w-full items-center justify-between">
-              <span className="text-gray text-xxs lg:text-xs">Сумма баланса:</span>
+              <span className="text-gray text-xxs lg:text-xs font-exo2">Сумма баланса:</span>
               <div className="flex items-center justify-end space-x-2">
                 <div className="flex items-center justify-end space-x-0.5">
-                  <span className="text-gradient-yellow text-xs font-semibold lg:text-sm"> {formatPrice(balanceInput)} </span>
+                  <span className="text-gradient-yellow text-xs font-semibold lg:text-sm font-exo2"> {formatPrice(balanceInput)} </span>
                   <img alt="" className="h-3 w-3" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
                 </div>
-                <span className="text-gray text-xxxs lg:text-xxs">(max {formatPrice(state.balance)})</span>
+                <span className="text-gray text-xxxs lg:text-xxs font-exo2">(max {formatPrice(state.balance)})</span>
               </div>
             </div>
             <input 
@@ -573,7 +576,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           ) : (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10">
-                <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug flex items-center justify-center h-full min-h-[22px] lg:min-h-0">Выберите предмет для апгрейда</h3>
+                <h3 className="font-bold text-white text-[9px] leading-tight lg:text-[13px] lg:leading-snug flex items-center justify-center h-full min-h-[22px] lg:min-h-0 font-exo2">Выберите предмет для апгрейда</h3>
               </div>
               <div className="absolute inset-0 z-0">
                 <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
@@ -584,18 +587,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Upgrade Multipliers */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center mt-2 lg:mt-6 w-full h-12 lg:h-14">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center lg:mt-6 w-full h-12 lg:h-14">
           <div className="flex h-full w-full items-center justify-center space-x-1">
             {state.fastMultipliers.map((mult, idx) => (
               <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99] font-exo2">
                   {state.predict.showMultipliers !== false ? `x${mult}` : mult}
                 </span>
               </button>
             ))}
             {state.fastPercentages.map((perc, idx) => (
               <button key={`perc-${idx}`} onClick={() => handleFastPercentage(perc)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : `border-white/10 btn-gradient-${idx + 1}`}`}>
-                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99]">
+                <span className="text-[13px] skew-x-6 transform lg:text-base text-[#8A8E99] font-exo2">
                   {state.predict.showPercentages !== false ? `${perc}%` : perc}
                 </span>
               </button>
@@ -607,12 +610,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Upgrade Button */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 mt-2 lg:mt-6 w-full flex justify-center">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 lg:mt-6 w-full flex justify-center">
           <button
             type="button"
             onClick={wonItemUid ? handleAddWonItem : handleSpin}
             disabled={spinning || (!wonItemUid && !state.loggedIn)}
-            className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-bold text-[#1C1C20] !w-full rounded-md lg:rounded-xl px-6 py-3 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] min-h-[41px] space-x-2 lg:space-x-3 lg:min-h-[56px] w-full flex-1 lg:max-w-[306px] text-[0.8125rem] lg:text-[1.375rem] !h-[1rem] !max-h-[2rem] lg:min-w-[19.125rem] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+            className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-semibold font-exo2 text-[#1C1C20] !w-full rounded-md lg:rounded-xl px-6 py-3 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] min-h-[41px] space-x-2 lg:space-x-3 lg:min-h-[56px] w-full flex-1 lg:max-w-[306px] text-[0.8125rem] lg:text-xl !h-[1rem] !max-h-[2rem] lg:min-w-[19.125rem] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <img alt="" draggable="false" className="pointer-events-none h-3 w-3 flex-shrink-0 select-none lg:h-4 lg:w-4" src="/assets/icons/logo-black.svg" />
             <span className="pointer-events-none select-none">
@@ -638,13 +641,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         <div className="lg:hidden flex w-[calc(100%+1rem)] -mx-2 px-2 bg-transparent rounded-t-xl">
           <div className="flex w-full bg-[#1C1D21] rounded-t-xl overflow-hidden">
             <button 
-              className={`flex-1 py-3 text-[0.875rem] font-semibold transition-colors ${mobileTab === "inventory" ? "bg-[#25262B] text-white rounded-t-xl" : "text-[#8A8E99]"}`}
+              className={`flex-1 py-3 text-[0.875rem] font-semibold transition-colors ${mobileTab === "inventory" ? "bg-[#1E1F23] text-white rounded-t-xl" : "text-[#8A8E99]"}`}
               onClick={() => setMobileTab("inventory")}
             >
               Мои предметы
             </button>
             <button 
-              className={`flex-1 py-3 text-[0.875rem] font-semibold transition-colors ${mobileTab === "catalog" ? "bg-[#25262B] text-white rounded-t-xl" : "text-[#8A8E99]"}`}
+              className={`flex-1 py-3 text-[0.875rem] font-semibold transition-colors ${mobileTab === "catalog" ? "bg-[#1E1F23] text-white rounded-t-xl" : "text-[#8A8E99]"}`}
               onClick={() => setMobileTab("catalog")}
             >
               Желаемые предметы

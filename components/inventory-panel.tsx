@@ -78,7 +78,7 @@ export function InventoryPanel({
   return (
     <div className="h-full flex flex-col">
       {/* Header separated with mb-2 */}
-      <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
+      <div className="!rounded-none lg:!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
         <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:flex-row lg:flex-nowrap">
             <div className="flex w-full flex-none items-center justify-start gap-2 lg:w-auto">
               {/* Icon tabs: Мои скины / Магазин */}
@@ -99,7 +99,7 @@ export function InventoryPanel({
                       </clipPath>
                     </defs>
                   </svg>
-                  <span className={`ml-1 text-[0.875rem] lg:hidden font-medium ${mode === "inventory" ? "text-[#202022]" : "text-white"}`}> Мои скины </span>
+                  <span className={`ml-1 text-[0.875rem] lg:hidden font-medium font-exo2 ${mode === "inventory" ? "text-[#202022]" : "text-white"}`}> Мои скины </span>
                 </button>
                 <button 
                   className={`flex h-full items-center justify-center gap-1 rounded-[6.25rem] px-[0.375rem] py-[0.25rem] transition-colors duration-200 hover:bg-[#202022] lg:w-[1.875rem] lg:rounded-[0.375rem] ${mode === "shop" ? "!cursor-default bg-[#FBD506] opacity-100 hover:bg-[#FBD506]" : "opacity-50"}`}
@@ -118,10 +118,10 @@ export function InventoryPanel({
                       </clipPath>
                     </defs>
                   </svg>
-                  <span className={`ml-1 text-[0.875rem] lg:hidden font-medium ${mode === "shop" ? "text-[#202022]" : "text-white"}`}> Магазин </span>
+                  <span className={`ml-1 text-[0.875rem] lg:hidden font-medium font-exo2 ${mode === "shop" ? "text-[#202022]" : "text-white"}`}> Магазин </span>
                 </button>
               </div>
-              <span className="hidden lg:block text-[1rem] font-medium text-white tracking-wide">{mode === "inventory" ? "Мои скины" : "Магазин"}</span>
+              <span className="hidden lg:block text-[1rem] font-medium text-white tracking-wide font-exo2">{mode === "inventory" ? "Мои скины" : "Магазин"}</span>
             </div>
             
             <div className="flex w-full flex-1 items-center justify-end space-x-2 lg:w-auto">

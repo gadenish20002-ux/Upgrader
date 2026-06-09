@@ -85,7 +85,7 @@ export function CatalogPanel({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
+      <div className="!rounded-none lg:!rounded-t-xl flex flex-col space-y-4 bg-[#1E1F23] p-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.20)] mb-2 lg:mb-0">
         <div className="flex min-h-[2.125rem] w-full flex-wrap items-center justify-between lg:flex-row lg:space-x-2">
           <div className="flex min-h-[2.125rem] w-full flex-1 flex-col items-center justify-between gap-3 lg:w-auto lg:flex-row lg:flex-wrap">
             <div className="flex h-[2.375rem] min-h-[2.125rem] w-full flex-none items-center justify-center lg:w-auto lg:space-x-1.5">
@@ -101,7 +101,7 @@ export function CatalogPanel({
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="text-[1rem] text-white opacity-50 lg:opacity-100 font-medium"> Выберите скин </span>
+                <span className="text-[1rem] text-white opacity-50 lg:opacity-100 font-medium font-exo2"> Выберите скин </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" className="block lg:hidden">
                   <path opacity="0.5" fillRule="evenodd" clipRule="evenodd" d="M18.2335 11.6354L9.99957 5.60777L1.76562 11.6354V6.02758L9.99957 0L18.2335 6.02758V11.6354Z" fill="white"></path>
                   <path opacity="0.2" d="M16.6654 13.9147V18.3327L9.9987 13.584L3.33203 18.3327V13.9147L9.9987 9.16602L16.6654 13.9147Z" fill="white"></path>
@@ -127,14 +127,14 @@ export function CatalogPanel({
               <div className="relative flex h-[2rem] w-full items-center justify-end select-none lg:h-[2.375rem] lg:min-w-[18.125rem]">
                 <div className={`relative z-[1] flex h-full flex-row items-center justify-end transition-all duration-200 ${searchOpen ? 'w-[0] overflow-hidden' : 'w-full'}`}>
                   <div className="mr-[0.375rem] flex h-full w-full flex-1 items-center rounded-[0.375rem] border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] lg:min-w-[5rem] lg:rounded-[0.625rem] lg:px-3">
-                    <span className="opacity-50"> Цена </span>
+                    <span className="opacity-50 font-exo2"> Цена </span>
                   </div>
                   <div className="relative h-full flex-1">
                     <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
                     <input 
                       value={min} 
                       onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} 
-                      className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6 bg-transparent" 
+                      className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 
                       placeholder="от" 
                       type="text" 
                     />
@@ -144,7 +144,7 @@ export function CatalogPanel({
                     <input 
                       value={max} 
                       onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} 
-                      className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-l-0 border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6 bg-transparent" 
+                      className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-l-0 border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 
                       placeholder="до" 
                       type="text" 
                     />

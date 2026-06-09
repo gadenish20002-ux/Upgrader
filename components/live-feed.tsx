@@ -510,7 +510,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
 
           <div className="absolute bottom-0 left-0 flex flex-col items-start justify-start space-x-0.5 text-left transition-all duration-700 group-hover:translate-y-[-100%] group-hover:opacity-0">
             <span className="font-tektur text-xxs max-w-[6.875rem] truncate font-bold uppercase text-white">{item.name}</span>
-            <span className="font-exo text-xxxs max-w-[6.8125rem] truncate font-semibold text-[#826e01]">{item.weapon}</span>
+            <span className="font-exo2 text-xxxs max-w-[6.8125rem] truncate font-semibold text-[#826e01]">{item.weapon}</span>
           </div>
 
           <div className="absolute bottom-0 left-0 flex translate-y-[50%] flex-col items-start justify-start space-y-1 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
