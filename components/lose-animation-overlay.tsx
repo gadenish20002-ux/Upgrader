@@ -27,13 +27,13 @@ type CssVars = CSSProperties & Record<`--${string}`, string | number>
 const TARGET_INDEX = 42
 const TAPE_LENGTH = 58
 const CASE_SEQUENCE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
-const CASE_SEQUENCE_SOUND_RATE = 0.96
+const CASE_SEQUENCE_SOUND_RATE = 1
 const CASE_FRAME_COUNT = 81
 const CASE_DROP_FRAME = 10
-const CASE_DROP_MS = 820
-const CASE_OPEN_MS = 4100
-const CASE_TO_ROULETTE_GAP_MS = 120
-const ROULETTE_SPIN_MS = 10000
+const CASE_DROP_MS = 500
+const CASE_OPEN_MS = 4700
+const CASE_TO_ROULETTE_GAP_MS = 100
+const ROULETTE_SPIN_MS = 6900
 const ROULETTE_REVEAL_MS = 450
 const CASE_FRAME_MS = CASE_OPEN_MS / (CASE_FRAME_COUNT - CASE_DROP_FRAME - 1)
 const STICKER_CHANCE = 0.95
@@ -387,7 +387,16 @@ function ReferenceCase({ phase }: { phase: Phase }) {
       }`}
       aria-hidden="true"
     >
-      <img src={caseFrameUrls[frameIdx]} alt="" draggable={false} />
+      <img
+        src={caseFrameUrls[frameIdx]}
+        alt=""
+        draggable={false}
+        style={{
+          transform: "scaleX(1.4) scaleY(1.35)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, black 65%, transparent 100%)",
+          maskImage: "radial-gradient(ellipse at center, black 65%, transparent 100%)"
+        }}
+      />
     </div>
   )
 }
@@ -418,7 +427,16 @@ function CaseScene({
       {!showRoulette ? (
         <div className={`bonus-impact-dust ${showImpact ? "is-active" : ""}`}>
           <div />
-          <img src="/assets/smoke.webp" alt="" draggable={false} />
+          <img
+            src="/assets/smoke.webp"
+            alt=""
+            draggable={false}
+            style={{
+              transform: "translateX(-50%) scaleX(3.5) scaleY(1.8)",
+              WebkitMaskImage: "radial-gradient(ellipse at center, black 50%, transparent 100%)",
+              maskImage: "radial-gradient(ellipse at center, black 50%, transparent 100%)"
+            }}
+          />
         </div>
       ) : null}
 
@@ -544,8 +562,9 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
   const clearRunning = useCallback(() => {
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
-    audioRefs.current.forEach((audio) => audio.pause())
-    audioRefs.current = []
+    if (audioElRef.current) {
+      audioElRef.current.pause()
+    }
   }, [])
 
   const schedule = useCallback((fn: () => void, delay: number) => {
@@ -571,25 +590,26 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     closingRef.current = false
   }, [])
 
-  const playSound = useCallback((src: string, volume = 0.75, playbackRate = 1) => {
-    if (soundEnabledRef.current === false) return
-    try {
-      const audio = new Audio(encodeURI(src))
-      audio.volume = volume
-      audio.playbackRate = playbackRate
-      audio.addEventListener("ended", () => {
-        audioRefs.current = audioRefs.current.filter((item) => item !== audio)
-      })
-      audio.play().catch(() => {})
-      audioRefs.current.push(audio)
-    } catch {
-      audioRefs.current = []
-    }
-  }, [])
+  const audioElRef = useRef<HTMLAudioElement>(null)
 
   const playCaseSequenceSound = useCallback(() => {
-    playSound(CASE_SEQUENCE_SOUND, 0.78, CASE_SEQUENCE_SOUND_RATE)
-  }, [playSound])
+    if (soundEnabledRef.current === false) return
+    const audio = audioElRef.current
+    if (audio) {
+      try {
+        audio.volume = 0.78
+        if (CASE_SEQUENCE_SOUND_RATE !== 1) {
+          audio.playbackRate = CASE_SEQUENCE_SOUND_RATE
+        }
+        audio.currentTime = 0
+        audio.play().catch((e) => {
+          console.error("Audio tag play blocked or failed:", e)
+        })
+      } catch (err) {
+        console.error("Failed to play audio tag:", err)
+      }
+    }
+  }, [])
 
   const finish = useCallback(() => {
     if (closingRef.current) return
@@ -745,6 +765,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
           )}
         </div>
       </div>
+      <audio ref={audioElRef} src={CASE_SEQUENCE_SOUND} preload="auto" />
     </div>
   )
 }

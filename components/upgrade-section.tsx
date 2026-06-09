@@ -489,6 +489,23 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                     </div>
                   )
                 })}
+                {displayHasBalance && (
+                  <div className="aspect-square h-full w-full">
+                    <div className="group relative h-full w-full rounded-md p-px shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, #FBD506 10%, rgb(28,28,32) 75%)` }}>
+                      <div className="relative flex h-full w-full flex-col items-center justify-center space-y-1 lg:space-y-2 rounded-md overflow-visible" style={{ backgroundColor: '#17181c' }}>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-[1.2rem] w-[1.2rem] lg:h-[2rem] lg:w-[2rem] items-center justify-center rounded-full bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)] shadow-[0_0_5.607px_0_rgba(255,255,255,0.10)]">
+                          <img alt="" className="h-[0.6rem] w-[0.6rem] lg:h-[1rem] lg:w-[1rem]" src="/assets/profitBlack.svg" />
+                        </div>
+                        <span className="font-semibold text-white text-[0.4rem] lg:text-[0.8rem] leading-none z-[1]">Ставка</span>
+                        <div className="flex items-center justify-center gap-[0.2rem] rounded-[0.3rem] border border-white/10 px-[0.4rem] py-[0.2rem] lg:px-[0.6rem] lg:py-[0.35rem] z-[1] bg-[#17181c]">
+                          <span className="font-semibold text-white text-[0.4rem] lg:text-[0.7rem] leading-none">{formatPrice(displayBalance)}</span>
+                          <img alt="" className="h-[0.4rem] w-[0.4rem] lg:h-[0.7rem] lg:w-[0.7rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                        </div>
+                        <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, #FBD50666 0%, #FBD50633 30%, #FBD5061a 45%, transparent 70%)` }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center space-x-0.5 z-[3] lg:bottom-4">
                 <span className="font-tektur text-gradient-yellow font-bold" style={{ fontSize: 'clamp(6px, 2vw, 18px)' }}>{formatPrice(inputValue)}</span>
