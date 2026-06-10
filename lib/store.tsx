@@ -59,7 +59,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (Date.now() - lastSyncTime.current < 1500) return
       
       try {
-        const res = await fetch(`/api/state?t=${Date.now()}`)
+        const res = await fetch(`/api/state?t=${Date.now()}`, { cache: "no-store" })
         if (res.ok) {
           const serverState = await res.json()
           setInternal((prev) => {
@@ -70,6 +70,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               upgradeSkins: DEFAULT_STATE.skins 
             }
             try {
+              window.localStorage.removeItem(STORAGE_KEY)
               window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
             } catch {}
             return next
@@ -110,33 +111,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Read latest local state to avoid overwriting with stale background tab state
-      let currentLocal = prev
-      try {
-        const raw = window.localStorage.getItem(STORAGE_KEY)
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          const merged = { 
-            ...DEFAULT_STATE, 
-            ...parsed,
-            skins: DEFAULT_STATE.skins,
-            upgradeSkins: DEFAULT_STATE.skins
-          }
-          
-          const optimizedLocal: any = { ...prev }
-          for (const key in merged) {
-            if (JSON.stringify(merged[key as keyof AppState]) !== JSON.stringify(prev[key as keyof AppState])) {
-              optimizedLocal[key] = merged[key as keyof AppState]
-            }
-          }
-          currentLocal = optimizedLocal
-        }
-      } catch {}
+      if (!hasChanges) return prev
 
-      const trueNext = { ...currentLocal, ...changes }
+      const finalState = { ...prev, ...changes }
 
       try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trueNext))
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(finalState))
       } catch {}
       
       if (hasChanges) {
@@ -144,11 +124,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         fetch(`/api/state?t=${Date.now()}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(changes)
+          body: JSON.stringify(changes),
+          cache: "no-store"
         }).catch(err => console.error("Failed to sync state", err))
       }
       
-      return trueNext
+      return finalState
     })
   }, [])
 
