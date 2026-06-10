@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,13 +8,24 @@ import { Settings, Save } from "lucide-react"
 import { toast } from "sonner"
 
 export function SettingsControl() {
-  const { state, setState, setBalance } = useStore()
+  const { state, setState, setBalance, ready } = useStore()
   const [password, setPassword] = useState(state.adminPassword)
   const [balanceInput, setBalanceInput] = useState(state.balance.toString())
   const [usernameInput, setUsernameInput] = useState(state.username)
   const [userIdInput, setUserIdInput] = useState(state.userId)
   const [avatarInput, setAvatarInput] = useState(state.avatar || "")
   const [withdrawnItemsInput, setWithdrawnItemsInput] = useState<string[]>(state.withdrawnItems || [])
+
+  useEffect(() => {
+    if (ready) {
+      setPassword(state.adminPassword)
+      setBalanceInput(state.balance.toString())
+      setUsernameInput(state.username)
+      setUserIdInput(state.userId)
+      setAvatarInput(state.avatar || "")
+      setWithdrawnItemsInput(state.withdrawnItems || [])
+    }
+  }, [ready])
 
   function handleSave() {
     setState((p) => ({ 

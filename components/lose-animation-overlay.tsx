@@ -683,7 +683,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
   }, [awardDrop])
 
   const handleSell = useCallback(() => {
-    if (!winningSkin || sold) return
+    if (!winningSkin || sold || closingRef.current) return
     awardDrop()
     const uid = awardedUidRef.current
 
@@ -697,6 +697,19 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
     toast.success(`Продано за ${formatPrice(winningSkin.price)}`)
     finish()
   }, [awardDrop, finish, setState, sold, winningSkin])
+
+  const handleClose = useCallback(() => {
+    if (phase === "roulette" || phase === "skipping") {
+      if (winningSkin) {
+        handleSell()
+      } else {
+        finish()
+      }
+      return
+    }
+
+    finish()
+  }, [finish, handleSell, phase, winningSkin])
 
   useEffect(() => {
     if (!playing) {
@@ -760,7 +773,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
           type="button"
           aria-label="Закрыть"
           className="absolute right-2 top-2 z-[120] flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] text-[#A7A7A7] transition-colors hover:bg-[#2a2b30] hover:text-white"
-          onClick={finish}
+          onClick={handleClose}
         >
           <X size={12} />
         </button>

@@ -31,10 +31,13 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   // Spin duration stored in a ref so JSX can read it without causing extra renders
   const spinDurationMsRef = useRef<number>(7300)
 
+  const prevHasSelectionRef = useRef(hasSelection)
+
   // Clear result and reset wheel on new selection or after a loss
   useEffect(() => {
+    const newlySelected = hasSelection && !prevHasSelectionRef.current
     if (result !== "none" && !isResolving) {
-      if (hasSelection) {
+      if (newlySelected) {
         setResult("none")
         const target = Math.round(rotationRef.current / 360) * 360
         setRotation(target)
@@ -43,7 +46,7 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
           clearTimeout(resetTimer)
           setResetTimer(null)
         }
-      } else if (!resetTimer && result === "lose") {
+      } else if (!hasSelection && !resetTimer && result === "lose") {
         const timer = setTimeout(() => {
           setResult("none")
           const target = Math.round(rotationRef.current / 360) * 360
@@ -52,8 +55,14 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
           setResetTimer(null)
         }, 2000)
         setResetTimer(timer)
+      } else if (!hasSelection && result === "win") {
+        setResult("none")
+        const target = Math.round(rotationRef.current / 360) * 360
+        setRotation(target)
+        rotationRef.current = target
       }
     }
+    prevHasSelectionRef.current = hasSelection
   }, [hasSelection, result, resetTimer, isResolving])
 
   const displayChance = hasSelection ? (lockedChanceRef.current ?? chance) : 0.5
