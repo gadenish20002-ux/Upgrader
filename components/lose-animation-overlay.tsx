@@ -12,6 +12,7 @@ interface LoseAnimationOverlayProps {
   playing: boolean
   onComplete?: () => void
   onStopSound?: () => void
+  onSkipSound?: () => void
 }
 
 type Phase = "drop" | "open" | "roulette" | "result"
@@ -676,7 +677,7 @@ function ResultScreen({
   )
 }
 
-export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseAnimationOverlayProps) {
+export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipSound }: LoseAnimationOverlayProps) {
   const { state, addToInventory, setState } = useStore()
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<Phase>("drop")
@@ -690,6 +691,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
   const timersRef = useRef<number[]>([])
   const onCompleteRef = useRef(onComplete)
   const onStopSoundRef = useRef(onStopSound)
+  const onSkipSoundRef = useRef(onSkipSound)
   const awardedRef = useRef(false)
   const awardedUidRef = useRef<string | null>(null)
   const closingRef = useRef(false)
@@ -701,6 +703,10 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
   useEffect(() => {
     onStopSoundRef.current = onStopSound
   }, [onStopSound])
+
+  useEffect(() => {
+    onSkipSoundRef.current = onSkipSound
+  }, [onSkipSound])
 
   useEffect(() => {
     void preloadLoseAnimationFrames()
@@ -736,10 +742,11 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
 
   const handleSkip = useCallback(() => {
     if (phase === "drop" || phase === "open") {
-      stopRunning()
+      clearTimers()
+      onSkipSoundRef.current?.()
       setPhase("roulette")
     }
-  }, [phase, stopRunning])
+  }, [phase, clearTimers])
 
   const resetVisualState = useCallback(() => {
     setPhase("drop")

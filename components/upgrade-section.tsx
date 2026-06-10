@@ -266,6 +266,19 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     loseCaseAudioRef.current = null
   }
 
+  function skipLoseCaseSound() {
+    const audio = loseCaseAudioRef.current
+    if (!audio) return
+
+    try {
+      audio.currentTime = 2.984
+    } catch {}
+
+    try {
+      audio.play().catch(() => {})
+    } catch {}
+  }
+
   function playLoseCaseSound() {
     if (state.soundMode !== "on") return
 
@@ -825,6 +838,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           clearSelection()
         }}
         onStopSound={stopLoseCaseSound}
+        onSkipSound={skipLoseCaseSound}
       />
 
       </div>{/* end relative wrapper */}

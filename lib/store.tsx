@@ -52,12 +52,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       window.localStorage.removeItem("upgrader_state_v2")
     } catch {}
     setInternal(loadState())
-    setReady(true)
 
     // Fetch global state from server
     async function fetchState() {
       if (Date.now() < syncManager.suppressUntil) return
-      // Prevent fetching if we just updated the state locally
       if (Date.now() - lastSyncTime.current < 1500) return
       
       try {
@@ -82,9 +80,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    fetchState()
-    const interval = setInterval(fetchState, 2000)
-    return () => clearInterval(interval)
+    let interval: NodeJS.Timeout
+    async function init() {
+      await fetchState()
+      setReady(true)
+      interval = setInterval(fetchState, 2000)
+    }
+
+    init()
+    return () => {
+      if (interval) clearInterval(interval)
+    }
   }, [])
 
 
