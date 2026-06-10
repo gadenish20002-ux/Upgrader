@@ -4,6 +4,9 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, ty
 import type { AppState, Skin, InventoryItem } from "./types"
 import { DEFAULT_STATE } from "./default-data"
 
+let syncTimeout: NodeJS.Timeout | null = null
+const pendingSyncChanges: Record<string, any> = {}
+
 const STORAGE_KEY = "upgrader_state_v3"
 
 interface StoreContextValue {
@@ -18,6 +21,7 @@ interface StoreContextValue {
   setBalance: (value: number) => void
   resetAll: () => void
   addGameHistory: (entry: import("./types").GameHistoryEntry) => void
+  addItemHistory: (entries: import("./types").ItemHistoryEntry[]) => void
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
@@ -30,12 +34,24 @@ function loadState(): AppState {
     const parsed = JSON.parse(raw)
     // Always use fresh skins from DEFAULT_STATE — never cache skin data
     // (image paths, prices, etc. may change between deployments)
-    return {
+    const migratedState = {
       ...DEFAULT_STATE,
       ...parsed,
       skins: DEFAULT_STATE.skins,  // always use latest skins list
       upgradeSkins: DEFAULT_STATE.skins, // DO NOT cache upgrade skins
     }
+    
+    // Migrate old withdrawnItems string array to itemHistory if needed
+    if (parsed.withdrawnItems && Array.isArray(parsed.withdrawnItems) && (!parsed.itemHistory || parsed.itemHistory.length === 0)) {
+      migratedState.itemHistory = parsed.withdrawnItems.map((skinId: string, idx: number) => ({
+        id: `ih-${Date.now()}-${idx}`,
+        skinId,
+        action: "withdrawn",
+        date: Date.now() - idx * 1000 // fake past dates
+      }))
+    }
+    
+    return migratedState
   } catch {
     return DEFAULT_STATE
   }
@@ -122,12 +138,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       
       if (hasChanges) {
         lastSyncTime.current = Date.now()
-        fetch(`/api/state?t=${Date.now()}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(changes),
-          cache: "no-store"
-        }).catch(err => console.error("Failed to sync state", err))
+        
+        // Debounce server updates to prevent race conditions when multiple setStates are called synchronously
+        Object.assign(pendingSyncChanges, changes)
+        if (syncTimeout) clearTimeout(syncTimeout)
+        syncTimeout = setTimeout(() => {
+          const toSend = { ...pendingSyncChanges }
+          for (const key in pendingSyncChanges) delete pendingSyncChanges[key]
+          
+          fetch(`/api/state?t=${Date.now()}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(toSend),
+            cache: "no-store"
+          }).catch(err => console.error("Failed to sync state", err))
+        }, 200)
       }
       
       return finalState
@@ -198,9 +223,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [setState],
   )
 
+  const addItemHistory = useCallback((entries: import("./types").ItemHistoryEntry[]) => {
+    setState((prev) => ({
+      ...prev,
+      itemHistory: [...entries, ...prev.itemHistory].slice(0, 500) // keep latest 500 entries
+    }))
+  }, [setState])
+
+  const contextValue: StoreContextValue = {
+    state,
+    ready,
+    setState,
+    login,
+    logout,
+    addToInventory,
+    removeFromInventory,
+    setBalance,
+    resetAll,
+    addGameHistory,
+    addItemHistory,
+  }
+
   return (
     <StoreContext.Provider
-      value={{ state, ready, setState, login, logout, addToInventory, removeFromInventory, setBalance, resetAll, addGameHistory }}
+      value={contextValue}
     >
       {children}
     </StoreContext.Provider>
@@ -214,7 +260,12 @@ export function useStore() {
 }
 
 export function getSkin(skins: Skin[], id: string): Skin | undefined {
-  return skins.find((s) => s.id === id)
+  let skin = skins.find((s) => s.id === id)
+  if (!skin) {
+    const { COMPENSATION_BONUS_ITEMS } = require("./default-data")
+    skin = COMPENSATION_BONUS_ITEMS.find((s: Skin) => s.id === id)
+  }
+  return skin
 }
 
 export function formatPrice(value: number): string {

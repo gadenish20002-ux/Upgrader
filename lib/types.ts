@@ -42,6 +42,15 @@ export interface GameHistoryEntry {
   resultSkinId?: string
 }
 
+export type ItemHistoryAction = "sold" | "withdrawn" | "compensation" | "upgrade" | "bought"
+
+export interface ItemHistoryEntry {
+  id: string
+  skinId: string
+  action: ItemHistoryAction
+  date: number
+}
+
 export interface AppState {
   balance: number
   inventory: InventoryItem[]
@@ -54,7 +63,8 @@ export interface AppState {
   online: number
   upgrades: number
   userUpgrades: number
-  withdrawnItems: string[]
+  itemHistory: ItemHistoryEntry[]
+  withdrawnItems?: string[] // keep as optional for backwards compatibility during migration
   predict: Predict
   adminPassword: string
   fastMode: boolean

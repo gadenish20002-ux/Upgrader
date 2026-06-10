@@ -51,7 +51,7 @@ function getFastFilterPriceRange(type: "multiplier" | "percentage", value: numbe
 }
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, removeFromInventory, addGameHistory } = useStore()
+  const { state, setState, removeFromInventory, addGameHistory, addItemHistory } = useStore()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
   const [selectedUids, setSelectedUids] = useState<string[]>([])
@@ -325,6 +325,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       upgrades: p.upgrades + itemsToBuy.length,
       userUpgrades: p.userUpgrades + itemsToBuy.length,
     }))
+    
+    addItemHistory(
+      itemsToBuy.map((item) => ({
+        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        skinId: item.skinId,
+        action: "bought",
+        date: Date.now()
+      }))
+    )
     
     toast.success("Предметы успешно куплены!")
     if (state.soundMode === "on") {

@@ -14,7 +14,7 @@ export function SettingsControl() {
   const [usernameInput, setUsernameInput] = useState(state.username)
   const [userIdInput, setUserIdInput] = useState(state.userId)
   const [avatarInput, setAvatarInput] = useState(state.avatar || "")
-  const [withdrawnItemsInput, setWithdrawnItemsInput] = useState<string[]>(state.withdrawnItems || [])
+  const [itemHistoryInput, setItemHistoryInput] = useState<import("@/lib/types").ItemHistoryEntry[]>(state.itemHistory || [])
 
   useEffect(() => {
     if (ready) {
@@ -23,7 +23,7 @@ export function SettingsControl() {
       setUsernameInput(state.username)
       setUserIdInput(state.userId)
       setAvatarInput(state.avatar || "")
-      setWithdrawnItemsInput(state.withdrawnItems || [])
+      setItemHistoryInput(state.itemHistory || [])
     }
   }, [ready])
 
@@ -34,7 +34,8 @@ export function SettingsControl() {
       username: usernameInput,
       userId: userIdInput,
       avatar: avatarInput || null,
-      withdrawnItems: withdrawnItemsInput
+      itemHistory: itemHistoryInput,
+      withdrawnItems: undefined // clear old field
     }))
     const parsedBalance = parseFloat(balanceInput)
     if (!isNaN(parsedBalance)) {
@@ -43,12 +44,17 @@ export function SettingsControl() {
     toast.success("Настройки успешно сохранены")
   }
 
-  function addWithdrawnItem(skinId: string) {
-    setWithdrawnItemsInput([...withdrawnItemsInput, skinId])
+  function addItemHistoryEntry(skinId: string, action: import("@/lib/types").ItemHistoryAction) {
+    setItemHistoryInput([...itemHistoryInput, {
+      id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      skinId,
+      action,
+      date: Date.now()
+    }])
   }
 
-  function removeWithdrawnItem(index: number) {
-    setWithdrawnItemsInput(withdrawnItemsInput.filter((_, i) => i !== index))
+  function removeItemHistoryEntry(index: number) {
+    setItemHistoryInput(itemHistoryInput.filter((_, i) => i !== index))
   }
 
   return (
@@ -116,7 +122,7 @@ export function SettingsControl() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Выведенные предметы</label>
+          <label className="text-sm font-medium text-muted-foreground">История предметов</label>
           <div className="flex gap-2">
             <select 
               id="skin-select"
@@ -128,21 +134,39 @@ export function SettingsControl() {
                 </option>
               ))}
             </select>
+            <select 
+              id="action-select"
+              className="flex h-9 w-32 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="sold" className="bg-background text-foreground">Продано</option>
+              <option value="withdrawn" className="bg-background text-foreground">Выведено</option>
+              <option value="compensation" className="bg-background text-foreground">Компенсация</option>
+              <option value="upgrade" className="bg-background text-foreground">Апгрейд</option>
+              <option value="bought" className="bg-background text-foreground">Куплено</option>
+            </select>
             <Button onClick={() => {
-              const select = document.getElementById('skin-select') as HTMLSelectElement
-              if (select && select.value) {
-                addWithdrawnItem(select.value)
+              const skinSelect = document.getElementById('skin-select') as HTMLSelectElement
+              const actionSelect = document.getElementById('action-select') as HTMLSelectElement
+              if (skinSelect && skinSelect.value && actionSelect && actionSelect.value) {
+                addItemHistoryEntry(skinSelect.value, actionSelect.value as any)
               }
             }} variant="secondary">Добавить</Button>
           </div>
           <div className="mt-2 flex flex-col gap-2 max-h-[150px] overflow-y-auto rounded-md border p-2">
-            {withdrawnItemsInput.length === 0 && <span className="text-xs text-muted-foreground p-1">Нет выведенных предметов</span>}
-            {withdrawnItemsInput.map((skinId, idx) => {
-              const skin = state.skins.find(s => s.id === skinId)
+            {itemHistoryInput.length === 0 && <span className="text-xs text-muted-foreground p-1">Нет истории предметов</span>}
+            {itemHistoryInput.map((entry, idx) => {
+              const skin = state.skins.find(s => s.id === entry.skinId)
+              const actionLabels: Record<string, string> = {
+                sold: "Продано",
+                withdrawn: "Выведено",
+                compensation: "Компенсация",
+                upgrade: "Апгрейд",
+                bought: "Куплено"
+              }
               return (
                 <div key={idx} className="flex items-center justify-between bg-secondary/30 px-2 py-1.5 rounded-md text-sm">
-                  <span>{skin ? skin.name : skinId}</span>
-                  <button onClick={() => removeWithdrawnItem(idx)} className="text-destructive hover:text-destructive/80 font-bold text-xs">Удалить</button>
+                  <span>{skin ? skin.name : entry.skinId} <span className="text-muted-foreground ml-2">({actionLabels[entry.action] || entry.action})</span></span>
+                  <button onClick={() => removeItemHistoryEntry(idx)} className="text-destructive hover:text-destructive/80 font-bold text-xs">Удалить</button>
                 </div>
               )
             })}
