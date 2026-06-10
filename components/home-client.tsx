@@ -25,7 +25,7 @@ export function HomeClient() {
 
   return (
     <div className="min-h-screen bg-transparent text-foreground flex flex-col">
-      <SiteHeader onProfileClick={() => setShowProfile((prev) => !prev)} />
+      <SiteHeader onProfileClick={() => setShowProfile((prev) => !prev)} onLogoClick={() => setShowProfile(false)} />
       <div className="flex flex-1 flex-col lg:flex-row pt-[3.25rem] md:pt-[4.25rem]">
         {/* Mobile: Top Live Feed */}
         <div className="lg:hidden border-b border-border/40 lose-anim-blur-target">

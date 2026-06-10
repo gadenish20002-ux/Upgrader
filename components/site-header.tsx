@@ -10,7 +10,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 
-export function SiteHeader({ onProfileClick }: { onProfileClick?: () => void }) {
+export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: () => void, onLogoClick?: () => void }) {
   const { state, logout, setState } = useStore()
 
   // Локальные счетчики, чтобы не дергать базу данных каждые 1.5 секунды
@@ -49,7 +49,7 @@ export function SiteHeader({ onProfileClick }: { onProfileClick?: () => void }) 
       <div className="flex h-[3.25rem] w-full items-center justify-start space-x-3 md:h-[4.25rem] md:space-x-5">
         <div className="flex h-full w-full flex-1 shrink flex-nowrap items-center justify-start space-x-3 md:space-x-5">
           <div className="my-auto select-none shrink-0">
-            <Link className="flex cursor-pointer items-center gap-[0.3125rem] lg:gap-2" href="/">
+            <Link className="flex cursor-pointer items-center gap-[0.3125rem] lg:gap-2" href="/" onClick={onLogoClick}>
               <img src="/assets/images/header/logo.svg" alt="Logo" className="h-[1.25rem] w-[1.25rem] lg:h-8 lg:w-8" />
               <span className="font-tektur text-xl font-extrabold text-white hidden lg:block lg:text-2xl"> UPGRADER </span>
             </Link>
