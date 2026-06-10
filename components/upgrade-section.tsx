@@ -58,6 +58,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [selectedShopIds, setSelectedShopIds] = useState<string[]>([])
   const [targetId, setTargetId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
+  const pendingWonItemUidRef = useRef<string | null>(null)
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
   const [loseAnimating, setLoseAnimating] = useState(false)
@@ -119,8 +120,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setCatalogPriceMin(range.min)
     setCatalogPriceMax(range.max)
 
-    const filteredSkins = state.upgradeSkins.filter(skin => skin.price >= range.min && skin.price <= range.max)
-    const sourceSkins = filteredSkins.length > 0 ? filteredSkins : state.upgradeSkins
+    const validSkins = state.upgradeSkins.filter(skin => {
+      const chance = (currentInputValue / skin.price) * WIN_FACTOR;
+      return chance >= 0.01 && chance <= 0.80;
+    });
+
+    const filteredSkins = validSkins.filter(skin => skin.price >= range.min && skin.price <= range.max)
+    const sourceSkins = filteredSkins.length > 0 ? filteredSkins : validSkins
 
     const closest = sourceSkins.reduce((best, skin) => {
       if (!best) return skin
@@ -297,8 +303,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Недостаточно баланса")
       return
     }
-    if (chance >= 0.92) {
+    if (chance > 0.8) {
       toast.error("Слишком высокий шанс — выберите цель подороже")
+      return
+    }
+    if (chance < 0.01) {
+      toast.error("Слишком низкий шанс")
       return
     }
 
@@ -370,10 +380,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         toast.error("Не повезло. Попробуйте снова!")
       }
     }
-
-    clearSelection()
-    if (newUid) {
-      setWonItemUid(newUid)
+    
+    // Если есть анимация, сброс перенесён в onComplete
+    if (result && newUid) {
+      pendingWonItemUidRef.current = newUid
     }
     setSpinning(false)
   }
@@ -653,7 +663,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           {targetSkin ? (
             <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
-                onClick={() => setTargetId(null)}
+                onClick={() => {
+                  if (spinning || loseAnimating || winAnimating) return
+                  setTargetId(null)
+                }}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
               >
                 <img alt="Close" className="h-2 w-2 lg:h-4 lg:w-4" src="/assets/close-gray.svg" />
@@ -685,14 +698,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 />
               </div>
 
-              {/* Win Animation Overlay */}
-              <WinAnimationOverlay
-                playing={winAnimating}
-                onComplete={() => {
-                  setWinAnimating(false)
-                  lockedLeftCard.current = null
-                }}
-              />
             </div>
           ) : (
             <div className="relative h-full w-full">
@@ -705,6 +710,20 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </div>
             </div>
           )}
+
+          {/* Win Animation Overlay */}
+          <WinAnimationOverlay
+            playing={winAnimating}
+            onComplete={() => {
+              setWinAnimating(false)
+              lockedLeftCard.current = null
+              clearSelection()
+              if (pendingWonItemUidRef.current) {
+                setWonItemUid(pendingWonItemUidRef.current)
+                pendingWonItemUidRef.current = null
+              }
+            }}
+          />
         </div>
 
         {/* Upgrade Multipliers */}
@@ -753,6 +772,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         onComplete={() => {
           setLoseAnimating(false)
           lockedLeftCard.current = null
+          clearSelection()
         }}
         soundEnabled={state.soundMode === "on"}
       />

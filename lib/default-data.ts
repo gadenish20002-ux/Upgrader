@@ -23,7 +23,7 @@ export const DEFAULT_STATE: AppState = {
   upgrades: 132860345,
   userUpgrades: 0,
   withdrawnItems: [],
-  predict: { outcome: "off", targetSkinId: null, hint: "x2", targetLosses: 3, currentLosses: 0, showPercentages: true, showMultipliers: true },
+  predict: { outcome: "off", targetSkinId: null, hint: "x2", targetLosses: 3, currentLosses: 0, showPercentages: false, showMultipliers: false },
   adminPassword: "admin123",
   fastMode: false,
   fastMultipliers: [2, 4, 8],
