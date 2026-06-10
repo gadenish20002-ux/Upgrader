@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { X } from "lucide-react"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatPrice, useStore } from "@/lib/store"
@@ -11,8 +11,7 @@ import { toast } from "sonner"
 interface LoseAnimationOverlayProps {
   playing: boolean
   onComplete?: () => void
-  soundEnabled?: boolean
-  caseAudioRef?: RefObject<HTMLAudioElement | null>
+  onStopSound?: () => void
 }
 
 type Phase = "drop" | "open" | "roulette" | "result"
@@ -25,18 +24,26 @@ interface TapeEntry {
 
 type CssVars = CSSProperties & Record<`--${string}`, string | number>
 
-const TARGET_INDEX = 42
-const TAPE_LENGTH = 58
-export const LOSE_CASE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
-export const LOSE_CASE_SOUND_RATE = 0.96
+const TARGET_INDEX = 5200
+const TAPE_LENGTH = 96
+const VISIBLE_TAPE_LENGTH = 31
+const ROULETTE_CENTER_SLOT = Math.floor(VISIBLE_TAPE_LENGTH / 2)
+const ROULETTE_START_INDEX = 10
+export const LOSE_CASE_SOUND = "/sounds/openCompensationCase.mp3"
+const LOSE_CASE_SOUND_MS = 14700
 const CASE_FRAME_COUNT = 81
+const CASE_LAST_FRAME = CASE_FRAME_COUNT - 1
 const CASE_DROP_FRAME = 10
+const CASE_ROULETTE_START_FRAME = 47
 const CASE_DROP_MS = 500
 const CASE_OPEN_MS = 4700
-const CASE_TO_ROULETTE_GAP_MS = 100
-const ROULETTE_SPIN_MS = 6900
-const ROULETTE_REVEAL_MS = 450
-const CASE_FRAME_MS = CASE_OPEN_MS / (CASE_FRAME_COUNT - CASE_DROP_FRAME - 1)
+const CASE_ROULETTE_START_MS = Math.round(
+  (CASE_OPEN_MS * (CASE_ROULETTE_START_FRAME - CASE_DROP_FRAME)) / (CASE_LAST_FRAME - CASE_DROP_FRAME),
+)
+const ROULETTE_SPIN_MS = 9500
+const ROULETTE_SLOWDOWN_START_MS = 3600
+const ROULETTE_SLOWDOWN_START = ROULETTE_SLOWDOWN_START_MS / ROULETTE_SPIN_MS
+const ROULETTE_REVEAL_MS = 1650
 const STICKER_CHANCE = 0.95
 const caseFrameUrls = Array.from({ length: CASE_FRAME_COUNT }, (_, index) =>
   `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`,
@@ -125,32 +132,35 @@ const COMPENSATION_BONUS_ITEMS: Skin[] = [
   },
 ]
 
-let caseFramesPreloaded = false
-function preloadCaseFrames() {
-  if (caseFramesPreloaded || typeof window === "undefined") return
-  caseFramesPreloaded = true
+let caseFramesPreloadPromise: Promise<void> | null = null
+const caseFrameImageCache: HTMLImageElement[] = []
 
-  const framesToWarm = caseFrameUrls.slice(CASE_DROP_FRAME)
-  let index = 0
-  const warmNextBatch = () => {
-    const batch = framesToWarm.slice(index, index + 12)
-    if (batch.length === 0) return
+export function preloadLoseAnimationFrames() {
+  if (typeof window === "undefined") return Promise.resolve()
+  if (caseFramesPreloadPromise) return caseFramesPreloadPromise
 
-    let completed = 0
-    batch.forEach((url) => {
-      const img = new window.Image()
-      img.onload = img.onerror = () => {
-        completed += 1
-        if (completed === batch.length) {
-          index += batch.length
-          window.setTimeout(warmNextBatch, 24)
-        }
-      }
-      img.src = url
-    })
-  }
+  caseFramesPreloadPromise = Promise.all(
+    caseFrameUrls.slice(CASE_DROP_FRAME).map(
+      (url, index) =>
+        new Promise<void>((resolve) => {
+          const img = new window.Image()
+          caseFrameImageCache[CASE_DROP_FRAME + index] = img
+          img.decoding = "async"
+          img.loading = "eager"
+          img.onload = () => {
+            if (typeof img.decode === "function") {
+              img.decode().then(resolve).catch(resolve)
+            } else {
+              resolve()
+            }
+          }
+          img.onerror = () => resolve()
+          img.src = url
+        }),
+    ),
+  ).then(() => undefined)
 
-  window.setTimeout(warmNextBatch, 300)
+  return caseFramesPreloadPromise
 }
 
 function isStickerSkin(skin: Skin) {
@@ -186,22 +196,71 @@ function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
   const winner = pickWeightedSkin(stickerItems, otherItems, fallback) ?? pool[0] ?? skins[0]
 
   const items = Array.from({ length: TAPE_LENGTH }, (_, index) => {
-    const skin = index === TARGET_INDEX ? winner : pickWeightedSkin(stickerItems, otherItems, fallback) ?? winner
+    const skin = pickWeightedSkin(stickerItems, otherItems, fallback) ?? winner
     return {
       key: `${skin.id}-${index}-${Math.random().toString(36).slice(2, 7)}`,
       skin,
-      isWinner: index === TARGET_INDEX,
+      isWinner: false,
     }
   })
 
   return { items, winner }
 }
 
-function resetAudio(audio: HTMLAudioElement) {
-  audio.pause()
-  try {
-    audio.currentTime = 0
-  } catch {}
+function buildVisibleTape(items: TapeEntry[], winner: Skin | null, baseIndex: number, keyPrefix = "slot") {
+  if (!winner || items.length === 0) return []
+
+  return Array.from({ length: VISIBLE_TAPE_LENGTH }, (_, slotIndex) => {
+    const globalIndex = baseIndex + slotIndex
+
+    if (globalIndex === TARGET_INDEX) {
+      return {
+        key: `${keyPrefix}-${slotIndex}`,
+        skin: winner,
+        isWinner: true,
+      }
+    }
+
+    const poolIndex = ((globalIndex % items.length) + items.length) % items.length
+    const entry = items[poolIndex] ?? items[0]
+    return {
+      ...entry,
+      key: `${keyPrefix}-${slotIndex}`,
+      isWinner: false,
+    }
+  })
+}
+
+const rouletteSpinCurve = (() => {
+  const points = 480
+  const curve = [0]
+  let total = 0
+
+  for (let index = 1; index <= points; index += 1) {
+    const t = (index - 0.5) / points
+    const smoothStep = (value: number) => value * value * (3 - 2 * value)
+    const smootherStep = (value: number) => value * value * value * (value * (value * 6 - 15) + 10)
+    const startRamp = smoothStep(Math.min(1, t / 0.14))
+    const slowdownT = Math.min(1, Math.max(0, (t - ROULETTE_SLOWDOWN_START) / (1 - ROULETTE_SLOWDOWN_START)))
+    const brake = (1 - smootherStep(slowdownT)) ** 2.6
+    const peak = Math.sin(Math.PI * Math.min(1, t / ROULETTE_SLOWDOWN_START)) ** 1.2
+    const fastVelocity = 1.0 + 2.2 * startRamp + 9.5 * peak
+    const slowVelocity = fastVelocity * brake
+    const velocity = t < ROULETTE_SLOWDOWN_START ? fastVelocity : slowVelocity
+    total += velocity
+    curve[index] = total
+  }
+
+  return curve.map((value) => value / total)
+})()
+
+function rouletteSpinProgress(t: number) {
+  const clamped = Math.min(1, Math.max(0, t))
+  const scaled = clamped * (rouletteSpinCurve.length - 1)
+  const lower = Math.floor(scaled)
+  const upper = Math.min(rouletteSpinCurve.length - 1, lower + 1)
+  const mix = scaled - lower
+  return rouletteSpinCurve[lower] + (rouletteSpinCurve[upper] - rouletteSpinCurve[lower]) * mix
 }
 
 function BonusItemCard({
@@ -269,66 +328,117 @@ function BonusItemCard({
 function HorizontalDropRoulette({
   active,
   items,
+  winner,
   onFinished,
 }: {
   active: boolean
   items: TapeEntry[]
+  winner: Skin | null
   onFinished: () => void
 }) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const tapeRef = useRef<HTMLDivElement>(null)
-  const winnerRef = useRef<HTMLDivElement>(null)
   const [spinFinished, setSpinFinished] = useState(false)
+  const [view, setView] = useState(() => ({
+    baseIndex: ROULETTE_START_INDEX - ROULETTE_CENTER_SLOT,
+    fraction: 0,
+  }))
+  const [metrics, setMetrics] = useState({ viewportWidth: 0, itemWidth: 0, itemStep: 0 })
+
+  useLayoutEffect(() => {
+    if (!active) return
+
+    const measure = () => {
+      const viewport = viewportRef.current
+      const tape = tapeRef.current
+      const first = tape?.children[0] as HTMLElement | undefined
+      const second = tape?.children[1] as HTMLElement | undefined
+
+      if (!viewport || !first) return
+
+      const itemWidth = first.offsetWidth
+      const itemStep = second ? second.offsetLeft - first.offsetLeft : itemWidth
+      setMetrics({
+        viewportWidth: viewport.clientWidth,
+        itemWidth,
+        itemStep: itemStep || itemWidth,
+      })
+    }
+
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [active])
 
   useEffect(() => {
-    const viewport = viewportRef.current
-    const tape = tapeRef.current
-    const winner = winnerRef.current
-
-    if (!active || !viewport || !tape || !winner) {
+    if (!active || !winner || metrics.itemStep <= 0) {
       setSpinFinished(false)
-      if (tape) {
-        tape.style.transition = "none"
-        tape.style.transform = "translate3d(0, 0, 0)"
-      }
+      setView({
+        baseIndex: ROULETTE_START_INDEX - ROULETTE_CENTER_SLOT,
+        fraction: 0,
+      })
       return
     }
 
     setSpinFinished(false)
-    tape.style.transition = "none"
-    
-    // Start with item 10 centered so the tape is full of items initially
-    const startItem = tape.children[10] as HTMLElement
-    if (startItem && viewport.clientWidth > 0) {
-      const startOffset = startItem.offsetLeft + startItem.offsetWidth / 2 - viewport.clientWidth / 2
-      tape.style.transform = `translate3d(${-startOffset}px, 0, 0)`
-    } else {
-      tape.style.transform = "translate3d(0, 0, 0)"
-    }
-    
-    void tape.offsetHeight
-
-    const raf = window.requestAnimationFrame(() => {
-      const target =
-        winner.offsetLeft + winner.offsetWidth / 2 - viewport.clientWidth / 2 + (Math.random() * 16 - 8)
-
-      tape.style.transition = `transform ${ROULETTE_SPIN_MS}ms cubic-bezier(0.5, 0, 0.1, 1)`
-      tape.style.transform = `translate3d(${-target}px, 0, 0)`
+    setView({
+      baseIndex: ROULETTE_START_INDEX - ROULETTE_CENTER_SLOT,
+      fraction: 0,
     })
 
-    const done = window.setTimeout(() => {
+    let raf = 0
+    let revealTimer = 0
+    const distanceItems = TARGET_INDEX - ROULETTE_START_INDEX
+    const startedAt = window.performance.now()
+
+    const animate = (now: number) => {
+      const elapsed = now - startedAt
+      const progress = rouletteSpinProgress(elapsed / ROULETTE_SPIN_MS)
+      const centerIndex = ROULETTE_START_INDEX + distanceItems * progress
+      const wholeIndex = Math.floor(centerIndex)
+
+      setView({
+        baseIndex: wholeIndex - ROULETTE_CENTER_SLOT,
+        fraction: centerIndex - wholeIndex,
+      })
+
+      if (elapsed < ROULETTE_SPIN_MS) {
+        raf = window.requestAnimationFrame(animate)
+        return
+      }
+
+      setView({
+        baseIndex: TARGET_INDEX - ROULETTE_CENTER_SLOT,
+        fraction: 0,
+      })
       setSpinFinished(true)
-      window.setTimeout(onFinished, ROULETTE_REVEAL_MS)
-    }, ROULETTE_SPIN_MS + 160)
+      revealTimer = window.setTimeout(onFinished, ROULETTE_REVEAL_MS)
+    }
+
+    raf = window.requestAnimationFrame(animate)
 
     return () => {
       window.cancelAnimationFrame(raf)
-      window.clearTimeout(done)
+      window.clearTimeout(revealTimer)
     }
-  }, [active, items, onFinished])
+  }, [active, metrics.itemStep, onFinished, winner])
+
+  const visibleItems = useMemo(() => buildVisibleTape(items, winner, view.baseIndex), [items, view.baseIndex, winner])
+
+  const tapeX =
+    metrics.viewportWidth > 0 && metrics.itemStep > 0
+      ? metrics.viewportWidth / 2 -
+        (ROULETTE_CENTER_SLOT * metrics.itemStep + metrics.itemWidth / 2 + view.fraction * metrics.itemStep)
+      : 0
 
   return (
-    <div className="relative w-full overflow-hidden h-[10.5rem] lg:h-[14rem]">
+    <div
+      className={`bonus-roulette-strip relative w-full ${
+        spinFinished
+          ? "is-stopped h-[14.75rem] overflow-visible lg:h-[18rem]"
+          : "h-[10.5rem] overflow-hidden lg:h-[14rem]"
+      }`}
+    >
       <img
         alt=""
         className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
@@ -337,15 +447,18 @@ function HorizontalDropRoulette({
       />
       <div
         ref={viewportRef}
-        className="relative w-full overflow-hidden h-full"
+        className={`relative h-full w-full ${spinFinished ? "overflow-visible" : "overflow-hidden"}`}
       >
-        <div ref={tapeRef} className="absolute left-0 top-0 flex w-max items-center gap-4 px-[50%] will-change-transform h-full">
-          {items.map((entry) => (
+        <div
+          ref={tapeRef}
+          className="absolute left-0 top-0 flex w-max items-center gap-4 will-change-transform h-full"
+          style={{ transform: `translate3d(${tapeX}px, 0, 0)` }}
+        >
+          {visibleItems.map((entry) => (
             <div
               key={entry.key}
-              ref={entry.isWinner ? winnerRef : undefined}
-              className={`pointer-events-none relative h-[10rem] w-[11rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[14.25rem] lg:h-[13.125rem] lg:w-[14.25rem] ${
-                entry.isWinner && spinFinished ? "z-20 scale-[1.08]" : ""
+              className={`bonus-roulette-item pointer-events-none relative h-[10rem] w-[11rem] flex-shrink-0 transition-all duration-500 ease-out md:w-[14.25rem] lg:h-[13.125rem] lg:w-[14.25rem] ${
+                entry.isWinner ? "is-winner" : ""
               }`}
             >
               <BonusItemCard skin={entry.skin} winner={entry.isWinner && spinFinished} />
@@ -367,23 +480,34 @@ function ReferenceCase({ phase }: { phase: Phase }) {
     }
 
     if (phase === "roulette" || phase === "result") {
-      setFrameIdx(CASE_FRAME_COUNT - 1)
+      setFrameIdx(CASE_ROULETTE_START_FRAME)
       return
     }
 
-    let frame = CASE_DROP_FRAME
-    setFrameIdx(frame)
+    const firstFrame = CASE_DROP_FRAME
+    const lastFrame = CASE_LAST_FRAME
+    const frameSpan = lastFrame - firstFrame
+    const startedAt = window.performance.now()
+    let currentFrame = firstFrame
+    let raf = 0
 
-    const timer = window.setInterval(() => {
-      frame += 1
-      if (frame >= CASE_FRAME_COUNT - 1) {
-        frame = CASE_FRAME_COUNT - 1
-        window.clearInterval(timer)
+    const tick = (now: number) => {
+      const progress = Math.min(1, Math.max(0, (now - startedAt) / CASE_OPEN_MS))
+      const nextFrame = firstFrame + Math.min(frameSpan, Math.floor(progress * frameSpan))
+      if (nextFrame !== currentFrame) {
+        currentFrame = nextFrame
+        setFrameIdx(nextFrame)
       }
-      setFrameIdx(frame)
-    }, CASE_FRAME_MS)
 
-    return () => window.clearInterval(timer)
+      if (progress < 1) {
+        raf = window.requestAnimationFrame(tick)
+      }
+    }
+
+    setFrameIdx(firstFrame)
+    raf = window.requestAnimationFrame(tick)
+
+    return () => window.cancelAnimationFrame(raf)
   }, [phase])
 
   return (
@@ -412,11 +536,13 @@ function ReferenceCase({ phase }: { phase: Phase }) {
 function CaseScene({
   phase,
   tapeItems,
+  winningSkin,
   onRouletteFinished,
   onSkip,
 }: {
   phase: Phase
   tapeItems: TapeEntry[]
+  winningSkin: Skin | null
   onRouletteFinished: () => void
   onSkip: () => void
 }) {
@@ -467,7 +593,12 @@ function CaseScene({
 
       {showRoulette ? (
         <div className="w-full transition-all duration-700 ease-out">
-          <HorizontalDropRoulette active={showRoulette} items={tapeItems} onFinished={onRouletteFinished} />
+          <HorizontalDropRoulette
+            active={showRoulette}
+            items={tapeItems}
+            winner={winningSkin}
+            onFinished={onRouletteFinished}
+          />
         </div>
       ) : null}
     </div>
@@ -476,27 +607,48 @@ function CaseScene({
 
 function ResultScreen({
   skin,
+  tapeItems,
   sold,
   onSell,
   onBack,
 }: {
   skin: Skin
+  tapeItems: TapeEntry[]
   sold: boolean
   onSell: () => void
   onBack: () => void
 }) {
+  const visibleItems = useMemo(
+    () => buildVisibleTape(tapeItems, skin, TARGET_INDEX - ROULETTE_CENTER_SLOT, "result-slot"),
+    [skin, tapeItems],
+  )
+
   return (
-    <div className="bonus-result-screen flex h-full w-full flex-col items-center justify-between gap-4 py-2">
-      <div className="flex flex-col items-center space-y-2 text-center">
-        <h2 className="text-2xl font-bold text-white">Вот твой дроп!</h2>
-        <span className="text-sm text-gray-400"> Ты заслужил — держи! </span>
+    <div className="bonus-result-screen flex h-full w-full flex-col items-center justify-center gap-4 px-2 py-4 lg:gap-5 lg:px-5">
+      <div className="bonus-roulette-strip is-result relative h-[14.75rem] w-full overflow-visible lg:h-[18rem]">
+        <img
+          alt=""
+          className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
+          src="https://s3.upgrader.pro/cdn/fa/images/game/carousel-line.png"
+          draggable={false}
+        />
+        <div className="relative h-full w-full overflow-visible">
+          <div className="absolute left-1/2 top-0 flex h-full w-max -translate-x-1/2 items-center gap-4 will-change-transform">
+            {visibleItems.map((entry) => (
+              <div
+                key={entry.key}
+                className={`bonus-roulette-item pointer-events-none relative h-[10rem] w-[11rem] flex-shrink-0 md:w-[14.25rem] lg:h-[13.125rem] lg:w-[14.25rem] ${
+                  entry.isWinner ? "is-winner" : ""
+                }`}
+              >
+                <BonusItemCard skin={entry.skin} winner={entry.isWinner} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="pointer-events-none my-2 h-[6.75rem] w-[7.3125rem] md:w-[9.5rem] lg:h-[12.5rem] lg:w-[13.5625rem]">
-        <BonusItemCard skin={skin} winner />
-      </div>
-
-      <div className="flex w-full items-center justify-center gap-3 px-1.5 lg:px-0">
+      <div className="flex w-full max-w-[39rem] items-center justify-center gap-3 px-1.5 lg:px-0">
         <button
           type="button"
           onClick={onSell}
@@ -524,7 +676,7 @@ function ResultScreen({
   )
 }
 
-export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAudioRef }: LoseAnimationOverlayProps) {
+export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseAnimationOverlayProps) {
   const { state, addToInventory, setState } = useStore()
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<Phase>("drop")
@@ -536,9 +688,8 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
   const capturedSkinsRef = useRef<Skin[]>([])
 
   const timersRef = useRef<number[]>([])
-  const audioRefs = useRef<HTMLAudioElement[]>([])
   const onCompleteRef = useRef(onComplete)
-  const soundEnabledRef = useRef(soundEnabled)
+  const onStopSoundRef = useRef(onStopSound)
   const awardedRef = useRef(false)
   const awardedUidRef = useRef<string | null>(null)
   const closingRef = useRef(false)
@@ -548,11 +699,11 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
   }, [onComplete])
 
   useEffect(() => {
-    soundEnabledRef.current = soundEnabled
-  }, [soundEnabled])
+    onStopSoundRef.current = onStopSound
+  }, [onStopSound])
 
   useEffect(() => {
-    preloadCaseFrames()
+    void preloadLoseAnimationFrames()
   }, [])
 
   // Add/remove body class to trigger CSS blur on the live feed sidebar
@@ -567,12 +718,15 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
     }
   }, [visible])
 
-  const clearRunning = useCallback(() => {
+  const clearTimers = useCallback(() => {
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
-    audioRefs.current.forEach((audio) => audio.pause())
-    audioRefs.current = []
   }, [])
+
+  const stopRunning = useCallback(() => {
+    clearTimers()
+    onStopSoundRef.current?.()
+  }, [clearTimers])
 
   const schedule = useCallback((fn: () => void, delay: number) => {
     const timer = window.setTimeout(fn, delay)
@@ -582,10 +736,10 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
 
   const handleSkip = useCallback(() => {
     if (phase === "drop" || phase === "open") {
-      clearRunning()
+      stopRunning()
       setPhase("roulette")
     }
-  }, [phase, clearRunning])
+  }, [phase, stopRunning])
 
   const resetVisualState = useCallback(() => {
     setPhase("drop")
@@ -597,46 +751,15 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
     closingRef.current = false
   }, [])
 
-  const playSound = useCallback((audio: HTMLAudioElement, volume = 0.75, playbackRate = 1) => {
-    if (soundEnabledRef.current === false) return
-    try {
-      resetAudio(audio)
-      audio.muted = false
-      audio.volume = volume
-      audio.playbackRate = playbackRate
-      audio.addEventListener(
-        "ended",
-        () => {
-          audioRefs.current = audioRefs.current.filter((item) => item !== audio)
-        },
-        { once: true },
-      )
-      if (!audioRefs.current.includes(audio)) {
-        audioRefs.current.push(audio)
-      }
-      audio.play().catch((error) => {
-        console.warn("[lose-case-audio] play failed", error)
-        audioRefs.current = audioRefs.current.filter((item) => item !== audio)
-      })
-    } catch {
-      audioRefs.current = []
-    }
-  }, [])
-
-  const playCaseSequenceSound = useCallback(() => {
-    if (soundEnabledRef.current === false) return
-    playSound(caseAudioRef?.current ?? new Audio(LOSE_CASE_SOUND), 1, LOSE_CASE_SOUND_RATE)
-  }, [caseAudioRef, playSound])
-
   const finish = useCallback(() => {
     if (closingRef.current) return
     closingRef.current = true
-    clearRunning()
+    stopRunning()
     setVisible(false)
     schedule(() => {
       onCompleteRef.current?.()
     }, 360)
-  }, [clearRunning, schedule])
+  }, [schedule, stopRunning])
 
   const awardDrop = useCallback(() => {
     if (!winningSkin || awardedRef.current) return
@@ -686,7 +809,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
 
   useEffect(() => {
     if (!playing) {
-      clearRunning()
+      stopRunning()
       setVisible(false)
       schedule(resetVisualState, 360)
       return
@@ -701,7 +824,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
       return
     }
 
-    clearRunning()
+    clearTimers()
     closingRef.current = false
     awardedRef.current = false
     awardedUidRef.current = null
@@ -710,7 +833,6 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
     setWinningSkin(next.winner)
     setPhase("drop")
     setVisible(true)
-    playCaseSequenceSound()
 
     schedule(() => {
       setPhase("open")
@@ -718,11 +840,11 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
 
     schedule(() => {
       setPhase("roulette")
-    }, CASE_DROP_MS + CASE_OPEN_MS + CASE_TO_ROULETTE_GAP_MS)
+    }, CASE_DROP_MS + CASE_ROULETTE_START_MS)
 
-    return () => clearRunning()
+    return () => clearTimers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearRunning, playCaseSequenceSound, playing, resetVisualState, schedule])
+  }, [clearTimers, playing, resetVisualState, schedule, stopRunning])
 
   const showResult = phase === "result" && winningSkin
 
@@ -736,10 +858,6 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
 
   const isRoulettePanel = phase === "roulette"
 
-  const panelSizeClass = showResult
-    ? "h-[min(30rem,calc(100vh-6rem))] max-w-[46rem] p-4 lg:p-6"
-    : "p-4 lg:p-5"
-
   return (
     <div
       className="pointer-events-none absolute -top-4 lg:-top-6 bottom-[4.5rem] lg:bottom-[5.5rem] -left-2 -right-2 z-[100] flex items-center justify-center transition-opacity duration-300 ease-out"
@@ -748,9 +866,7 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
       aria-modal="true"
     >
       <div
-        className={`pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden bg-[#111216] rounded-xl lg:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.48)] ${
-          showResult ? "max-w-[46rem] h-auto border border-white/10 p-4 lg:p-6" : ""
-        }`}
+        className="pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#111216] shadow-[0_18px_60px_rgba(0,0,0,0.48)] lg:rounded-2xl"
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(251,213,6,0.1),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(211,44,230,0.1),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent_25%)]" />
         <button
@@ -771,11 +887,12 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAu
 
         <div className="relative z-10 flex min-h-0 w-full flex-1 items-center justify-center">
           {showResult ? (
-            <ResultScreen skin={winningSkin} sold={sold} onSell={handleSell} onBack={finish} />
+            <ResultScreen skin={winningSkin} tapeItems={tapeItems} sold={sold} onSell={handleSell} onBack={finish} />
           ) : (
             <CaseScene
               phase={phase}
               tapeItems={tapeItems}
+              winningSkin={winningSkin}
               onRouletteFinished={handleRouletteFinished}
               onSkip={handleSkip}
             />

@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
-import { LoseAnimationOverlay, LOSE_CASE_SOUND } from "./lose-animation-overlay"
+import { LoseAnimationOverlay, LOSE_CASE_SOUND, preloadLoseAnimationFrames } from "./lose-animation-overlay"
 import type { InventoryItem } from "@/lib/types"
 
 const WIN_FACTOR = 0.92 // house edge
@@ -62,7 +62,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
   const [loseAnimating, setLoseAnimating] = useState(false)
-  const loseCaseMediaRef = useRef<HTMLAudioElement | null>(null)
+  const loseCaseAudioRef = useRef<HTMLAudioElement | null>(null)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -94,7 +94,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   const inputValue = useMemo(() => selectedInventoryValue + balanceInput, [selectedInventoryValue, balanceInput])
 
-  const targetSkin = effectiveTarget ? getSkin(state.skins, effectiveTarget) : undefined
+  const targetSkinRaw = effectiveTarget ? getSkin(state.skins, effectiveTarget) : undefined
+
+  const targetSkin = useMemo(() => {
+    if (!targetSkinRaw) return undefined
+    if (inputValue > 0) {
+      const rawChance = (inputValue / targetSkinRaw.price) * WIN_FACTOR
+      if (rawChance < 0.01 || rawChance > 0.8) {
+        return undefined
+      }
+    }
+    return targetSkinRaw
+  }, [targetSkinRaw, inputValue])
 
   const chance = useMemo(() => {
     if (!targetSkin || inputValue <= 0) return 0
@@ -108,10 +119,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   useEffect(() => {
     preloadWinAnimationFrames()
-  }, [])
-
-  useEffect(() => {
-    loseCaseMediaRef.current?.load()
+    void preloadLoseAnimationFrames()
   }, [])
 
   function applyFastFilter(type: "multiplier" | "percentage", value: number, currentInputValue: number) {
@@ -146,6 +154,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       if (window.innerWidth < 1024) {
         setMobileTab("catalog")
       }
+    } else {
+      setTargetId(null)
     }
   }
 
@@ -244,6 +254,43 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     applyFastFilter("percentage", percent, inputValue)
   }
 
+  function stopLoseCaseSound() {
+    const audio = loseCaseAudioRef.current
+    if (!audio) return
+
+    audio.pause()
+    try {
+      audio.currentTime = 0
+    } catch {}
+    audio.onended = null
+    loseCaseAudioRef.current = null
+  }
+
+  function playLoseCaseSound() {
+    if (state.soundMode !== "on") return
+
+    stopLoseCaseSound()
+
+    const audio = new Audio(LOSE_CASE_SOUND)
+    audio.preload = "auto"
+    audio.muted = false
+    audio.volume = 1
+    loseCaseAudioRef.current = audio
+    const releaseAudio = () => {
+      if (loseCaseAudioRef.current === audio) {
+        loseCaseAudioRef.current = null
+      }
+      audio.onended = null
+    }
+    audio.onended = releaseAudio
+    audio.play().catch(() => {
+      if (loseCaseAudioRef.current === audio) {
+        loseCaseAudioRef.current = null
+      }
+      audio.onended = null
+    })
+  }
+
   function handleBuyCartItems() {
     if (!state.loggedIn) {
       toast.error("Войдите через Steam, чтобы совершать покупки")
@@ -308,22 +355,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Недостаточно баланса")
       return
     }
-    if (chance > 0.8) {
-      toast.error("Слишком высокий шанс — выберите цель подороже")
-      return
-    }
-    if (chance < 0.01) {
-      toast.error("Слишком низкий шанс")
-      return
-    }
+    // Chance bounds are now handled automatically by targetSkin becoming undefined
 
     if (state.soundMode === "on") {
       const audio = new Audio("/sounds/makeBet.mp3")
       audio.play().catch(() => {})
-    }
-
-    if (state.soundMode === "on" && selectedInventoryValue > 50) {
-      loseCaseMediaRef.current?.load()
     }
 
     lockedLeftCard.current = {
@@ -384,6 +420,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setState((p) => ({ ...p, upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim) {
+        playLoseCaseSound()
         setLoseAnimating(true)
       } else {
         toast.error("Не повезло. Попробуйте снова!")
@@ -779,14 +816,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       <LoseAnimationOverlay
         playing={loseAnimating}
         onComplete={() => {
+          stopLoseCaseSound()
           setLoseAnimating(false)
           lockedLeftCard.current = null
           clearSelection()
         }}
-        soundEnabled={state.soundMode === "on"}
-        caseAudioRef={loseCaseMediaRef}
+        onStopSound={stopLoseCaseSound}
       />
-      <audio ref={loseCaseMediaRef} src={LOSE_CASE_SOUND} preload="auto" />
 
       </div>{/* end relative wrapper */}
 
