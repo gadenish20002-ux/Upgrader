@@ -101,7 +101,7 @@ function PredictContent() {
             
             {/* Слой 1: Темное фоновое кольцо трека */}
             <div className="absolute top-1/2 left-1/2 z-[1] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
-              <svg className="h-full w-full rotate-0" viewBox="0 0 289 289">
+              <svg className="h-full w-full rotate-0" viewBox="-1 -1 291 291">
                 <circle fill="none" stroke="#202021" cx="144.5" cy="144.5" r="124" strokeWidth="42"></circle>
               </svg>
             </div>
@@ -111,7 +111,7 @@ function PredictContent() {
             
             {/* Слой 3: Цветной градиент трека */}
             <div className="absolute top-1/2 left-1/2 z-[2] h-[13.25rem] w-[13.25rem] -translate-x-1/2 -translate-y-1/2 lg:h-[20.125rem] lg:w-[20.125rem]">
-              <svg className="h-full w-full rotate-0" viewBox="0 0 289 289">
+              <svg className="h-full w-full rotate-0" viewBox="-1 -1 291 291">
                 <defs>
                   <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" style={{ stopColor: '#23d70c', stopOpacity: 1 }}></stop>

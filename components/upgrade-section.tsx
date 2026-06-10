@@ -424,6 +424,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         setLoseAnimating(true)
       } else {
         toast.error("Не повезло. Попробуйте снова!")
+        lockedLeftCard.current = null
+        clearSelection()
       }
     }
     
