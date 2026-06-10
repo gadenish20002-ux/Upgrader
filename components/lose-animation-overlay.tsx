@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react"
 import { X } from "lucide-react"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatPrice, useStore } from "@/lib/store"
@@ -12,6 +12,7 @@ interface LoseAnimationOverlayProps {
   playing: boolean
   onComplete?: () => void
   soundEnabled?: boolean
+  caseAudioRef?: RefObject<HTMLAudioElement | null>
 }
 
 type Phase = "drop" | "open" | "roulette" | "result"
@@ -26,10 +27,8 @@ type CssVars = CSSProperties & Record<`--${string}`, string | number>
 
 const TARGET_INDEX = 42
 const TAPE_LENGTH = 58
-const CASE_SEQUENCE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
-// openCompensationCase.mp3 = 14.707s, full anim cycle = CASE_DROP_MS+CASE_OPEN_MS+CASE_TO_ROULETTE_GAP_MS+ROULETTE_SPIN_MS = 12200ms
-// rate = 14.707 / 12.2 ≈ 1.206 — sound ends exactly when roulette finishes
-const CASE_SEQUENCE_SOUND_RATE = 14.707 / 12.2
+export const LOSE_CASE_SOUND = "/assets/lose-anim/openCompensationCase.mp3"
+export const LOSE_CASE_SOUND_RATE = 0.96
 const CASE_FRAME_COUNT = 81
 const CASE_DROP_FRAME = 10
 const CASE_DROP_MS = 500
@@ -196,6 +195,13 @@ function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
   })
 
   return { items, winner }
+}
+
+function resetAudio(audio: HTMLAudioElement) {
+  audio.pause()
+  try {
+    audio.currentTime = 0
+  } catch {}
 }
 
 function BonusItemCard({
@@ -518,7 +524,7 @@ function ResultScreen({
   )
 }
 
-export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: LoseAnimationOverlayProps) {
+export function LoseAnimationOverlay({ playing, onComplete, soundEnabled, caseAudioRef }: LoseAnimationOverlayProps) {
   const { state, addToInventory, setState } = useStore()
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<Phase>("drop")
@@ -564,9 +570,8 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
   const clearRunning = useCallback(() => {
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
-    if (audioElRef.current) {
-      audioElRef.current.pause()
-    }
+    audioRefs.current.forEach((audio) => audio.pause())
+    audioRefs.current = []
   }, [])
 
   const schedule = useCallback((fn: () => void, delay: number) => {
@@ -592,26 +597,36 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
     closingRef.current = false
   }, [])
 
-  const audioElRef = useRef<HTMLAudioElement>(null)
+  const playSound = useCallback((audio: HTMLAudioElement, volume = 0.75, playbackRate = 1) => {
+    if (soundEnabledRef.current === false) return
+    try {
+      resetAudio(audio)
+      audio.muted = false
+      audio.volume = volume
+      audio.playbackRate = playbackRate
+      audio.addEventListener(
+        "ended",
+        () => {
+          audioRefs.current = audioRefs.current.filter((item) => item !== audio)
+        },
+        { once: true },
+      )
+      if (!audioRefs.current.includes(audio)) {
+        audioRefs.current.push(audio)
+      }
+      audio.play().catch((error) => {
+        console.warn("[lose-case-audio] play failed", error)
+        audioRefs.current = audioRefs.current.filter((item) => item !== audio)
+      })
+    } catch {
+      audioRefs.current = []
+    }
+  }, [])
 
   const playCaseSequenceSound = useCallback(() => {
     if (soundEnabledRef.current === false) return
-    const audio = audioElRef.current
-    if (audio) {
-      try {
-        audio.volume = 0.78
-        if (CASE_SEQUENCE_SOUND_RATE !== 1) {
-          audio.playbackRate = CASE_SEQUENCE_SOUND_RATE
-        }
-        audio.currentTime = 0
-        audio.play().catch((e) => {
-          console.error("Audio tag play blocked or failed:", e)
-        })
-      } catch (err) {
-        console.error("Failed to play audio tag:", err)
-      }
-    }
-  }, [])
+    playSound(caseAudioRef?.current ?? new Audio(LOSE_CASE_SOUND), 1, LOSE_CASE_SOUND_RATE)
+  }, [caseAudioRef, playSound])
 
   const finish = useCallback(() => {
     if (closingRef.current) return
@@ -767,7 +782,6 @@ export function LoseAnimationOverlay({ playing, onComplete, soundEnabled }: Lose
           )}
         </div>
       </div>
-      <audio ref={audioElRef} src={CASE_SEQUENCE_SOUND} preload="auto" />
     </div>
   )
 }

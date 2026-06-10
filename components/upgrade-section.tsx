@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
-import { LoseAnimationOverlay } from "./lose-animation-overlay"
+import { LoseAnimationOverlay, LOSE_CASE_SOUND } from "./lose-animation-overlay"
 import type { InventoryItem } from "@/lib/types"
 
 const WIN_FACTOR = 0.92 // house edge
@@ -62,6 +62,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
   const [loseAnimating, setLoseAnimating] = useState(false)
+  const loseCaseMediaRef = useRef<HTMLAudioElement | null>(null)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -107,6 +108,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   useEffect(() => {
     preloadWinAnimationFrames()
+  }, [])
+
+  useEffect(() => {
+    loseCaseMediaRef.current?.load()
   }, [])
 
   function applyFastFilter(type: "multiplier" | "percentage", value: number, currentInputValue: number) {
@@ -315,6 +320,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     if (state.soundMode === "on") {
       const audio = new Audio("/sounds/makeBet.mp3")
       audio.play().catch(() => {})
+    }
+
+    if (state.soundMode === "on" && selectedInventoryValue > 50) {
+      loseCaseMediaRef.current?.load()
     }
 
     lockedLeftCard.current = {
@@ -775,7 +784,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           clearSelection()
         }}
         soundEnabled={state.soundMode === "on"}
+        caseAudioRef={loseCaseMediaRef}
       />
+      <audio ref={loseCaseMediaRef} src={LOSE_CASE_SOUND} preload="auto" />
 
       </div>{/* end relative wrapper */}
 

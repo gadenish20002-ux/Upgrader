@@ -109,12 +109,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const raw = window.localStorage.getItem(STORAGE_KEY)
         if (raw) {
           const parsed = JSON.parse(raw)
-          currentLocal = { 
+          const merged = { 
             ...DEFAULT_STATE, 
             ...parsed,
             skins: DEFAULT_STATE.skins,
             upgradeSkins: DEFAULT_STATE.skins
           }
+          
+          const optimizedLocal: any = { ...prev }
+          for (const key in merged) {
+            if (JSON.stringify(merged[key as keyof AppState]) !== JSON.stringify(prev[key as keyof AppState])) {
+              optimizedLocal[key] = merged[key as keyof AppState]
+            }
+          }
+          currentLocal = optimizedLocal
         }
       } catch {}
 

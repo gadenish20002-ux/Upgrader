@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useStore } from "@/lib/store"
 
 function PredictContent() {
-  const { state } = useStore()
+  const { state, setState } = useStore()
   // hint from admin state is no longer used for static display
 
   const [phase, setPhase] = useState<"idle" | "analyzing" | "result">("idle")
@@ -30,6 +30,20 @@ function PredictContent() {
     }
   }, [phase])
 
+  // Track currentLosses to detect a win
+  const prevLosses = useRef(state.predict.currentLosses)
+
+  useEffect(() => {
+    // If losses drop from >0 to 0 while we are showing the result, it means the user won on the main wheel!
+    if (prevLosses.current > 0 && state.predict.currentLosses === 0) {
+      if (phase === "result") {
+        setPhase("idle")
+        setRotation(0) // Reset wheel rotation visually if desired, optional
+      }
+    }
+    prevLosses.current = state.predict.currentLosses
+  }, [state.predict.currentLosses, phase])
+
   const handleClick = () => {
     if (phase === "idle" || phase === "result") {
       setPhase("analyzing")
@@ -39,11 +53,24 @@ function PredictContent() {
         audio.play().catch(() => {})
       }
       
-      // Generate random hint based on fastMultipliers range
-      const minMult = Math.min(...state.fastMultipliers)
-      const maxMult = Math.max(...state.fastMultipliers)
-      const val = Math.floor(Math.random() * (maxMult - minMult + 1) + minMult)
-      setRandomHint("x" + val)
+      // Generate random hint percentage
+      const minP = Math.min(...state.fastPercentages)
+      const maxP = Math.max(...state.fastPercentages)
+      const val = Math.floor(Math.random() * (maxP - minP + 1) + minP)
+      setRandomHint(val + "%")
+
+      // Generate random targetLosses between 2 and 10 (so targetWin is 3 to 11)
+      const newTargetLosses = Math.floor(Math.random() * 9) + 2; 
+
+      setState((p) => ({
+        ...p,
+        predict: {
+          ...p.predict,
+          targetLosses: newTargetLosses,
+          currentLosses: 0,
+          outcome: "win_after_losses"
+        }
+      }))
 
       // Start spinning (5 full spins + some random rotation)
       setRotation((prev) => prev + 360 * 5 + Math.floor(Math.random() * 360))
@@ -66,8 +93,21 @@ function PredictContent() {
 
   const formattedHint = randomHint.toUpperCase()
 
+  const targetWin = (state.predict.targetLosses || 3) + 1;
+  const currentAttempt = state.predict.currentLosses;
+  const isVictoryNext = state.predict.currentLosses >= (state.predict.targetLosses || 3);
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0f1013" }}>
+      <style>{`
+        @keyframes blink-green-gray {
+          0%, 100% { color: #a4e57e; }
+          50% { color: #8a8e99; }
+        }
+        .animate-blink-color {
+          animation: blink-green-gray 1s ease-in-out infinite;
+        }
+      `}</style>
       {/* Header */}
       <header
         className="sticky top-0 z-40 flex h-14 items-center justify-center px-5 shrink-0"
@@ -166,9 +206,20 @@ function PredictContent() {
                       <span className="font-sans font-black lg:text-6xl text-4xl text-[#a4e57e] mb-1 lg:mb-2 leading-none"> 
                         {formattedHint}
                       </span>
-                      <span className="font-sans lg:text-[0.65rem] text-[0.45rem] text-[#6b6b6b] leading-tight mt-1"> 
-                        нажми, чтобы получить<br/>новый сигнал
-                      </span>
+                      {isVictoryNext ? (
+                        <span className="font-sans lg:text-[0.65rem] text-[0.45rem] leading-tight mt-1 animate-blink-color uppercase tracking-widest font-bold"> 
+                          СЕЙЧАС БУДЕТ ПОБЕДА
+                        </span>
+                      ) : (
+                        <div className="flex flex-col items-center mt-1">
+                          <span className="font-sans lg:text-[0.65rem] text-[0.45rem] text-[#6b6b6b] leading-tight uppercase mb-0.5 tracking-wider"> 
+                            ПОБЕДНЫЙ: {targetWin}-ОЙ
+                          </span>
+                          <span className="font-sans lg:text-[0.65rem] text-[0.45rem] text-[#6b6b6b] leading-tight tracking-wider"> 
+                            {currentAttempt}/{targetWin}
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -188,6 +239,6 @@ function PredictContent() {
   )
 }
 
-export function PredictPageClient() {
+export function PredictPageClient2() {
   return <PredictContent />
 }

@@ -48,6 +48,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
+      <head>
+        <link rel="preload" href="/assets/lose-anim/openCompensationCase.mp3" as="audio" type="audio/mpeg" />
+      </head>
       <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg-PEFHGDDX.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
         <StoreProvider>
           <SiteGate>
