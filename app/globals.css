@@ -710,11 +710,13 @@ input[type="number"] {
 /* ============================================================
    Lose animation: blur live feed sidebar, keep everything else sharp
    ============================================================ */
-.lose-anim-blur-target {
+.lose-anim-blur-target,
+.lose-anim-upgrade-control {
   transition: filter 0.35s ease, opacity 0.35s ease;
 }
 
-body.lose-animating .lose-anim-blur-target {
+body.lose-animating .lose-anim-blur-target,
+body.lose-animating .lose-anim-upgrade-control {
   filter: blur(4px);
   opacity: 0.6;
 }

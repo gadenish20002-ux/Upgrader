@@ -31,6 +31,17 @@ export interface Predict {
   showMultipliers: boolean
 }
 
+export interface GameHistoryEntry {
+  id: string
+  betPrice: number
+  betSkinId: string
+  targetPrice: number
+  targetSkinId: string
+  chance: number
+  status: "win" | "loss" | "compensation"
+  resultSkinId?: string
+}
+
 export interface AppState {
   balance: number
   inventory: InventoryItem[]
@@ -50,4 +61,5 @@ export interface AppState {
   fastMultipliers: [number, number, number]
   fastPercentages: [number, number, number]
   soundMode: "on" | "off"
+  gameHistory: GameHistoryEntry[]
 }

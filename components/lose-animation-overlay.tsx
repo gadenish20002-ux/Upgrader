@@ -10,12 +10,11 @@ import { toast } from "sonner"
 
 interface LoseAnimationOverlayProps {
   playing: boolean
-  onComplete?: () => void
+  onComplete?: (awardedSkinId?: string) => void
   onStopSound?: () => void
-  onSkipSound?: () => void
 }
 
-type Phase = "drop" | "open" | "roulette" | "result"
+type Phase = "skipping" | "roulette" | "result"
 
 interface TapeEntry {
   key: string
@@ -31,24 +30,19 @@ const VISIBLE_TAPE_LENGTH = 31
 const ROULETTE_CENTER_SLOT = Math.floor(VISIBLE_TAPE_LENGTH / 2)
 const ROULETTE_START_INDEX = 10
 export const LOSE_CASE_SOUND = "/sounds/openCompensationCase.mp3"
-const LOSE_CASE_SOUND_MS = 14700
-const CASE_FRAME_COUNT = 81
-const CASE_LAST_FRAME = CASE_FRAME_COUNT - 1
-const CASE_DROP_FRAME = 10
-const CASE_ROULETTE_START_FRAME = 47
-const CASE_DROP_MS = 500
-const CASE_OPEN_MS = 4700
-const CASE_ROULETTE_START_MS = Math.round(
-  (CASE_OPEN_MS * (CASE_ROULETTE_START_FRAME - CASE_DROP_FRAME)) / (CASE_LAST_FRAME - CASE_DROP_FRAME),
-)
 const ROULETTE_SPIN_MS = 9500
-const ROULETTE_SLOWDOWN_START_MS = 3600
+const ROULETTE_SLOWDOWN_START_MS = 5000
 const ROULETTE_SLOWDOWN_START = ROULETTE_SLOWDOWN_START_MS / ROULETTE_SPIN_MS
+const ROULETTE_SLOW_APPROACH_START_MS = 6400
+const ROULETTE_SLOW_APPROACH_START = ROULETTE_SLOW_APPROACH_START_MS / ROULETTE_SPIN_MS
+const ROULETTE_FINAL_APPROACH_START_MS = 8100
+const ROULETTE_FINAL_APPROACH_START = ROULETTE_FINAL_APPROACH_START_MS / ROULETTE_SPIN_MS
+const ROULETTE_PROGRESS_AT_SLOWDOWN = 1 - 50 / (TARGET_INDEX - ROULETTE_START_INDEX)
+const ROULETTE_PROGRESS_AT_SLOW_APPROACH = 1 - 20 / (TARGET_INDEX - ROULETTE_START_INDEX)
+const ROULETTE_PROGRESS_AT_FINAL_APPROACH = 1 - 5 / (TARGET_INDEX - ROULETTE_START_INDEX)
+const ROULETTE_FINAL_BRAKE_POWER = 1.7
 const ROULETTE_REVEAL_MS = 1650
 const STICKER_CHANCE = 0.95
-const caseFrameUrls = Array.from({ length: CASE_FRAME_COUNT }, (_, index) =>
-  `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`,
-)
 
 const COMPENSATION_BONUS_ITEMS: Skin[] = [
   {
@@ -133,35 +127,8 @@ const COMPENSATION_BONUS_ITEMS: Skin[] = [
   },
 ]
 
-let caseFramesPreloadPromise: Promise<void> | null = null
-const caseFrameImageCache: HTMLImageElement[] = []
-
 export function preloadLoseAnimationFrames() {
-  if (typeof window === "undefined") return Promise.resolve()
-  if (caseFramesPreloadPromise) return caseFramesPreloadPromise
-
-  caseFramesPreloadPromise = Promise.all(
-    caseFrameUrls.slice(CASE_DROP_FRAME).map(
-      (url, index) =>
-        new Promise<void>((resolve) => {
-          const img = new window.Image()
-          caseFrameImageCache[CASE_DROP_FRAME + index] = img
-          img.decoding = "async"
-          img.loading = "eager"
-          img.onload = () => {
-            if (typeof img.decode === "function") {
-              img.decode().then(resolve).catch(resolve)
-            } else {
-              resolve()
-            }
-          }
-          img.onerror = () => resolve()
-          img.src = url
-        }),
-    ),
-  ).then(() => undefined)
-
-  return caseFramesPreloadPromise
+  return Promise.resolve()
 }
 
 function isStickerSkin(skin: Skin) {
@@ -232,23 +199,20 @@ function buildVisibleTape(items: TapeEntry[], winner: Skin | null, baseIndex: nu
   })
 }
 
-const rouletteSpinCurve = (() => {
-  const points = 480
+const rouletteFastCurve = (() => {
+  const points = 1000
   const curve = [0]
   let total = 0
 
+  // The lose sound already starts after the case-opening part, so the visual brake
+  // has to become obvious around the fifth second of this shortened audio segment.
   for (let index = 1; index <= points; index += 1) {
     const t = (index - 0.5) / points
     const smoothStep = (value: number) => value * value * (3 - 2 * value)
-    const smootherStep = (value: number) => value * value * value * (value * (value * 6 - 15) + 10)
-    const startRamp = smoothStep(Math.min(1, t / 0.14))
-    const slowdownT = Math.min(1, Math.max(0, (t - ROULETTE_SLOWDOWN_START) / (1 - ROULETTE_SLOWDOWN_START)))
-    const brake = (1 - smootherStep(slowdownT)) ** 2.6
-    const peak = Math.sin(Math.PI * Math.min(1, t / ROULETTE_SLOWDOWN_START)) ** 1.2
-    const fastVelocity = 1.0 + 2.2 * startRamp + 9.5 * peak
-    const slowVelocity = fastVelocity * brake
-    const velocity = t < ROULETTE_SLOWDOWN_START ? fastVelocity : slowVelocity
-    total += velocity
+    const startRamp = smoothStep(Math.min(1, t / 0.05))
+    const peak = Math.sin(Math.PI * t)
+    const fastVelocity = 2 + 4 * startRamp + 8 * peak
+    total += fastVelocity
     curve[index] = total
   }
 
@@ -257,11 +221,42 @@ const rouletteSpinCurve = (() => {
 
 function rouletteSpinProgress(t: number) {
   const clamped = Math.min(1, Math.max(0, t))
-  const scaled = clamped * (rouletteSpinCurve.length - 1)
-  const lower = Math.floor(scaled)
-  const upper = Math.min(rouletteSpinCurve.length - 1, lower + 1)
-  const mix = scaled - lower
-  return rouletteSpinCurve[lower] + (rouletteSpinCurve[upper] - rouletteSpinCurve[lower]) * mix
+
+  if (clamped <= ROULETTE_SLOWDOWN_START) {
+    const fastProgress = clamped / ROULETTE_SLOWDOWN_START
+    const scaled = fastProgress * (rouletteFastCurve.length - 1)
+    const lower = Math.floor(scaled)
+    const upper = Math.min(rouletteFastCurve.length - 1, lower + 1)
+    const mix = scaled - lower
+    return (
+      ROULETTE_PROGRESS_AT_SLOWDOWN *
+      (rouletteFastCurve[lower] + (rouletteFastCurve[upper] - rouletteFastCurve[lower]) * mix)
+    )
+  }
+
+  if (clamped <= ROULETTE_SLOW_APPROACH_START) {
+    const slowdownProgress =
+      (clamped - ROULETTE_SLOWDOWN_START) / (ROULETTE_SLOW_APPROACH_START - ROULETTE_SLOWDOWN_START)
+    return (
+      ROULETTE_PROGRESS_AT_SLOWDOWN +
+      (ROULETTE_PROGRESS_AT_SLOW_APPROACH - ROULETTE_PROGRESS_AT_SLOWDOWN) * slowdownProgress
+    )
+  }
+
+  if (clamped <= ROULETTE_FINAL_APPROACH_START) {
+    const slowApproachProgress =
+      (clamped - ROULETTE_SLOW_APPROACH_START) / (ROULETTE_FINAL_APPROACH_START - ROULETTE_SLOW_APPROACH_START)
+    return (
+      ROULETTE_PROGRESS_AT_SLOW_APPROACH +
+      (ROULETTE_PROGRESS_AT_FINAL_APPROACH - ROULETTE_PROGRESS_AT_SLOW_APPROACH) * slowApproachProgress
+    )
+  }
+
+  const brakeProgress = (clamped - ROULETTE_FINAL_APPROACH_START) / (1 - ROULETTE_FINAL_APPROACH_START)
+  return (
+    ROULETTE_PROGRESS_AT_FINAL_APPROACH +
+    (1 - ROULETTE_PROGRESS_AT_FINAL_APPROACH) * (1 - (1 - brakeProgress) ** ROULETTE_FINAL_BRAKE_POWER)
+  )
 }
 
 function BonusItemCard({
@@ -280,9 +275,7 @@ function BonusItemCard({
 
   return (
     <div
-      className={`group relative h-full w-full rounded-md p-px shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] ${
-        winner ? "bonus-winner-card" : ""
-      } ${className}`}
+      className={`group relative h-full w-full rounded-md p-px shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)] ${className}`}
       style={{
         ...style,
         background: `linear-gradient(137deg, ${rarityColor} 10%, rgb(28, 28, 32) 75%)`,
@@ -298,7 +291,7 @@ function BonusItemCard({
         />
 
         <div className="absolute right-1.5 top-1.5 z-[2] flex items-center justify-center gap-0.5">
-          <span className="font-tektur text-xxxs font-bold text-[#fbd506] lg:text-xxs">
+          <span className="font-exo2 text-xxxs font-bold text-[#fbd506] lg:text-xxs">
             {formatPrice(skin.price)}
           </span>
           <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/assets/coin-2.svg" draggable={false} />
@@ -312,10 +305,10 @@ function BonusItemCard({
         />
 
         <div className="absolute bottom-1.5 left-1/2 z-[2] flex w-full max-w-[84%] -translate-x-1/2 flex-col items-center justify-center text-center">
-          <span className="w-full truncate text-xxxxs font-semibold leading-tight text-[#A7A7A7]">
+          <span className="w-full truncate text-xxxxs font-semibold leading-tight text-[#A7A7A7] font-exo2">
             {formatWeaponName(skin.weapon)}
           </span>
-          <span className="font-tektur w-full truncate text-xxxs font-bold leading-tight text-white lg:text-xxs">
+          <span className="font-exo2 w-full truncate text-xxxs font-bold leading-tight text-white lg:text-xxs">
             {formatSkinName(skin.name)}
           </span>
         </div>
@@ -471,135 +464,39 @@ function HorizontalDropRoulette({
   )
 }
 
-function ReferenceCase({ phase }: { phase: Phase }) {
-  const [frameIdx, setFrameIdx] = useState(CASE_DROP_FRAME)
-
-  useEffect(() => {
-    if (phase === "drop") {
-      setFrameIdx(CASE_DROP_FRAME)
-      return
-    }
-
-    if (phase === "roulette" || phase === "result") {
-      setFrameIdx(CASE_ROULETTE_START_FRAME)
-      return
-    }
-
-    const firstFrame = CASE_DROP_FRAME
-    const lastFrame = CASE_LAST_FRAME
-    const frameSpan = lastFrame - firstFrame
-    const startedAt = window.performance.now()
-    let currentFrame = firstFrame
-    let raf = 0
-
-    const tick = (now: number) => {
-      const progress = Math.min(1, Math.max(0, (now - startedAt) / CASE_OPEN_MS))
-      const nextFrame = firstFrame + Math.min(frameSpan, Math.floor(progress * frameSpan))
-      if (nextFrame !== currentFrame) {
-        currentFrame = nextFrame
-        setFrameIdx(nextFrame)
-      }
-
-      if (progress < 1) {
-        raf = window.requestAnimationFrame(tick)
-      }
-    }
-
-    setFrameIdx(firstFrame)
-    raf = window.requestAnimationFrame(tick)
-
-    return () => window.cancelAnimationFrame(raf)
-  }, [phase])
-
-  return (
-    <div
-      className={`bonus-reference-case ${phase === "drop" ? "is-dropping" : ""} ${
-        phase === "open" ? "is-opening" : ""
-      } ${
-        phase === "roulette" || phase === "result" ? "is-cleared" : ""
-      }`}
-      aria-hidden="true"
-    >
-      <img
-        src={caseFrameUrls[frameIdx]}
-        alt=""
-        draggable={false}
-        style={{
-          transform: "scaleX(1.4) scaleY(1.35)",
-          WebkitMaskImage: "radial-gradient(ellipse at center, black 65%, transparent 100%)",
-          maskImage: "radial-gradient(ellipse at center, black 65%, transparent 100%)"
-        }}
-      />
-    </div>
-  )
-}
-
 function CaseScene({
   phase,
   tapeItems,
   winningSkin,
   onRouletteFinished,
-  onSkip,
 }: {
   phase: Phase
   tapeItems: TapeEntry[]
   winningSkin: Skin | null
   onRouletteFinished: () => void
-  onSkip: () => void
 }) {
-  const showRoulette = phase === "roulette"
-  const showImpact = phase === "open"
+  const showRoulette = phase === "roulette" || phase === "skipping"
+  const rouletteActive = phase === "roulette"
 
   return (
-    <div
-      className={`relative flex h-full w-full flex-1 flex-col items-center justify-center ${
-        showRoulette ? "min-h-0" : "min-h-[18rem] lg:min-h-[22rem]"
-      }`}
-    >
-      {!showRoulette ? <div className="bonus-case-shadow" /> : null}
-      {!showRoulette ? <div className="bonus-stage-glow" /> : null}
-
-      {!showRoulette ? (
-        <div className={`bonus-impact-dust ${showImpact ? "is-active" : ""}`}>
-          <div />
-          <img
-            src="/assets/smoke.webp"
-            alt=""
-            draggable={false}
-            style={{
-              transform: "translateX(-50%) scaleX(3.5) scaleY(1.8)",
-              WebkitMaskImage: "radial-gradient(ellipse at center, black 50%, transparent 100%)",
-              maskImage: "radial-gradient(ellipse at center, black 50%, transparent 100%)"
-            }}
-          />
-        </div>
-      ) : null}
-
-      {!showRoulette ? (
-        <div className="relative z-10 flex h-[14rem] w-full items-center justify-center sm:h-[16rem] lg:h-[19rem]">
-          <ReferenceCase phase={phase} />
-          
-          {phase !== "result" ? (
-            <div className="absolute -bottom-2 lg:-bottom-6 left-1/2 -translate-x-1/2 z-20">
-              <button
-                onClick={onSkip}
-                className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-bold text-[#1C1C20] rounded-md px-6 py-2 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] text-[0.8125rem] lg:text-[1.125rem]"
-              >
-                <span>Пропустить</span>
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
+    <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center min-h-0">
       {showRoulette ? (
-        <div className="w-full transition-all duration-700 ease-out">
+        <div className="w-full transition-all duration-700 ease-out relative">
           <HorizontalDropRoulette
-            active={showRoulette}
+            active={rouletteActive}
             items={tapeItems}
             winner={winningSkin}
             onFinished={onRouletteFinished}
           />
+          <div 
+             className={`absolute -bottom-2 lg:-bottom-6 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ease-in ${
+               phase === "skipping" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+             }`}
+          >
+             <button className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-bold text-[#1C1C20] rounded-md px-6 py-2 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] text-[0.8125rem] lg:text-[1.125rem] cursor-default font-exo2">
+               <span>Крутиться...</span>
+             </button>
+          </div>
         </div>
       ) : null}
     </div>
@@ -654,7 +551,7 @@ function ResultScreen({
           type="button"
           onClick={onSell}
           disabled={sold}
-          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-md bg-[#fbd506] px-3 py-3 text-[0.8125rem] font-semibold text-[#1C1C20] shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] transition-all duration-200 hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:max-w-[306px] lg:rounded-xl lg:px-6 lg:text-xl"
+          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-md bg-[#fbd506] px-3 py-3 text-[0.8125rem] font-semibold text-[#1C1C20] shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] transition-all duration-200 hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:max-w-[306px] lg:rounded-xl lg:px-6 lg:text-xl font-exo2"
         >
           <span className="pointer-events-none flex min-w-0 items-center gap-1">
             <span className="truncate">Продать за {formatPrice(skin.price)}</span>
@@ -665,7 +562,7 @@ function ResultScreen({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-md border border-[#fbd506]/70 bg-[#17181c] px-3 py-3 text-[0.8125rem] font-light text-[#FBD506] transition-all duration-200 hover:border-[#fbd506] hover:bg-[#221f10] lg:max-w-[306px] lg:rounded-xl lg:text-base"
+          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-md border border-[#fbd506]/70 bg-[#17181c] px-3 py-3 text-[0.8125rem] font-light text-[#FBD506] transition-all duration-200 hover:border-[#fbd506] hover:bg-[#221f10] lg:max-w-[306px] lg:rounded-xl lg:text-base font-exo2"
         >
           <span className="pointer-events-none select-none">
             <span className="block lg:hidden">Назад</span>
@@ -677,10 +574,10 @@ function ResultScreen({
   )
 }
 
-export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipSound }: LoseAnimationOverlayProps) {
+export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseAnimationOverlayProps) {
   const { state, addToInventory, setState } = useStore()
   const [visible, setVisible] = useState(false)
-  const [phase, setPhase] = useState<Phase>("drop")
+  const [phase, setPhase] = useState<Phase>("skipping")
   const [tapeItems, setTapeItems] = useState<TapeEntry[]>([])
   const [winningSkin, setWinningSkin] = useState<Skin | null>(null)
   const [sold, setSold] = useState(false)
@@ -691,7 +588,6 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
   const timersRef = useRef<number[]>([])
   const onCompleteRef = useRef(onComplete)
   const onStopSoundRef = useRef(onStopSound)
-  const onSkipSoundRef = useRef(onSkipSound)
   const awardedRef = useRef(false)
   const awardedUidRef = useRef<string | null>(null)
   const closingRef = useRef(false)
@@ -703,10 +599,6 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
   useEffect(() => {
     onStopSoundRef.current = onStopSound
   }, [onStopSound])
-
-  useEffect(() => {
-    onSkipSoundRef.current = onSkipSound
-  }, [onSkipSound])
 
   useEffect(() => {
     void preloadLoseAnimationFrames()
@@ -740,16 +632,8 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
     return timer
   }, [])
 
-  const handleSkip = useCallback(() => {
-    if (phase === "drop" || phase === "open") {
-      clearTimers()
-      onSkipSoundRef.current?.()
-      setPhase("roulette")
-    }
-  }, [phase, clearTimers])
-
   const resetVisualState = useCallback(() => {
-    setPhase("drop")
+    setPhase("skipping")
     setTapeItems([])
     setWinningSkin(null)
     setSold(false)
@@ -764,9 +648,9 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
     stopRunning()
     setVisible(false)
     schedule(() => {
-      onCompleteRef.current?.()
+      onCompleteRef.current?.(awardedRef.current ? winningSkin?.id : undefined)
     }, 360)
-  }, [schedule, stopRunning])
+  }, [schedule, stopRunning, winningSkin])
 
   const awardDrop = useCallback(() => {
     if (!winningSkin || awardedRef.current) return
@@ -838,16 +722,12 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
     setSold(false)
     setTapeItems(next.items)
     setWinningSkin(next.winner)
-    setPhase("drop")
+    setPhase("skipping")
     setVisible(true)
 
     schedule(() => {
-      setPhase("open")
-    }, CASE_DROP_MS)
-
-    schedule(() => {
       setPhase("roulette")
-    }, CASE_DROP_MS + CASE_ROULETTE_START_MS)
+    }, 400)
 
     return () => clearTimers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -857,13 +737,13 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
 
   const panelTitle = useMemo(() => {
     if (phase === "result") return null
-    if (phase === "roulette") return "Бонус за отвагу"
+    if (phase === "roulette" || phase === "skipping") return "Бонус за отвагу"
     return "Компенсационный кейс"
   }, [phase])
 
   if (!visible && !playing) return null
 
-  const isRoulettePanel = phase === "roulette"
+  const isRoulettePanel = phase === "roulette" || phase === "skipping"
 
   return (
     <div
@@ -886,7 +766,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
         </button>
 
         {!showResult && !isRoulettePanel ? (
-          <div className="relative z-10 flex flex-col items-center space-y-1 text-center transition-all duration-500 ease-out lg:space-y-2">
+          <div className="relative z-10 flex flex-col items-center space-y-1 text-center transition-all duration-500 ease-out lg:space-y-2 font-exo2">
             <h2 className="text-xl font-bold text-white lg:text-2xl">{panelTitle}</h2>
             <span className="text-xs text-gray-400 lg:text-sm">Бонус выдается случайным образом</span>
           </div>
@@ -901,7 +781,6 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound, onSkipS
               tapeItems={tapeItems}
               winningSkin={winningSkin}
               onRouletteFinished={handleRouletteFinished}
-              onSkip={handleSkip}
             />
           )}
         </div>

@@ -29,6 +29,7 @@ export const DEFAULT_STATE: AppState = {
   fastMultipliers: [2, 4, 8],
   fastPercentages: [35, 55, 75],
   soundMode: "on",
+  gameHistory: [],
 }
 
 export const RARITY_COLORS: Record<string, string> = {

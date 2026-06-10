@@ -17,6 +17,7 @@ interface StoreContextValue {
   removeFromInventory: (uids: string[]) => void
   setBalance: (value: number) => void
   resetAll: () => void
+  addGameHistory: (entry: import("./types").GameHistoryEntry) => void
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
@@ -190,9 +191,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(() => DEFAULT_STATE)
   }, [setState])
 
+  const addGameHistory = useCallback(
+    (entry: import("./types").GameHistoryEntry) => {
+      setState((p) => ({ ...p, gameHistory: [entry, ...(p.gameHistory || [])] }))
+    },
+    [setState],
+  )
+
   return (
     <StoreContext.Provider
-      value={{ state, ready, setState, login, logout, addToInventory, removeFromInventory, setBalance, resetAll }}
+      value={{ state, ready, setState, login, logout, addToInventory, removeFromInventory, setBalance, resetAll, addGameHistory }}
     >
       {children}
     </StoreContext.Provider>

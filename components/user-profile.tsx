@@ -1,12 +1,21 @@
 "use client"
 
-import { useRef } from "react"
-import { useStore, formatNumber, getSkin } from "@/lib/store"
+import { useRef, useState, useMemo } from "react"
+import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
+import { RARITY_COLORS } from "@/lib/default-data"
+import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LogOut, Settings, Camera } from "lucide-react"
+import { GamesHistory } from "./games-history"
+
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+};
 
 export function UserProfile({ onClose }: { onClose?: () => void }) {
-  const { state, logout, setState } = useStore()
+  const { state, logout, setState, removeFromInventory, setBalance } = useStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [activeTab, setActiveTab] = useState<'inventory' | 'history' | 'games'>('inventory')
 
   const withdrawnItems = state.withdrawnItems || []
   const withdrawnCount = withdrawnItems.length
@@ -14,6 +23,32 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
     const skin = getSkin(state.skins, skinId)
     return acc + (skin?.price || 0)
   }, 0)
+
+  const bestDrop = useMemo(() => {
+    let bestGame = null
+    let maxPrice = -1
+    let bestSkin = null
+
+    for (const g of state.gameHistory) {
+      if (g.status === "win") {
+        const skin = getSkin(state.skins, g.targetSkinId)
+        if (skin && skin.price > maxPrice) {
+          maxPrice = skin.price
+          bestGame = g
+          bestSkin = skin
+        }
+      } else if (g.status === "compensation" && g.resultSkinId) {
+        const skin = getSkin(state.skins, g.resultSkinId)
+        if (skin && skin.price > maxPrice) {
+          maxPrice = skin.price
+          bestGame = g
+          bestSkin = skin
+        }
+      }
+    }
+
+    return { game: bestGame, skin: bestSkin }
+  }, [state.gameHistory, state.skins])
 
   function handleLogout() {
     logout()
@@ -131,13 +166,41 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
         {/* User Stats */}
         <div>
           <div className="shadow-block flex w-full flex-col gap-3 rounded-xl lg:h-full">
-            <div className="shadow-block relative flex h-full min-h-[8.75rem] w-full flex-col justify-between overflow-hidden rounded-xl bg-[#282A2D] p-3 lg:bg-[#00000066]">
-              <div className="z-[3] flex items-end justify-between">
-                <span className="text-[0.875rem] text-white/50">Лучший дроп</span>
+            {bestDrop.game && bestDrop.skin ? (
+              <div className="shadow-block relative flex h-full min-h-[8.75rem] w-full flex-col justify-between overflow-hidden rounded-xl bg-[#282A2D] p-3 lg:bg-[#00000066]">
+                <div className="z-[3] flex items-end justify-between">
+                  <span className="text-[0.875rem] text-white/50">Лучший дроп</span>
+                  <div className="absolute top-0 right-0 flex items-center justify-start space-x-1 rounded-tr-[11px] rounded-bl-[6px] bg-[#FFFFFF1A] px-1.5 py-1">
+                    <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+                    <span className="font-exo2 text-[0.75rem] font-semibold text-white">{bestDrop.game.chance}%</span>
+                  </div>
+                </div>
+                
+                <img alt="" className="absolute top-1/2 -right-[2.25rem] z-[2] max-h-full w-full max-w-[18.75rem] -translate-y-1/2 object-contain" src={bestDrop.skin.image || "/unknown-item.svg"} />
+                
+                <div className="absolute top-0 -left-5 z-[0] h-[200%] w-[200%]" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.4) 0%, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.2) 30%, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.1) 45%, transparent 70%)` }}></div>
+                
+                <div className="z-[3] flex items-end justify-between mt-auto mb-1">
+                  <div className="flex flex-col items-start justify-start space-y-0.25">
+                    <span className="text-[#a7a7a7] text-[0.5625rem] uppercase">{formatWeaponName(bestDrop.skin.weapon)}</span>
+                    <span className="text-[0.8125rem] font-tektur font-bold text-white">{formatSkinName(bestDrop.skin.name)}</span>
+                    <span className="text-[0.5625rem] hidden text-[#A7A7A7] lg:block"></span>
+                  </div>
+                </div>
+                <div className="z-[3] flex items-center justify-start space-x-0.5">
+                  <span className="text-gradient-yellow text-[0.8125rem] font-tektur font-bold">{formatPrice(bestDrop.skin.price)}</span>
+                  <img alt="" className="h-3 w-3" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                </div>
               </div>
-              <img alt="" className="absolute top-1/2 right-[1rem] z-[2] h-auto w-[11.36625rem] -translate-y-1/2" src="/assets/ak47.webp" />
-              <span className="text-gray w-1/2 text-xs text-[#a7a7a7]">Отобразится после первой игры</span>
-            </div>
+            ) : (
+              <div className="shadow-block relative flex h-full min-h-[8.75rem] w-full flex-col justify-between overflow-hidden rounded-xl bg-[#282A2D] p-3 lg:bg-[#00000066]">
+                <div className="z-[3] flex items-end justify-between">
+                  <span className="text-[0.875rem] text-white/50">Лучший дроп</span>
+                </div>
+                <img alt="" className="absolute top-1/2 right-[1rem] z-[2] h-auto w-[11.36625rem] -translate-y-1/2" src="/assets/ak47.webp" />
+                <span className="text-[#a7a7a7] w-1/2 text-[0.75rem] mt-auto">Отобразится после первой игры</span>
+              </div>
+            )}
             <div className="flex h-full w-full items-center gap-3">
               <div className="flex h-full min-h-[6rem] w-full flex-1 flex-col items-start justify-start space-y-1.5 rounded-xl bg-[#00000066] p-4">
                 <div className="flex w-full flex-wrap items-center justify-between">
@@ -176,41 +239,170 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
         <div className="bg-block shadow-block flex w-full flex-col items-center justify-center space-y-6 rounded-xl pb-3 lg:rounded-md">
           <div className="flex w-full flex-col items-center justify-between rounded-t-xl bg-[#FFFFFF08] p-3 shadow-[0_2px_20px_0_rgba(0,0,0,0.20)] lg:flex-row">
             <div className="flex h-[2rem] w-full items-center gap-1 rounded-[0.625rem] lg:h-[2.375rem] lg:max-w-[50%] lg:bg-[#17181C] lg:p-1">
-              <button className="flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] bg-[#FFDD24]">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 flex-shrink-0 lg:h-4 lg:w-4 opacity-100" style={{ color: "rgb(32, 32, 34)" }}>
+              <button onClick={() => setActiveTab('inventory')} className={`flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] ${activeTab === 'inventory' ? 'bg-[#FFDD24]' : 'bg-[#FFFFFF1A] lg:bg-transparent lg:hover:bg-[#FFFFFF08]'}`}>
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 flex-shrink-0 lg:h-4 lg:w-4 ${activeTab === 'inventory' ? 'opacity-100' : 'opacity-50'}`} style={{ color: activeTab === 'inventory' ? "rgb(32, 32, 34)" : "rgb(255, 255, 255)" }}>
                   <path d="M15.6443 3.95755C15.6443 3.94063 15.6443 3.94063 15.6443 3.92372C15.6274 3.88989 15.6274 3.85607 15.6104 3.82224V3.80533C15.5935 3.77151 15.5597 3.73768 15.5428 3.72077L15.5259 3.70386C15.509 3.68694 15.4751 3.67003 15.4582 3.65312L15.4413 3.63621H15.4244L15.4075 3.61929L8.21964 0.0507378C8.08434 -0.0169126 7.91522 -0.0169126 7.763 0.0507378L5.3445 1.25153L12.5662 4.95539L12.5831 4.9723C12.6 4.9723 12.6 4.98921 12.6169 4.98921C12.6338 5.00613 12.6338 5.02304 12.6507 5.03995C12.6507 5.05686 12.6507 5.05686 12.6507 5.07378V5.09069V9.01441C12.6507 9.08206 12.6169 9.1328 12.5662 9.16662L11.1117 9.92769C11.0271 9.97843 10.9257 9.9446 10.8749 9.86004C10.858 9.84313 10.858 9.8093 10.858 9.77547V5.93632L3.55177 2.16481L3.53486 2.1479L0.60898 3.60238L0.592068 3.61929H0.575155L0.558243 3.63621C0.54133 3.65312 0.507505 3.67003 0.490592 3.68694L0.47368 3.70386C0.439854 3.73768 0.422942 3.77151 0.389117 3.80533V3.82224C0.372204 3.85607 0.355291 3.88989 0.355291 3.92372C0.355291 3.94063 0.355291 3.94063 0.355291 3.95755C0.355291 3.99137 0.338379 4.00828 0.338379 4.04211V4.05902V11.9403C0.338379 12.1263 0.439854 12.3124 0.625893 12.3969L7.74609 15.9486C7.84757 15.9993 7.96596 16.0162 8.08434 15.9824L8.11817 15.9655C8.15199 15.9655 8.16891 15.9486 8.20273 15.9317L15.3737 12.38C15.5428 12.2955 15.6612 12.1263 15.6612 11.9234V4.05902V4.04211C15.6443 4.00828 15.6443 3.99137 15.6443 3.95755Z" fill="currentColor"></path>
                 </svg>
-                <span className="text-[0.625rem] lg:text-[0.8125rem] text-[#202022] opacity-100 font-medium"> Инвентарь </span>
+                <span className={`text-[0.625rem] lg:text-[0.8125rem] font-medium ${activeTab === 'inventory' ? 'text-[#202022] opacity-100' : 'text-[#FFFFFF] opacity-50'}`}> Инвентарь </span>
               </button>
-              <button className="flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] bg-[#FFFFFF1A] lg:bg-transparent lg:hover:bg-[#FFFFFF08]">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-[0.72725rem] w-[0.72725rem] flex-shrink-0 lg:h-4 lg:w-4 opacity-50" style={{ color: "rgb(255, 255, 255)" }}>
+              <button onClick={() => setActiveTab('history')} className={`flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] ${activeTab === 'history' ? 'bg-[#FFDD24]' : 'bg-[#FFFFFF1A] lg:bg-transparent lg:hover:bg-[#FFFFFF08]'}`}>
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={`h-[0.72725rem] w-[0.72725rem] flex-shrink-0 lg:h-4 lg:w-4 ${activeTab === 'history' ? 'opacity-100' : 'opacity-50'}`} style={{ color: activeTab === 'history' ? "rgb(32, 32, 34)" : "rgb(255, 255, 255)" }}>
                   <path d="M15 8C15 9.85652 14.2625 11.637 12.9497 12.9498C11.637 14.2625 9.85652 15 8 15C6.14348 15 4.36301 14.2625 3.05025 12.9498C1.7375 11.637 1 9.85652 1 8C1 7.8674 1.05268 7.74022 1.14645 7.64645C1.24021 7.55268 1.36739 7.5 1.5 7.5C1.63261 7.5 1.75979 7.55268 1.85355 7.64645C1.94732 7.74022 2 7.8674 2 8C1.998 9.33903 2.4433 10.6404 3.26523 11.6975C4.08716 12.7545 5.23861 13.5068 6.53684 13.8349C7.83506 14.1629 9.20566 14.048 10.4311 13.5082C11.6565 12.9685 12.6666 12.0349 13.3009 10.8557C13.9353 9.67642 14.1576 8.31909 13.9325 6.9991C13.7075 5.67912 13.048 4.47212 12.0588 3.56968C11.0695 2.66724 9.80719 2.12107 8.47214 2.01787C7.13709 1.91466 5.80582 2.26033 4.68963 3H5C5.13261 3 5.25979 3.05268 5.35355 3.14645C5.44732 3.24022 5.5 3.3674 5.5 3.5C5.5 3.63261 5.44732 3.75979 5.35355 3.85356C5.25979 3.94733 5.13261 4 5 4H3.5C3.43433 4.00004 3.36929 3.98713 3.30861 3.96202C3.24793 3.93691 3.1928 3.90008 3.14636 3.85364C3.09993 3.8072 3.0631 3.75207 3.03798 3.69139C3.01287 3.63071 2.99996 3.56568 3 3.5V2C3 1.8674 3.05268 1.74022 3.14645 1.64645C3.24021 1.55268 3.36739 1.5 3.5 1.5C3.63261 1.5 3.75979 1.55268 3.85355 1.64645C3.94732 1.74022 4 1.8674 4 2V2.25696C5.04939 1.52555 6.27917 1.09574 7.5557 1.01423C8.83224 0.932714 10.1067 1.20262 11.2406 1.79462C12.3745 2.38662 13.3244 3.27807 13.9872 4.37209C14.65 5.46612 15.0003 6.72087 15 8ZM12.5 8C12.5 8.89002 12.2361 9.76005 11.7416 10.5001C11.2471 11.2401 10.5443 11.8169 9.72208 12.1575C8.89981 12.4981 7.99501 12.5872 7.12209 12.4135C6.24918 12.2399 5.44736 11.8113 4.81802 11.182C4.18868 10.5526 3.7601 9.75082 3.58647 8.87791C3.41283 8.005 3.50195 7.1002 3.84254 6.27793C4.18314 5.45566 4.75991 4.75286 5.49993 4.25839C6.23995 3.76392 7.10998 3.5 8 3.5C9.19307 3.50131 10.3369 3.97583 11.1805 4.81946C12.0242 5.66309 12.4987 6.80693 12.5 8ZM9.77734 8.584L8.5 7.73242V5.5C8.5 5.3674 8.44732 5.24022 8.35355 5.14645C8.25979 5.05268 8.13261 5 8 5C7.86739 5 7.74021 5.05268 7.64645 5.14645C7.55268 5.24022 7.5 5.3674 7.5 5.5V8C7.50002 8.08231 7.52035 8.16334 7.55919 8.23591C7.59803 8.30848 7.65418 8.37034 7.72265 8.416L9.22266 9.416C9.333 9.48802 9.4673 9.51358 9.59638 9.48711C9.72546 9.46064 9.83887 9.38429 9.91196 9.27466C9.98506 9.16503 10.0119 9.03097 9.98671 8.90164C9.9615 8.77231 9.88626 8.65816 9.77734 8.584Z" fill="currentColor"></path>
                 </svg>
-                <span className="xxs:whitespace-nowrap text-[0.625rem] leading-normal font-medium lg:text-[0.8125rem] text-[#FFFFFF] opacity-50"> История предметов </span>
+                <span className={`xxs:whitespace-nowrap text-[0.625rem] leading-normal font-medium lg:text-[0.8125rem] ${activeTab === 'history' ? 'text-[#202022] opacity-100' : 'text-[#FFFFFF] opacity-50'}`}> История предметов </span>
               </button>
-              <button className="flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] bg-[#FFFFFF1A] lg:bg-transparent lg:hover:bg-[#FFFFFF08]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" className="h-[0.72725rem] w-[0.72725rem] flex-shrink-0 lg:h-4 lg:w-4 opacity-50" style={{ color: "rgb(255, 255, 255)" }}>
+              <button onClick={() => setActiveTab('games')} className={`flex h-full w-full cursor-pointer items-center justify-center gap-1 rounded-[0.375rem] py-1 pr-2.5 pl-1.5 transition-colors duration-200 lg:shadow-[0_2px_4px_0_rgba(0,0,0,0.15)] ${activeTab === 'games' ? 'bg-[#FFDD24]' : 'bg-[#FFFFFF1A] lg:bg-transparent lg:hover:bg-[#FFFFFF08]'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" className={`h-[0.72725rem] w-[0.72725rem] flex-shrink-0 lg:h-4 lg:w-4 ${activeTab === 'games' ? 'opacity-100' : 'opacity-50'}`} style={{ color: activeTab === 'games' ? "rgb(32, 32, 34)" : "rgb(255, 255, 255)" }}>
                   <path fillRule="evenodd" clipRule="evenodd" d="M14.5864 9.30828L7.99927 4.48622L1.41211 9.30828V4.82206L7.99927 0L14.5864 4.82206V9.30828Z" fill="currentColor"></path>
                   <path d="M13.3327 11.1325V14.6668L7.99935 10.8679L2.66602 14.6668V11.1325L7.99935 7.3335L13.3327 11.1325Z" fill="currentColor"></path>
                 </svg>
-                <span className="xxs:whitespace-nowrap text-[0.625rem] leading-normal font-medium lg:text-[0.8125rem] text-[#FFFFFF] opacity-50"> История игр </span>
+                <span className={`xxs:whitespace-nowrap text-[0.625rem] leading-normal font-medium lg:text-[0.8125rem] ${activeTab === 'games' ? 'text-[#202022] opacity-100' : 'text-[#FFFFFF] opacity-50'}`}> История игр </span>
               </button>
             </div>
-            <div className="mt-3 flex w-full items-center justify-end space-x-6 lg:mt-0">
+            <div className={`mt-3 flex w-full items-center justify-end space-x-6 lg:mt-0 ${activeTab !== 'inventory' ? 'hidden' : ''}`}>
               <div className="flex shrink-0 items-center justify-center space-x-2">
                 <span className="text-[#a7a7a7] text-sm font-normal">Доступно для продажи</span>
                 <div tabIndex={0} role="switch" className="relative h-[1.25rem] w-[2.25rem] cursor-pointer rounded-[6.25rem] p-[0.125rem] transition-colors duration-200 focus:outline-none bg-[#FFFFFF1A]" aria-checked="false" aria-disabled="false">
                   <div className="absolute h-[1rem] w-[1rem] rounded-2xl shadow-[0px_4px_6px_0px_rgba(0,0,0,0.5)] transition-transform duration-200 translate-x-0 bg-[#FFFFFF] opacity-50"></div>
                 </div>
               </div>
-              <button type="button" disabled className="inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-transparent text-[#a7a7a7] rounded-md px-3 space-x-2 min-h-[2.0625rem] text-xs lg:text-sm border border-[#a7a7a7] border-solid hover:bg-[#a7a7a7]/10 !justify-end !transition-none !text-[0.8125rem] !px-2 !py-2 !min-h-[1.875rem] lg:!min-h-10 lg:!px-3 lg:!text-base !font-light opacity-50 cursor-not-allowed pointer-events-none">
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (state.inventory.length === 0) return
+                  let total = 0
+                  const idsToSell: string[] = []
+                  state.inventory.forEach(item => {
+                    const skin = getSkin(state.skins, item.skinId)
+                    if (skin) {
+                      total += skin.price
+                      idsToSell.push(item.uid)
+                    }
+                  })
+                  if (idsToSell.length > 0) {
+                    removeFromInventory(idsToSell)
+                    setBalance(state.balance + total)
+                  }
+                }}
+                disabled={state.inventory.length === 0}
+                className={`inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-transparent text-[#a7a7a7] rounded-md px-3 space-x-2 min-h-[2.0625rem] text-xs lg:text-sm border border-[#a7a7a7] border-solid hover:bg-[#a7a7a7]/10 !justify-end !transition-none !text-[0.8125rem] !px-2 !py-2 !min-h-[1.875rem] lg:!min-h-10 lg:!px-3 lg:!text-base !font-light ${state.inventory.length === 0 ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'opacity-100 cursor-pointer'}`}
+              >
                 <span className="pointer-events-none select-none text-[#a7a7a7]"> Продать все </span>
               </button>
             </div>
           </div>
-          <div className="flex w-full items-center justify-center py-8">
-            <span className="text-[#a7a7a7]">У вас пока нет предметов</span>
-          </div>
+          {activeTab === 'inventory' && (state.inventory.length === 0 ? (
+            <div className="flex w-full items-center justify-center py-8">
+              <span className="text-[#a7a7a7]">У вас пока нет предметов</span>
+            </div>
+          ) : (
+            <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
+              {state.inventory.map((item) => {
+                const skin = getSkin(state.skins, item.skinId)
+                if (!skin) return null
+                const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
+                
+                return (
+                  <div key={item.uid} className="animate-bounce-in relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center">
+                    <div className="absolute top-0 left-0 z-[3] flex h-full w-full flex-col items-center justify-center space-y-3 rounded-md bg-black/50 backdrop-blur-xs transition-opacity duration-300 pointer-events-none opacity-0">
+                    </div>
+                    <div className="pointer-events-none z-[2] h-full w-full">
+                      <div className="w-full h-full">
+                        <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
+                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                            <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
+                              <div className="flex items-center justify-center space-x-0.5">
+                                <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
+                                <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                              </div>
+                              <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                            </div>
+                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                              <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
+                              <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
+                            </div>
+                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="-mt-1 flex w-full items-center justify-between relative z-[4]">
+                      <button 
+                        onClick={() => {
+                          removeFromInventory([item.uid])
+                          setBalance(state.balance + skin.price)
+                        }}
+                        className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
+                        title="Продать"
+                      >
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Sell" src="/assets/sale.svg" />
+                      </button>
+                      <button className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer">
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="data:image/svg+xml,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%23FBD506%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20%23FBD506%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cg%20clip-path%3D%22url(%23clip0_2133_11678)%22%3E%0A%3Cpath%20d%3D%22M8%200.1875C3.68528%200.1875%200.1875%203.68528%200.1875%208C0.1875%2012.3147%203.68528%2015.8125%208%2015.8125C12.3147%2015.8125%2015.8125%2012.3147%2015.8125%208C15.8125%203.68528%2012.3147%200.1875%208%200.1875ZM10.6654%208.84797L8.02397%2010.757C7.92812%2011.7886%207.04584%2012.5959%205.983%2012.5959C5.5161%2012.5962%205.063%2012.4376%204.69822%2012.1462C4.33343%2011.8548%204.07868%2011.4479%203.97587%2010.9924L2.58612%2010.4402V7.87244L4.93437%208.81153C5.30084%208.59278%205.7125%208.49475%206.19166%208.53681L7.90559%206.10362C7.91687%204.61228%209.14878%203.40409%2010.6597%203.40409C12.1792%203.40409%2013.4111%204.62631%2013.4139%206.12325C13.4139%207.63125%2012.1792%208.84797%2010.6654%208.84797Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3Cpath%20d%3D%22M5.98267%209.06055C5.87264%209.06021%205.76293%209.07243%205.65567%209.09699L6.28433%209.34927C6.43022%209.40603%206.56339%209.49118%206.67612%209.5998C6.78885%209.70841%206.8789%209.83832%206.94105%209.982C7.0032%2010.1257%207.0362%2010.2803%207.03815%2010.4368C7.04011%2010.5933%207.01097%2010.7487%206.95242%2010.8939C6.89309%2011.04%206.80552%2011.1729%206.69474%2011.2851C6.58395%2011.3973%206.45212%2011.4866%206.30679%2011.5478C6.16146%2011.609%206.00549%2011.6409%205.84781%2011.6417C5.69012%2011.6426%205.53382%2011.6123%205.38786%2011.5526C5.14261%2011.4573%204.89173%2011.3536%204.64648%2011.2611C4.76949%2011.4989%204.95363%2011.6998%205.17996%2011.8429C5.40629%2011.986%205.66665%2012.0663%205.93427%2012.0754C6.2019%2012.0846%206.46714%2012.0223%206.70272%2011.895C6.93831%2011.7677%207.13574%2011.5799%207.27473%2011.351C7.41371%2011.1222%207.48924%2010.8604%207.49353%2010.5926C7.49783%2010.3249%207.43075%2010.0608%207.29918%209.82758C7.16762%209.59435%206.97631%209.40036%206.74494%209.26555C6.51356%209.13075%206.25045%209.05999%205.98267%209.06055Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3Cpath%20d%3D%22M10.6627%204.30078C9.63945%204.30078%208.81348%205.11934%208.81348%206.12578C8.81348%207.13775%209.64226%207.95078%2010.6627%207.95078C11.6748%207.95359%2012.5065%207.13784%2012.5035%206.12578C12.5036%205.11934%2011.6748%204.30078%2010.6627%204.30078ZM10.6585%207.22169C10.4422%207.21937%2010.2315%207.15313%2010.0528%207.03129C9.87409%206.90946%209.73543%206.73747%209.65427%206.537C9.5731%206.33652%209.55307%206.11652%209.59668%205.90468C9.64029%205.69284%209.7456%205.49864%209.89935%205.34652C10.0531%205.19441%2010.2484%205.09118%2010.4607%205.04984C10.673%205.00849%2010.8928%205.03088%2011.0924%205.11418C11.292%205.19748%2011.4625%205.33797%2011.5824%205.51797C11.7023%205.69796%2011.7663%205.90941%2011.7663%206.12569C11.7658%206.27046%2011.7367%206.4137%2011.6807%206.54721C11.6247%206.68071%2011.5429%206.80185%2011.44%206.90367C11.337%207.00549%2011.215%207.086%2011.0809%207.14057C10.9469%207.19514%2010.8033%207.22271%2010.6585%207.22169H10.6585Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3C%2Fg%3E%0A%3Cdefs%3E%0A%3ClinearGradient%20id%3D%22paint0_linear_2133_11678%22%20x1%3D%220.34375%22%20y1%3D%220.885045%22%20x2%3D%2216.4974%22%20y2%3D%221.66721%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3ClinearGradient%20id%3D%22paint1_linear_2133_11678%22%20x1%3D%224.67496%22%20y1%3D%229.19518%22%20x2%3D%227.61928%22%20y2%3D%229.32978%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3ClinearGradient%20id%3D%22paint2_linear_2133_11678%22%20x1%3D%228.85038%22%20y1%3D%224.46373%22%20x2%3D%2212.6651%22%20y2%3D%224.65047%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3CclipPath%20id%3D%22clip0_2133_11678%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3C%2FclipPath%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E%0A" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+          {activeTab === 'history' && (withdrawnItems.length === 0 ? (
+            <div className="flex w-full items-center justify-center py-8">
+              <span className="text-[#a7a7a7]">У вас пока нет выведенных предметов</span>
+            </div>
+          ) : (
+            <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
+              {withdrawnItems.map((skinId, i) => {
+                const skin = getSkin(state.skins, skinId)
+                if (!skin) return null
+                const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
+                
+                return (
+                  <div key={i} className="animate-bounce-in relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center">
+                    <div className="pointer-events-none z-[2] h-full w-full">
+                      <div className="w-full h-full">
+                        <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
+                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                            <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
+                              <div className="flex items-center justify-center space-x-0.5">
+                                <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
+                                <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                              </div>
+                              <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                            </div>
+                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                              <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
+                              <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
+                            </div>
+                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="relative -mt-1 flex w-full items-center justify-between">
+                      <div className="bg-[#1C1D1F] absolute top-[-1.25rem] left-1/2 z-[3] flex -translate-x-1/2 items-center justify-center rounded-md px-1.5 py-0.5">
+                        <span className="text-[10px] leading-normal font-medium text-white"> Выведен </span>
+                      </div>
+                      <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent opacity-50 lg:h-10">
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="data:image/svg+xml,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%23494949%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20%23494949%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M5.33301%205.33279C8.38534%205.33279%2010.6661%204.12616%2010.6661%203.04723C10.6661%201.96841%208.38529%200.761719%205.33301%200.761719C2.28074%200.761719%200%201.96841%200%203.04723C0%204.12616%202.28069%205.33279%205.33301%205.33279Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M5.33301%2014.4754C5.77852%2014.4754%206.20732%2014.4495%206.61519%2014.4023C6.27138%2013.9605%205.98705%2013.4701%205.77405%2012.9436C5.6277%2012.9485%205.48084%2012.9519%205.33296%2012.9519C3.58887%2012.9519%201.93718%2012.6063%200.682285%2011.9788C0.435198%2011.8553%200.20782%2011.7225%200%2011.582V12.1899C0%2013.2687%202.28069%2014.4754%205.33301%2014.4754Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M5.33306%2011.4276C5.34871%2011.4276%205.3641%2011.4273%205.3797%2011.4273C5.34845%2011.1775%205.33215%2010.9232%205.33215%2010.6651C5.33215%2010.4071%205.3484%2010.1529%205.3797%209.90342C5.3641%209.90342%205.34866%209.90398%205.33306%209.90398C3.58897%209.90398%201.93733%209.5584%200.682387%208.93092C0.435248%208.80738%200.20782%208.67464%200%208.53418V9.14199C5.07993e-05%2010.2209%202.28074%2011.4276%205.33306%2011.4276Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M5.33306%208.38063C5.48424%208.38063%205.63339%208.37758%205.78065%208.37179C6.01718%207.79151%206.34041%207.25553%206.73451%206.7802C6.27823%206.83049%205.80931%206.85716%205.33306%206.85716C3.58897%206.85716%201.93733%206.51157%200.682387%205.8841C0.435248%205.7605%200.20782%205.62782%200%205.4873V6.09517C5.07993e-05%207.17404%202.28074%208.38063%205.33306%208.38063Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M7.61881%208.1401C7.28912%208.63575%207.05357%209.19906%206.93769%209.80438C6.8842%2010.0834%206.85596%2010.3713%206.85596%2010.6657C6.85596%2010.887%206.87211%2011.1046%206.90264%2011.3176C6.97767%2011.8409%207.1416%2012.3357%207.37863%2012.7865C7.62734%2013.2594%207.95637%2013.6839%208.34768%2014.0412C9.16087%2014.784%2010.2424%2015.2376%2011.4279%2015.2376C13.9489%2015.2376%2015.9998%2013.1867%2015.9998%2010.6657C15.9998%208.14467%2013.9489%206.09375%2011.4279%206.09375C11.1673%206.09375%2010.9119%206.116%2010.6631%206.15806C9.39572%206.37238%208.30414%207.10994%207.61881%208.1401Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3C%2Fsvg%3E%0A" />
+                      </div>
+                      <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center border border-t-transparent opacity-50 lg:h-10">
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="data:image/svg+xml,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%23494949%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20%23494949%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M8%200.1875C3.68528%200.1875%200.1875%203.68528%200.1875%208C0.1875%2012.3147%203.68528%2015.8125%208%2015.8125C12.3147%2015.8125%2015.8125%2012.3147%2015.8125%208C15.8125%203.68528%2012.3147%200.1875%208%200.1875ZM10.6654%208.84797L8.02397%2010.757C7.92812%2011.7886%207.04584%2012.5959%205.983%2012.5959C5.5161%2012.5962%205.063%2012.4376%204.69822%2012.1462C4.33343%2011.8548%204.07868%2011.4479%203.97587%2010.9924L2.58612%2010.4402V7.87244L4.93437%208.81153C5.30084%208.59278%205.7125%208.49475%206.19166%208.53681L7.90559%206.10362C7.91687%204.61228%209.14878%203.40409%2010.6597%203.40409C12.1792%203.40409%2013.4111%204.62631%2013.4139%206.12325C13.4139%207.63125%2012.1792%208.84797%2010.6654%208.84797Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M5.98267%209.06055C5.87264%209.06021%205.76293%209.07243%205.65567%209.09699L6.28433%209.34927C6.43022%209.40603%206.56339%209.49118%206.67612%209.5998C6.78885%209.70841%206.8789%209.83832%206.94105%209.982C7.0032%2010.1257%207.0362%2010.2803%207.03815%2010.4368C7.04011%2010.5933%207.01097%2010.7487%206.95242%2010.8939C6.89309%2011.04%206.80552%2011.1729%206.69474%2011.2851C6.58395%2011.3973%206.45212%2011.4866%206.30679%2011.5478C6.16146%2011.609%206.00549%2011.6409%205.84781%2011.6417C5.69012%2011.6426%205.53382%2011.6123%205.38786%2011.5526C5.14261%2011.4573%204.89173%2011.3536%204.64648%2011.2611C4.76949%2011.4989%204.95363%2011.6998%205.17996%2011.8429C5.40629%2011.986%205.66665%2012.0663%205.93427%2012.0754C6.2019%2012.0846%206.46714%2012.0223%206.70272%2011.895C6.93831%2011.7677%207.13574%2011.5799%207.27473%2011.351C7.41371%2011.1222%207.48924%2010.8604%207.49353%2010.5926C7.49783%2010.3249%207.43075%2010.0608%207.29918%209.82758C7.16762%209.59435%206.97631%209.40036%206.74494%209.26555C6.51356%209.13075%206.25045%209.05999%205.98267%209.06055Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M10.6627%204.30078C9.63945%204.30078%208.81348%205.11934%208.81348%206.12578C8.81348%207.13775%209.64226%207.95078%2010.6627%207.95078C11.6748%207.95359%2012.5065%207.13784%2012.5035%206.12578C12.5036%205.11934%2011.6748%204.30078%2010.6627%204.30078ZM10.6585%207.22169C10.4422%207.21937%2010.2315%207.15313%2010.0528%207.03129C9.87409%206.90946%209.73543%206.73747%209.65427%206.537C9.5731%206.33652%209.55307%206.11652%209.59668%205.90468C9.64029%205.69284%209.7456%205.49864%209.89935%205.34652C10.0531%205.19441%2010.2484%205.09118%2010.4607%205.04984C10.673%205.00849%2010.8928%205.03088%2011.0924%205.11418C11.292%205.19748%2011.4625%205.33797%2011.5824%205.51797C11.7023%205.69796%2011.7663%205.90941%2011.7663%206.12569C11.7658%206.27046%2011.7367%206.4137%2011.6807%206.54721C11.6247%206.68071%2011.5429%206.80185%2011.44%206.90367C11.337%207.00549%2011.215%207.086%2011.0809%207.14057C10.9469%207.19514%2010.8033%207.22271%2010.6585%207.22169H10.6585Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3C%2Fsvg%3E%0A" />
+                      </div>
+                      <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent opacity-50 lg:h-10">
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="data:image/svg+xml,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%23494949%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20%23494949%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cpath%20d%3D%22M8%200.1875C3.68528%200.1875%200.1875%203.68528%200.1875%208C0.1875%2012.3147%203.68528%2015.8125%208%2015.8125C12.3147%2015.8125%2015.8125%2012.3147%2015.8125%208C15.8125%203.68528%2012.3147%200.1875%208%200.1875ZM10.6654%208.84797L8.02397%2010.757C7.92812%2011.7886%207.04584%2012.5959%205.983%2012.5959C5.5161%2012.5962%205.063%2012.4376%204.69822%2012.1462C4.33343%2011.8548%204.07868%2011.4479%203.97587%2010.9924L2.58612%2010.4402V7.87244L4.93437%208.81153C5.30084%208.59278%205.7125%208.49475%206.19166%208.53681L7.90559%206.10362C7.91687%204.61228%209.14878%203.40409%2010.6597%203.40409C12.1792%203.40409%2013.4111%204.62631%2013.4139%206.12325C13.4139%207.63125%2012.1792%208.84797%2010.6654%208.84797Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M5.98267%209.06055C5.87264%209.06021%205.76293%209.07243%205.65567%209.09699L6.28433%209.34927C6.43022%209.40603%206.56339%209.49118%206.67612%209.5998C6.78885%209.70841%206.8789%209.83832%206.94105%209.982C7.0032%2010.1257%207.0362%2010.2803%207.03815%2010.4368C7.04011%2010.5933%207.01097%2010.7487%206.95242%2010.8939C6.89309%2011.04%206.80552%2011.1729%206.69474%2011.2851C6.58395%2011.3973%206.45212%2011.4866%206.30679%2011.5478C6.16146%2011.609%206.00549%2011.6409%205.84781%2011.6417C5.69012%2011.6426%205.53382%2011.6123%205.38786%2011.5526C5.14261%2011.4573%204.89173%2011.3536%204.64648%2011.2611C4.76949%2011.4989%204.95363%2011.6998%205.17996%2011.8429C5.40629%2011.986%205.66665%2012.0663%205.93427%2012.0754C6.2019%2012.0846%206.46714%2012.0223%206.70272%2011.895C6.93831%2011.7677%207.13574%2011.5799%207.27473%2011.351C7.41371%2011.1222%207.48924%2010.8604%207.49353%2010.5926C7.49783%2010.3249%207.43075%2010.0608%207.29918%209.82758C7.16762%209.59435%206.97631%209.40036%206.74494%209.26555C6.51356%209.13075%206.25045%209.05999%205.98267%209.06055Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3Cpath%20d%3D%22M10.6627%204.30078C9.63945%204.30078%208.81348%205.11934%208.81348%206.12578C8.81348%207.13775%209.64226%207.95078%2010.6627%207.95078C11.6748%207.95359%2012.5065%207.13784%2012.5035%206.12578C12.5036%205.11934%2011.6748%204.30078%2010.6627%204.30078ZM10.6585%207.22169C10.4422%207.21937%2010.2315%207.15313%2010.0528%207.03129C9.87409%206.90946%209.73543%206.73747%209.65427%206.537C9.5731%206.33652%209.55307%206.11652%209.59668%205.90468C9.64029%205.69284%209.7456%205.49864%209.89935%205.34652C10.0531%205.19441%2010.2484%205.09118%2010.4607%205.04984C10.673%205.00849%2010.8928%205.03088%2011.0924%205.11418C11.292%205.19748%2011.4625%205.33797%2011.5824%205.51797C11.7023%205.69796%2011.7663%205.90941%2011.7663%206.12569C11.7658%206.27046%2011.7367%206.4137%2011.6807%206.54721C11.6247%206.68071%2011.5429%206.80185%2011.44%206.90367C11.337%207.00549%2011.215%207.086%2011.0809%207.14057C10.9469%207.19514%2010.8033%207.22271%2010.6585%207.22169H10.6585Z%22%20fill%3D%22%23494949%22%2F%3E%0A%3C%2Fsvg%3E%0A" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+          {activeTab === 'games' && <GamesHistory />}
         </div>
       </div>
 

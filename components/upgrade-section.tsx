@@ -51,7 +51,7 @@ function getFastFilterPriceRange(type: "multiplier" | "percentage", value: numbe
 }
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, removeFromInventory } = useStore()
+  const { state, setState, removeFromInventory, addGameHistory } = useStore()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
   const [selectedUids, setSelectedUids] = useState<string[]>([])
@@ -59,6 +59,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [targetId, setTargetId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
   const pendingWonItemUidRef = useRef<string | null>(null)
+  const pendingHistoryEntryRef = useRef<import("@/lib/types").GameHistoryEntry | null>(null)
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
   const [loseAnimating, setLoseAnimating] = useState(false)
@@ -266,19 +267,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     loseCaseAudioRef.current = null
   }
 
-  function skipLoseCaseSound() {
-    const audio = loseCaseAudioRef.current
-    if (!audio) return
-
-    try {
-      audio.currentTime = 2.984
-    } catch {}
-
-    try {
-      audio.play().catch(() => {})
-    } catch {}
-  }
-
   function playLoseCaseSound() {
     if (state.soundMode !== "on") return
 
@@ -288,6 +276,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     audio.preload = "auto"
     audio.muted = false
     audio.volume = 1
+    audio.currentTime = 2.984
     loseCaseAudioRef.current = audio
     const releaseAudio = () => {
       if (loseCaseAudioRef.current === audio) {
@@ -438,6 +427,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         setLoseAnimating(true)
       } else {
         toast.error("Не повезло. Попробуйте снова!")
+        if (pendingHistoryEntryRef.current) {
+          addGameHistory(pendingHistoryEntryRef.current)
+          pendingHistoryEntryRef.current = null
+        }
         lockedLeftCard.current = null
         clearSelection()
       }
@@ -447,6 +440,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     if (result && newUid) {
       pendingWonItemUidRef.current = newUid
     }
+    
+    const displaySkinId = lockedLeftCard.current?.items[0]?.skinId ?? ""
+    pendingHistoryEntryRef.current = {
+      id: Math.floor(Math.random() * 1000000000).toString(),
+      betPrice: inputValue,
+      betSkinId: displaySkinId || "balance",
+      targetPrice: targetSkin.price,
+      targetSkinId: targetSkin.id,
+      chance: Math.round(chance * 100 * 100) / 100,
+      status: result ? "win" : "loss",
+    }
+    
     setSpinning(false)
   }
 
@@ -686,7 +691,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
 
         {/* Balance Slider */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-3 order-6 lg:order-4 w-full lg:mt-6">
+        <div className="lose-anim-upgrade-control col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-3 order-6 lg:order-4 w-full lg:mt-6">
           <div
             className="bg-block flex h-full w-full flex-col items-center justify-start space-y-2 rounded-md p-2 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] lg:px-3 transition-opacity duration-200"
             style={{ opacity: selectedItems.length === 0 ? 0.4 : 1, pointerEvents: selectedItems.length === 0 ? "none" : "auto" }}
@@ -778,6 +783,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             playing={winAnimating}
             onComplete={() => {
               setWinAnimating(false)
+              if (pendingHistoryEntryRef.current) {
+                addGameHistory(pendingHistoryEntryRef.current)
+                pendingHistoryEntryRef.current = null
+              }
               lockedLeftCard.current = null
               clearSelection()
               if (pendingWonItemUidRef.current) {
@@ -789,7 +798,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Upgrade Multipliers */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center lg:mt-6 w-full h-12 lg:h-14">
+        <div className="lose-anim-upgrade-control col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-3 order-7 lg:order-6 flex items-center justify-center lg:mt-6 w-full h-12 lg:h-14">
           <div className="flex h-full w-full items-center justify-center space-x-1">
             {state.fastMultipliers.map((mult, idx) => (
               <button key={`mult-${idx}`} onClick={() => handleFastMultiplier(mult)} className={`bg-[#131315] flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border transition-colors hover:border-white/20 hover:bg-[#FBD50633] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-[2.4375rem] lg:w-[3.25rem] ${isReadyForTarget ? 'animate-pulse-border-glow border-[#f7d324]' : 'border-white/10'}`}>
@@ -812,7 +821,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         </div>
 
         {/* Upgrade Button */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 lg:mt-6 w-full flex justify-center">
+        <div className="lose-anim-upgrade-control col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3 order-5 lg:mt-6 w-full flex justify-center">
           <button
             type="button"
             onClick={wonItemUid ? handleAddWonItem : handleSpin}
@@ -831,14 +840,23 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       {/* Lose animation overlay — absolute within this relative wrapper */}
       <LoseAnimationOverlay
         playing={loseAnimating}
-        onComplete={() => {
+        onComplete={(awardedSkinId?: string) => {
           stopLoseCaseSound()
           setLoseAnimating(false)
+          
+          if (pendingHistoryEntryRef.current) {
+             if (awardedSkinId) {
+               pendingHistoryEntryRef.current.status = "compensation"
+               pendingHistoryEntryRef.current.resultSkinId = awardedSkinId
+             }
+             addGameHistory(pendingHistoryEntryRef.current)
+             pendingHistoryEntryRef.current = null
+          }
+
           lockedLeftCard.current = null
           clearSelection()
         }}
         onStopSound={stopLoseCaseSound}
-        onSkipSound={skipLoseCaseSound}
       />
 
       </div>{/* end relative wrapper */}
