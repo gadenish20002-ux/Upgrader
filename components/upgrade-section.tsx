@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useMemo } from "react"
-import { useStore, getSkin, formatPrice } from "@/lib/store"
+import { useStore, getSkin, formatPrice, syncManager } from "@/lib/store"
 import { UpgradeWheel, type UpgradeWheelHandle } from "./upgrade-wheel"
 import { InventoryPanel } from "./inventory-panel"
 import { CatalogPanel } from "./catalog-panel"
@@ -368,6 +368,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       total: inputValue,
     }
 
+    syncManager.suppress(8000) // Prevent fetching state from server during animation
     setSpinning(true)
 
     // determine outcome — admin predict overrides chance

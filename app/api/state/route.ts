@@ -23,9 +23,7 @@ export async function GET() {
     return NextResponse.json(data)
   } catch (error: any) {
     console.error("KV GET Error:", error)
-    // Fallback to default state if KV fails or isn't configured yet
-    const defaultStripped = stripSkins(DEFAULT_STATE)
-    return NextResponse.json(defaultStripped)
+    return NextResponse.json({ error: "Failed to fetch state from KV" }, { status: 500 })
   }
 }
 

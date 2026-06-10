@@ -56,6 +56,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     // Fetch global state from server
     async function fetchState() {
+      if (Date.now() < syncManager.suppressUntil) return
       // Prevent fetching if we just updated the state locally
       if (Date.now() - lastSyncTime.current < 1500) return
       
@@ -227,4 +228,11 @@ export function formatPrice(value: number): string {
 
 export function formatNumber(value: number): string {
   return value.toLocaleString("ru-RU")
+}
+
+export const syncManager = {
+  suppressUntil: 0,
+  suppress(ms: number) {
+    this.suppressUntil = Date.now() + ms
+  }
 }
