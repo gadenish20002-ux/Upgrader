@@ -23,7 +23,7 @@ export function AnimatedArrowBg({ color, className }: { color: string, className
       timeoutId = setTimeout(playPeriodically, 8000)
     }
 
-    timeoutId = setTimeout(playPeriodically, 8000)
+    timeoutId = setTimeout(playPeriodically, 100)
     return () => clearTimeout(timeoutId)
   }, [])
 
