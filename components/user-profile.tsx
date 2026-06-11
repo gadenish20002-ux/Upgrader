@@ -8,6 +8,7 @@ import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LogOut, Settings, Camera } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
+import type { InventoryItem, Skin } from "@/lib/types"
 
 const hexToRgb = (hex: string) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -19,10 +20,12 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [soundMode, setSoundMode] = useState<'on' | 'off'>(state.soundMode)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const [withdrawItem, setWithdrawItem] = useState<InventoryItem | null>(null)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [activeTab, setActiveTab] = useState<'inventory' | 'history' | 'games'>('inventory')
   const [itemHistoryVisible, setItemHistoryVisible] = useState(8)
   const itemHistory = state.itemHistory || []
+  const withdrawSkin = withdrawItem ? getSkin(state.skins, withdrawItem.skinId) : null
   const withdrawnEntries = itemHistory.filter(i => i.action === "withdrawn")
   const withdrawnCount = withdrawnEntries.length
   const withdrawnTotal = withdrawnEntries.reduce((acc, entry) => {
@@ -71,6 +74,19 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
     }
     reader.readAsDataURL(file)
     e.target.value = ""
+  }
+
+  function handleWithdrawConfirm() {
+    if (!withdrawItem || !withdrawSkin) return
+
+    removeFromInventory([withdrawItem.uid])
+    addItemHistory([{
+      id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      skinId: withdrawItem.skinId,
+      action: "withdrawn",
+      date: Date.now()
+    }])
+    setWithdrawItem(null)
   }
 
   return (
@@ -387,8 +403,12 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                       >
                         <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Sell" src="/assets/sale.svg" />
                       </button>
-                      <button className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer">
-                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="data:image/svg+xml,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%23FBD506%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cstyle%3E*%20%7B%20fill%3A%20%23FBD506%20!important%3B%20%7D%3C%2Fstyle%3E%0A%3Cg%20clip-path%3D%22url(%23clip0_2133_11678)%22%3E%0A%3Cpath%20d%3D%22M8%200.1875C3.68528%200.1875%200.1875%203.68528%200.1875%208C0.1875%2012.3147%203.68528%2015.8125%208%2015.8125C12.3147%2015.8125%2015.8125%2012.3147%2015.8125%208C15.8125%203.68528%2012.3147%200.1875%208%200.1875ZM10.6654%208.84797L8.02397%2010.757C7.92812%2011.7886%207.04584%2012.5959%205.983%2012.5959C5.5161%2012.5962%205.063%2012.4376%204.69822%2012.1462C4.33343%2011.8548%204.07868%2011.4479%203.97587%2010.9924L2.58612%2010.4402V7.87244L4.93437%208.81153C5.30084%208.59278%205.7125%208.49475%206.19166%208.53681L7.90559%206.10362C7.91687%204.61228%209.14878%203.40409%2010.6597%203.40409C12.1792%203.40409%2013.4111%204.62631%2013.4139%206.12325C13.4139%207.63125%2012.1792%208.84797%2010.6654%208.84797Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3Cpath%20d%3D%22M5.98267%209.06055C5.87264%209.06021%205.76293%209.07243%205.65567%209.09699L6.28433%209.34927C6.43022%209.40603%206.56339%209.49118%206.67612%209.5998C6.78885%209.70841%206.8789%209.83832%206.94105%209.982C7.0032%2010.1257%207.0362%2010.2803%207.03815%2010.4368C7.04011%2010.5933%207.01097%2010.7487%206.95242%2010.8939C6.89309%2011.04%206.80552%2011.1729%206.69474%2011.2851C6.58395%2011.3973%206.45212%2011.4866%206.30679%2011.5478C6.16146%2011.609%206.00549%2011.6409%205.84781%2011.6417C5.69012%2011.6426%205.53382%2011.6123%205.38786%2011.5526C5.14261%2011.4573%204.89173%2011.3536%204.64648%2011.2611C4.76949%2011.4989%204.95363%2011.6998%205.17996%2011.8429C5.40629%2011.986%205.66665%2012.0663%205.93427%2012.0754C6.2019%2012.0846%206.46714%2012.0223%206.70272%2011.895C6.93831%2011.7677%207.13574%2011.5799%207.27473%2011.351C7.41371%2011.1222%207.48924%2010.8604%207.49353%2010.5926C7.49783%2010.3249%207.43075%2010.0608%207.29918%209.82758C7.16762%209.59435%206.97631%209.40036%206.74494%209.26555C6.51356%209.13075%206.25045%209.05999%205.98267%209.06055Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3Cpath%20d%3D%22M10.6627%204.30078C9.63945%204.30078%208.81348%205.11934%208.81348%206.12578C8.81348%207.13775%209.64226%207.95078%2010.6627%207.95078C11.6748%207.95359%2012.5065%207.13784%2012.5035%206.12578C12.5036%205.11934%2011.6748%204.30078%2010.6627%204.30078ZM10.6585%207.22169C10.4422%207.21937%2010.2315%207.15313%2010.0528%207.03129C9.87409%206.90946%209.73543%206.73747%209.65427%206.537C9.5731%206.33652%209.55307%206.11652%209.59668%205.90468C9.64029%205.69284%209.7456%205.49864%209.89935%205.34652C10.0531%205.19441%2010.2484%205.09118%2010.4607%205.04984C10.673%205.00849%2010.8928%205.03088%2011.0924%205.11418C11.292%205.19748%2011.4625%205.33797%2011.5824%205.51797C11.7023%205.69796%2011.7663%205.90941%2011.7663%206.12569C11.7658%206.27046%2011.7367%206.4137%2011.6807%206.54721C11.6247%206.68071%2011.5429%206.80185%2011.44%206.90367C11.337%207.00549%2011.215%207.086%2011.0809%207.14057C10.9469%207.19514%2010.8033%207.22271%2010.6585%207.22169H10.6585Z%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3C%2Fg%3E%0A%3Cdefs%3E%0A%3ClinearGradient%20id%3D%22paint0_linear_2133_11678%22%20x1%3D%220.34375%22%20y1%3D%220.885045%22%20x2%3D%2216.4974%22%20y2%3D%221.66721%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3ClinearGradient%20id%3D%22paint1_linear_2133_11678%22%20x1%3D%224.67496%22%20y1%3D%229.19518%22%20x2%3D%227.61928%22%20y2%3D%229.32978%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3ClinearGradient%20id%3D%22paint2_linear_2133_11678%22%20x1%3D%228.85038%22%20y1%3D%224.46373%22%20x2%3D%2212.6651%22%20y2%3D%224.65047%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%3Cstop%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3Cstop%20offset%3D%220.5%22%20stop-color%3D%22%23FFDD23%22%2F%3E%0A%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FBD506%22%2F%3E%0A%3C%2FlinearGradient%3E%0A%3CclipPath%20id%3D%22clip0_2133_11678%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23FBD506%22%2F%3E%0A%3C%2FclipPath%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E%0A" />
+                      <button 
+                        onClick={() => setWithdrawItem(item)}
+                        className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
+                        title="Вывести"
+                      >
+                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Вывести" src="/assets/steam-yellow.svg" />
                       </button>
                     </div>
                   </div>
@@ -483,6 +503,173 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
       />
       
       {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} />}
+      {withdrawItem && withdrawSkin && (
+        <WithdrawWarningModal
+          skin={withdrawSkin}
+          onClose={() => setWithdrawItem(null)}
+          onConfirm={handleWithdrawConfirm}
+        />
+      )}
     </div>
+  )
+}
+
+function WithdrawWarningModal({
+  skin,
+  onClose,
+  onConfirm,
+}: {
+  skin: Skin
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  const [dontShowAgain, setDontShowAgain] = useState(false)
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-3 backdrop-blur-md">
+      <button className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Закрыть окно вывода" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="withdraw-warning-title"
+        tabIndex={0}
+        className="animate-scaleIn bg-block relative m-0 flex h-auto max-h-[calc(100vh-1.5rem)] w-full max-w-[29.875rem] flex-col overflow-hidden rounded-xl p-[0.825rem] shadow-[0_2px_4px_rgba(0,0,0,0.1)] outline-none"
+      >
+        <svg width="478" height="342" viewBox="0 0 478 342" fill="none" xmlns="http://www.w3.org/2000/svg" className="pointer-events-none absolute top-0 left-0 z-[1] w-full">
+          <g filter="url(#filter0_f_7202_52645)">
+            <ellipse cx="221" cy="34.5" rx="258" ry="117.5" fill="url(#paint0_linear_7202_52645)" fillOpacity="0.4"></ellipse>
+          </g>
+          <defs>
+            <filter id="filter0_f_7202_52645" x="-227" y="-273" width="896" height="615" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+              <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
+              <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
+              <feGaussianBlur stdDeviation="95" result="effect1_foregroundBlur_7202_52645"></feGaussianBlur>
+            </filter>
+            <linearGradient id="paint0_linear_7202_52645" x1="-31.84" y1="-72.5089" x2="496.893" y2="-16.2949" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FBD506"></stop>
+              <stop offset="0.5" stopColor="#FFDD23"></stop>
+              <stop offset="1" stopColor="#FBD506"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+        <svg width="191" height="127" viewBox="0 0 191 127" fill="none" xmlns="http://www.w3.org/2000/svg" className="pointer-events-none absolute top-0 left-0 z-[1]">
+          <rect x="170.433" y="-56.4224" width="35.0018" height="269.117" transform="rotate(54.9945 170.433 -56.4224)" fill="url(#paint0_linear_7202_52698)" fillOpacity="0.03"></rect>
+          <defs>
+            <linearGradient id="paint0_linear_7202_52698" x1="170.783" y1="-44.4082" x2="207.052" y2="-44.1798" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FBD506"></stop>
+              <stop offset="0.5" stopColor="#FFDD23"></stop>
+              <stop offset="1" stopColor="#FBD506"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+        <svg width="113" height="161" viewBox="0 0 113 161" fill="none" xmlns="http://www.w3.org/2000/svg" className="pointer-events-none absolute top-0 right-0 z-[1]">
+          <g filter="url(#filter0_f_7202_52699)">
+            <rect width="35.0018" height="269.117" transform="matrix(-0.573656 0.819097 0.819097 0.573656 32.0791 -35)" fill="url(#paint0_linear_7202_52699)" fillOpacity="0.03"></rect>
+          </g>
+          <defs>
+            <filter id="filter0_f_7202_52699" x="0" y="-47" width="264.512" height="207.05" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+              <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
+              <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
+              <feGaussianBlur stdDeviation="6" result="effect1_foregroundBlur_7202_52699"></feGaussianBlur>
+            </filter>
+            <linearGradient id="paint0_linear_7202_52699" x1="0.350018" y1="12.0142" x2="36.6195" y2="12.2426" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FBD506"></stop>
+              <stop offset="0.5" stopColor="#FFDD23"></stop>
+              <stop offset="1" stopColor="#FBD506"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+        <img alt="up-arrow" className="pointer-events-none tablet:left-[10.5625rem] absolute top-[1rem] left-[calc(50vw-4.625rem)] z-[1] h-[9.25rem] w-[9.25rem]" src="/assets/up-arrow.webp" />
+        <img alt="top-left-knife" className="pointer-events-none absolute top-0 left-0 z-[2] w-[5.3125rem] hue-rotate-20" src="/assets/top-left.webp" />
+        <img alt="top-center-gun" className="pointer-events-none tablet:left-[8.40625rem] absolute top-0 left-[calc(50vw-6.53125rem)] z-[2] h-[9.2625rem] hue-rotate-55 sepia-50" src="/assets/top-center.webp" />
+        <img alt="top-right-gun" className="pointer-events-none absolute top-[1rem] right-0 z-[2] w-[10rem]" src="/assets/top-right.webp" />
+
+        <div className="mb-6 flex min-h-[19px] items-center justify-between px-[0.625rem] pt-[0.625rem]">
+          <div className="flex items-center gap-1.5 text-base leading-[19px] font-medium text-white" />
+          <button
+            onClick={onClose}
+            className="bg-dark z-[1] flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-[15px] border-none text-white/40 transition-colors duration-200 hover:bg-[#202022]"
+            aria-label="Закрыть"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="11" viewBox="0 0 10 11" fill="none">
+              <g clipPath="url(#clip0_1_8976)">
+                <path d="M9.98338 1.51328L8.9867 0.516602L4.99999 4.50331L1.01328 0.516602L0.0166016 1.51328L4.00331 5.49999L0.0166016 9.4867L1.01328 10.4834L4.99999 6.49667L8.9867 10.4834L9.98338 9.4867L5.99667 5.49999L9.98338 1.51328Z" fill="white" fillOpacity="0.4" />
+              </g>
+              <defs>
+                <clipPath id="clip0_1_8976">
+                  <rect width="9.96678" height="9.96678" fill="white" transform="translate(0.0166016 0.516602)" />
+                </clipPath>
+              </defs>
+            </svg>
+          </button>
+        </div>
+
+        <div className="custom-scroll relative z-[3] max-h-[calc(100vh-4.5rem)] overflow-y-auto overflow-x-hidden px-[0.625rem] pb-[0.625rem]">
+          <div className="relative z-[3] mt-[0.825rem] flex h-full w-full flex-col items-start rounded-[0.75rem]">
+            <span id="withdraw-warning-title" className="mb-[0.5rem] text-[1.5rem] leading-[2rem] font-semibold text-[#FEDC23]">
+              Внимание:
+            </span>
+            <span className="mb-[1.5rem] text-[1rem] leading-[1.2rem] font-semibold text-white">
+              При отмене трейда после получения предмета действуют следующие правила:
+            </span>
+
+            <WithdrawRule number="01">При самостоятельной отмене возврат средств не производится.</WithdrawRule>
+            <WithdrawRule number="02">Если отмена произошла по инициативе сервиса, в течение 8 дней вы получите скин обратно в инвентарь на сайте и дополнительно +10% на баланс.</WithdrawRule>
+            <WithdrawRule number="03">При отмене трейдов Steam накладывает ограничение на обмены сроком до 30 дней.</WithdrawRule>
+
+            <div className="mb-[0.625rem] flex flex-row items-center gap-[0.8125rem] rounded-[0.5rem] bg-[linear-gradient(93deg,rgba(130,110,1,0.35)_1.16%,rgba(251,213,6,0.12)_100%)] p-[0.75rem]">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                <path d="M0.94043 2.9419C0.94043 1.83733 1.83586 0.941895 2.94043 0.941895H13.0587C14.1633 0.941895 15.0587 1.83733 15.0587 2.94189V13.0602C15.0587 14.1647 14.1633 15.0602 13.0587 15.0602H2.94043C1.83586 15.0602 0.94043 14.1647 0.94043 13.0602V2.9419Z" fill="#826E01" />
+                <path d="M8.00977 10.2052C8.74042 10.2054 9.33281 10.7978 9.33301 11.5284V11.5382C9.3328 12.2689 8.74041 12.8612 8.00977 12.8615H8C7.26918 12.8615 6.67697 12.269 6.67676 11.5382V11.5284C6.67696 10.7977 7.26917 10.2052 8 10.2052H8.00977ZM8 3.58704C8.4873 3.58704 8.88281 3.98352 8.88281 4.47083V8.00012C8.88255 8.4872 8.48714 8.88293 8 8.88293C7.5127 8.88293 7.11719 8.48645 7.11719 7.99915V4.46985C7.11745 3.98277 7.51286 3.58704 8 3.58704Z" fill="#FBD506" />
+              </svg>
+              <span className="text-[0.75rem] leading-[100%] font-normal text-[#FBD506]">
+                Обратите внимание: при отмене трейда все ваши незавершённые обмены будут отменены. Кроме того, с каждой отменой вы будете получать блокировки на торговых и обменных площадках.
+              </span>
+            </div>
+
+            <span className="group !pointer-events-auto mb-[1.5rem] flex items-end">
+              <input
+                type="checkbox"
+                id="dont-show-again-checkbox"
+                checked={dontShowAgain}
+                onChange={(event) => setDontShowAgain(event.target.checked)}
+                className="checkbox-input transition-all duration-200 group-hover:brightness-120"
+              />
+              <label
+                htmlFor="dont-show-again-checkbox"
+                className="font-exo ml-[0.375rem] cursor-pointer text-[0.75rem] leading-[100%] font-normal text-[#A7A7A7] transition-all duration-200 group-hover:brightness-120"
+              >
+                Больше не показывать данное окно
+              </label>
+            </span>
+
+            <div className="flex w-full flex-col items-center justify-between gap-[0.625rem] tablet:flex-row">
+              <button
+                onClick={onClose}
+                className="main-bg border border-[#FBD506] font-exo flex h-[2.6875rem] w-full items-center justify-center gap-[0.75rem] rounded-[0.375rem] p-[0.75rem] text-[1rem] leading-[100%] font-normal text-white transition-colors duration-200 hover:bg-[#FBD506]/10 tablet:w-[8.5rem]"
+              >
+                Отменить
+              </button>
+              <button
+                onClick={onConfirm}
+                className="flex h-[2.6875rem] w-full items-center justify-center gap-[0.75rem] rounded-[0.375rem] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)] p-[0.75rem] text-[1rem] leading-[100%] font-normal text-[#17181C] transition-shadow duration-200 hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] tablet:w-[17.75rem]"
+              >
+                <img alt="" className="h-[1rem] w-[1rem] brightness-0" src="/assets/wallet-yellow.svg" />
+                Вывести скин
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function WithdrawRule({ number, children }: { number: string; children: React.ReactNode }) {
+  return (
+    <span className="mb-[0.625rem] flex flex-row items-center gap-[0.625rem]">
+      <span className="text-gradient-yellow text-[0.875rem] leading-[100%] font-semibold">{number}</span>
+      <span className="text-[0.75rem] leading-[100%] font-normal text-[#A7A7A7]">{children}</span>
+    </span>
   )
 }
