@@ -128,7 +128,7 @@ function getMultiplierFilterPriceRange(value: number, inputValue: number) {
 }
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, addToInventory, removeFromInventory, addGameHistory, addItemHistory } = useStore()
+  const { state, setState, addToInventory, addGameHistory, addItemHistory } = useStore()
   const isMobile = useIsMobile()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
@@ -508,9 +508,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       balance: balanceInput,
       total: inputValue,
     }
+    const consumedUids = new Set(selectedItems.map((item) => item!.uid))
     const shouldUseFastLoseAnimation = state.fastMode || isMobile
 
     syncManager.suppress(8000) // Prevent fetching state from server during animation
+    setState((p) => ({
+      ...p,
+      inventory: p.inventory.filter((item) => !consumedUids.has(item.uid)),
+    }))
     setSpinning(true)
 
     // determine outcome — admin predict overrides chance
@@ -559,7 +564,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setLeftPanelMode("inventory")
       setMobileTab("inventory")
     } else {
-      removeFromInventory(selectedUids)
       setState((p) => ({ ...p, upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim && shouldUseFastLoseAnimation) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
@@ -47,6 +47,7 @@ export function CatalogPanel({
   const [searchOpen, setSearchOpen] = useState(false)
   const [showNewItems, setShowNewItems] = useState(false)
   const [randomNewSkins, setRandomNewSkins] = useState<Skin[]>([])
+  const previousPercentageTargetRef = useRef<number | null>(percentageTarget ?? null)
 
   // On mount, select 50 random skins to act as "New Skins"
   useEffect(() => {
@@ -90,10 +91,27 @@ export function CatalogPanel({
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
   }, [filtered, onPercentageMatchChange, percentageTarget])
 
-  // Reset to first page on filter changes
+  // Reset to first page on filter changes. Clearing percentageTarget happens when
+  // a skin is selected manually, so that transition must keep the current page.
   useEffect(() => {
     setCurrentPage(1)
-  }, [query, min, max, sortOrder, showNewItems, percentageTarget, inputValue])
+  }, [query, min, max, sortOrder, showNewItems])
+
+  useEffect(() => {
+    const previousPercentageTarget = previousPercentageTargetRef.current
+    previousPercentageTargetRef.current = percentageTarget ?? null
+
+    if (percentageTarget == null) return
+    if (previousPercentageTarget === percentageTarget) return
+
+    setCurrentPage(1)
+  }, [percentageTarget])
+
+  useEffect(() => {
+    if (percentageTarget != null) {
+      setCurrentPage(1)
+    }
+  }, [inputValue, percentageTarget])
 
   const allItems = useMemo(() => {
     const skinItems = filtered.map(skin => ({ type: 'skin' as const, skin }))

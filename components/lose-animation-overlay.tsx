@@ -48,18 +48,49 @@ const ROULETTE_FINAL_BRAKE_POWER = 1.7
 const ROULETTE_REVEAL_MS = 1650
 const STICKER_CHANCE = 0.95
 
+let caseFramePreloadPromise: Promise<void> | null = null
+const caseFrameImages: HTMLImageElement[] = []
 
+function getCaseFrameSrc(index: number) {
+  return `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`
+}
 
 export function preloadLoseAnimationFrames() {
   if (typeof window === "undefined") return Promise.resolve()
+  if (caseFramePreloadPromise) return caseFramePreloadPromise
 
-  Array.from({ length: CASE_FRAME_COUNT }, (_, index) => {
-    const image = new Image()
-    image.src = `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`
-    return image
-  })
+  caseFramePreloadPromise = Promise.all(
+    Array.from({ length: CASE_FRAME_COUNT - CASE_FIRST_VISIBLE_FRAME }, (_, offset) => {
+      const index = CASE_FIRST_VISIBLE_FRAME + offset
+      const image = new Image()
+      caseFrameImages[index] = image
+      image.decoding = "async"
+      image.src = getCaseFrameSrc(index)
 
-  return Promise.resolve()
+      return new Promise<void>((resolve) => {
+        const finish = () => {
+          image.onload = null
+          image.onerror = null
+          resolve()
+        }
+
+        image.onload = () => {
+          if (typeof image.decode === "function") {
+            image.decode().catch(() => {}).finally(finish)
+          } else {
+            finish()
+          }
+        }
+        image.onerror = finish
+
+        if (image.complete) {
+          image.onload?.(new Event("load"))
+        }
+      })
+    }),
+  ).then(() => undefined)
+
+  return caseFramePreloadPromise
 }
 
 function isStickerSkin(skin: Skin) {
@@ -424,7 +455,7 @@ function CaseOpeningAnimation({ active }: { active: boolean }) {
     return () => window.cancelAnimationFrame(raf)
   }, [active])
 
-  const frameSrc = `/assets/lose-anim/roulette/r${String(frame).padStart(4, "0")}.png`
+  const frameSrc = getCaseFrameSrc(frame)
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
@@ -713,44 +744,50 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
       return
     }
 
-    // Capture current skins once at animation start — do NOT include state.skins
-    // in the dependency array to avoid re-triggering when inventory changes.
-    capturedSkinsRef.current = state.skins
-    const next = pickTape(capturedSkinsRef.current)
-    if (!next.winner) {
-      onCompleteRef.current?.()
-      return
+    let cancelled = false
+
+    const startAnimation = async () => {
+      await preloadLoseAnimationFrames()
+      if (cancelled) return
+
+      // Capture current skins once at animation start — do NOT include state.skins
+      // in the dependency array to avoid re-triggering when inventory changes.
+      capturedSkinsRef.current = state.skins
+      const next = pickTape(capturedSkinsRef.current)
+      if (!next.winner) {
+        onCompleteRef.current?.()
+        return
+      }
+
+      clearTimers()
+      closingRef.current = false
+      awardedRef.current = false
+      awardedUidRef.current = null
+      setSold(false)
+      setTapeItems(next.items)
+      setWinningSkin(next.winner)
+      setPhase("case")
+      setVisible(true)
+
+      schedule(() => {
+        setPhase("skipping")
+      }, CASE_FRAME_DURATION_MS)
+
+      schedule(() => {
+        setPhase("roulette")
+      }, CASE_FRAME_DURATION_MS + 400)
     }
 
-    clearTimers()
-    closingRef.current = false
-    awardedRef.current = false
-    awardedUidRef.current = null
-    setSold(false)
-    setTapeItems(next.items)
-    setWinningSkin(next.winner)
-    setPhase("case")
-    setVisible(true)
+    void startAnimation()
 
-    schedule(() => {
-      setPhase("skipping")
-    }, CASE_FRAME_DURATION_MS)
-
-    schedule(() => {
-      setPhase("roulette")
-    }, CASE_FRAME_DURATION_MS + 400)
-
-    return () => clearTimers()
+    return () => {
+      cancelled = true
+      clearTimers()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearTimers, playing, resetVisualState, schedule, stopRunning])
 
   const showResult = phase === "result" && winningSkin
-
-  const panelTitle = useMemo(() => {
-    if (phase === "result") return null
-    if (phase === "roulette" || phase === "skipping") return "Бонус за отвагу"
-    return "Компенсационный кейс"
-  }, [phase])
 
   if (!visible && !playing) return null
 
@@ -774,13 +811,6 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
         >
           <X size={12} />
         </button>
-
-        {!showResult && !isRoulettePanel ? (
-          <div className="relative z-10 flex flex-col items-center space-y-1 text-center transition-all duration-500 ease-out lg:space-y-2 font-exo2">
-            <h2 className="text-xl font-bold text-white lg:text-2xl">{panelTitle}</h2>
-            <span className="text-xs text-gray-400 lg:text-sm">Бонус выдается случайным образом</span>
-          </div>
-        ) : null}
 
         <div className="relative z-10 flex min-h-0 w-full flex-1 items-center justify-center">
           {showResult ? (
