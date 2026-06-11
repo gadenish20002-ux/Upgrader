@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { X } from "lucide-react"
-import { RARITY_COLORS } from "@/lib/default-data"
+import { COMPENSATION_BONUS_ITEMS, RARITY_COLORS } from "@/lib/default-data"
 import { formatPrice, useStore } from "@/lib/store"
 import type { Skin } from "@/lib/types"
 import { formatSkinName, formatWeaponName } from "@/lib/utils"
@@ -14,7 +14,7 @@ interface LoseAnimationOverlayProps {
   onStopSound?: () => void
 }
 
-type Phase = "skipping" | "roulette" | "result"
+type Phase = "case" | "skipping" | "roulette" | "result"
 
 interface TapeEntry {
   key: string
@@ -30,6 +30,8 @@ const VISIBLE_TAPE_LENGTH = 11
 const ROULETTE_CENTER_SLOT = Math.floor(VISIBLE_TAPE_LENGTH / 2)
 const ROULETTE_START_INDEX = 10
 export const LOSE_CASE_SOUND = "/sounds/openCompensationCase.mp3"
+const CASE_FRAME_COUNT = 81
+const CASE_FRAME_DURATION_MS = 2984
 const ROULETTE_SPIN_MS = 9500
 const ROULETTE_SLOWDOWN_START_MS = 5000
 const ROULETTE_SLOWDOWN_START = ROULETTE_SLOWDOWN_START_MS / ROULETTE_SPIN_MS
@@ -47,6 +49,14 @@ const STICKER_CHANCE = 0.95
 
 
 export function preloadLoseAnimationFrames() {
+  if (typeof window === "undefined") return Promise.resolve()
+
+  Array.from({ length: CASE_FRAME_COUNT }, (_, index) => {
+    const image = new Image()
+    image.src = `/assets/lose-anim/roulette/r${String(index).padStart(4, "0")}.png`
+    return image
+  })
+
   return Promise.resolve()
 }
 
@@ -383,6 +393,45 @@ function HorizontalDropRoulette({
   )
 }
 
+function CaseOpeningAnimation({ active }: { active: boolean }) {
+  const [frame, setFrame] = useState(0)
+
+  useEffect(() => {
+    if (!active) {
+      setFrame(0)
+      return
+    }
+
+    let raf = 0
+    const startedAt = window.performance.now()
+    const animate = (now: number) => {
+      const elapsed = Math.min(CASE_FRAME_DURATION_MS, now - startedAt)
+      const progress = elapsed / CASE_FRAME_DURATION_MS
+      setFrame(Math.min(CASE_FRAME_COUNT - 1, Math.floor(progress * (CASE_FRAME_COUNT - 1))))
+
+      if (elapsed < CASE_FRAME_DURATION_MS) {
+        raf = window.requestAnimationFrame(animate)
+      }
+    }
+
+    raf = window.requestAnimationFrame(animate)
+
+    return () => window.cancelAnimationFrame(raf)
+  }, [active])
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+      <div className="bonus-stage-glow" />
+      <img
+        className="bonus-reference-case"
+        src={`/assets/lose-anim/roulette/r${String(frame).padStart(4, "0")}.png`}
+        alt=""
+        draggable={false}
+      />
+    </div>
+  )
+}
+
 function CaseScene({
   phase,
   tapeItems,
@@ -394,11 +443,13 @@ function CaseScene({
   winningSkin: Skin | null
   onRouletteFinished: () => void
 }) {
+  const showCase = phase === "case"
   const showRoulette = phase === "roulette" || phase === "skipping"
   const rouletteActive = phase === "roulette"
 
   return (
     <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center min-h-0">
+      {showCase ? <CaseOpeningAnimation active={showCase} /> : null}
       {showRoulette ? (
         <div className="w-full transition-all duration-700 ease-out relative">
           <HorizontalDropRoulette
@@ -552,7 +603,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
   }, [])
 
   const resetVisualState = useCallback(() => {
-    setPhase("skipping")
+    setPhase("case")
     setTapeItems([])
     setWinningSkin(null)
     setSold(false)
@@ -631,7 +682,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
   }, [awardDrop, finish, setState, sold, winningSkin])
 
   const handleClose = useCallback(() => {
-    if (phase === "roulette" || phase === "skipping") {
+    if (phase === "case" || phase === "roulette" || phase === "skipping") {
       if (winningSkin) {
         handleSell()
       } else {
@@ -667,12 +718,16 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
     setSold(false)
     setTapeItems(next.items)
     setWinningSkin(next.winner)
-    setPhase("skipping")
+    setPhase("case")
     setVisible(true)
 
     schedule(() => {
+      setPhase("skipping")
+    }, CASE_FRAME_DURATION_MS)
+
+    schedule(() => {
       setPhase("roulette")
-    }, 400)
+    }, CASE_FRAME_DURATION_MS + 400)
 
     return () => clearTimers()
     // eslint-disable-next-line react-hooks/exhaustive-deps

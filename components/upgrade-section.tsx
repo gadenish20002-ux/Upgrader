@@ -276,7 +276,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     audio.preload = "auto"
     audio.muted = false
     audio.volume = 1
-    audio.currentTime = 2.984
+    audio.currentTime = 0
     loseCaseAudioRef.current = audio
     const releaseAudio = () => {
       if (loseCaseAudioRef.current === audio) {

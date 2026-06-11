@@ -499,8 +499,8 @@ input[type="number"] {
   position: absolute;
   left: 50%;
   top: 56%;
-  width: 32rem;
-  max-width: 64vw;
+  width: 42rem;
+  max-width: 92vw;
   height: 14rem;
   max-height: 29vw;
   transform: translate(-50%, -50%);
@@ -518,8 +518,8 @@ input[type="number"] {
   left: 50%;
   top: 50%;
   z-index: 5;
-  width: 41rem;
-  max-width: 101vw;
+  width: clamp(48rem, 98vw, 62rem);
+  max-width: 132vw;
   transform: translate(-50%, -50%) translateY(0) scale(1);
   transform-origin: center 72%;
   opacity: 1;
@@ -778,4 +778,3 @@ body.lose-animating .lose-anim-upgrade-control {
     opacity: 1;
   }
 }
-
