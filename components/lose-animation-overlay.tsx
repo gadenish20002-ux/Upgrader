@@ -428,7 +428,6 @@ function CaseOpeningAnimation({ active }: { active: boolean }) {
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-      <div className="bonus-stage-glow" />
       <img
         className="bonus-reference-case"
         src={frameLoadFailed ? fallbackCaseFrame.src : frameSrc}

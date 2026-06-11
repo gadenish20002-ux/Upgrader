@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Lottie from "lottie-react"
 import arrowAnimIdle from "@/public/assets/lottie/arrow-anim-hover.json"
 
@@ -215,6 +215,36 @@ let uidCounter = SKIN_ITEMS.length
 
 type SkinEntry = (typeof SKIN_ITEMS)[0] & { uid: number }
 
+type LiveFeedMotion = {
+  fallMs: number
+  leadMs: number
+  shiftMs: number
+  totalMs: number
+}
+
+const randomBetween = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min
+
+function createLiveFeedMotion(): LiveFeedMotion {
+  const roll = Math.random()
+
+  if (roll < 0.7) {
+    const fallMs = randomBetween(80, 110)
+    const leadMs = randomBetween(30, 45)
+    return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+  }
+
+  if (roll < 0.9) {
+    const fallMs = randomBetween(120, 160)
+    const leadMs = randomBetween(45, 60)
+    return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+  }
+
+  const fallMs = randomBetween(170, 220)
+  const leadMs = randomBetween(60, 80)
+  return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+}
+
 export function LiveFeed({
   selectedId,
   onSelect,
@@ -227,7 +257,77 @@ export function LiveFeed({
   const [items, setItems] = useState<SkinEntry[]>(() =>
     SKIN_ITEMS.slice(0, 12).map((s, i) => ({ ...s, uid: i }))
   )
+  const [fallingUid, setFallingUid] = useState<number | null>(null)
+  const [visibleFallingUid, setVisibleFallingUid] = useState<number | null>(null)
+  const [fallDurationMs, setFallDurationMs] = useState(170)
   const counterRef = useRef(12)
+  const itemRefs = useRef(new Map<number, HTMLDivElement>())
+  const previousRectsRef = useRef<Map<number, DOMRect> | null>(null)
+  const motionRef = useRef<LiveFeedMotion>({
+    fallMs: 100,
+    leadMs: 35,
+    shiftMs: 135,
+    totalMs: 155,
+  })
+  const fallStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const assignItemRef = (uid: number, node: HTMLDivElement | null) => {
+    if (node) {
+      itemRefs.current.set(uid, node)
+    } else {
+      itemRefs.current.delete(uid)
+    }
+  }
+
+  const captureCurrentRects = () => {
+    previousRectsRef.current = new Map(
+      Array.from(itemRefs.current.entries()).map(([uid, node]) => [uid, node.getBoundingClientRect()])
+    )
+  }
+
+  useLayoutEffect(() => {
+    const previousRects = previousRectsRef.current
+    if (!previousRects) return
+
+    previousRectsRef.current = null
+    const movedNodes: HTMLDivElement[] = []
+
+    itemRefs.current.forEach((node, uid) => {
+      const previousRect = previousRects.get(uid)
+      if (!previousRect) return
+
+      const nextRect = node.getBoundingClientRect()
+      const deltaX = previousRect.left - nextRect.left
+      const deltaY = previousRect.top - nextRect.top
+
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return
+
+      node.style.transition = "none"
+      node.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`
+      node.style.willChange = "transform"
+      movedNodes.push(node)
+    })
+
+    if (!movedNodes.length) return
+
+    const frameId = requestAnimationFrame(() => {
+      movedNodes.forEach((node) => {
+        const cleanup = () => {
+          node.style.transition = ""
+          node.style.transform = ""
+          node.style.willChange = ""
+          node.removeEventListener("transitionend", cleanup)
+        }
+
+        node.addEventListener("transitionend", cleanup)
+        node.style.transition = `transform ${motionRef.current.shiftMs}ms linear`
+        node.style.transform = "translate3d(0, 0, 0)"
+      })
+    })
+
+    return () => cancelAnimationFrame(frameId)
+  }, [items])
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -239,12 +339,32 @@ export function LiveFeed({
       uidCounter++
 
       const newEntry: SkinEntry = { ...base, uid: uidCounter }
+      const motion = createLiveFeedMotion()
+      motionRef.current = motion
+
+      captureCurrentRects()
+      if (fallStartTimerRef.current) clearTimeout(fallStartTimerRef.current)
+      if (fallTimerRef.current) clearTimeout(fallTimerRef.current)
+      setFallingUid(newEntry.uid)
+      setVisibleFallingUid(null)
+      setFallDurationMs(motion.fallMs)
 
       setItems((prev) => {
         const arr = [newEntry, ...prev]
         if (arr.length > 20) return arr.slice(0, 20)
         return arr
       })
+
+      fallStartTimerRef.current = setTimeout(() => {
+        setVisibleFallingUid(newEntry.uid)
+        fallStartTimerRef.current = null
+      }, motion.leadMs)
+
+      fallTimerRef.current = setTimeout(() => {
+        setFallingUid((currentUid) => currentUid === newEntry.uid ? null : currentUid)
+        setVisibleFallingUid((currentUid) => currentUid === newEntry.uid ? null : currentUid)
+        fallTimerRef.current = null
+      }, motion.totalMs)
 
       const rand = Math.random()
       let nextInterval = 0
@@ -256,30 +376,50 @@ export function LiveFeed({
         nextInterval = Math.floor(Math.random() * 3000) + 2500
       }
 
-      timeoutId = setTimeout(addNextItem, nextInterval)
+      timeoutId = setTimeout(addNextItem, Math.max(motion.totalMs + 60, nextInterval))
     }
 
     timeoutId = setTimeout(addNextItem, 1000)
-    return () => clearTimeout(timeoutId)
+    return () => {
+      clearTimeout(timeoutId)
+      if (fallStartTimerRef.current) clearTimeout(fallStartTimerRef.current)
+      if (fallTimerRef.current) clearTimeout(fallTimerRef.current)
+    }
   }, [])
+
+  const fallingItem = visibleFallingUid === null
+    ? null
+    : items.find((item) => item.uid === visibleFallingUid) ?? null
 
   /* ── Mobile: horizontal scroll ── */
   if (isMobile) {
     return (
-      <div className="w-full bg-[#17181c] p-3 overflow-hidden">
+      <div className="w-full bg-[#17181c] p-3 overflow-visible">
         <div className="flex items-center mb-2 text-[#f0c000] text-[10px] font-medium tracking-wider">
           Лучший дроп
         </div>
-        <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
-          <BestDropCard horizontal />
-          {items.map((skin, idx) => (
+        <div className="relative overflow-hidden">
+          {fallingItem && (
             <div
-              key={`m-${skin.uid}`}
-              className={idx === 0 ? "animate-live-feed-enter-mobile" : "live-feed-mobile-entry"}
+              key={`mobile-fall-${fallingItem.uid}`}
+              className="animate-live-feed-fall-overlay-mobile pointer-events-none absolute top-0 left-[8.25rem] z-30"
+              style={{ animationDuration: `${fallDurationMs}ms` }}
             >
-              <SkinCard skin={skin} isNew={idx === 0} horizontal />
+              <SkinCard skin={fallingItem} horizontal interactive={false} />
             </div>
-          ))}
+          )}
+          <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
+            <BestDropCard horizontal />
+            {items.map((skin) => (
+              <div
+                key={`m-${skin.uid}`}
+                ref={(node) => assignItemRef(skin.uid, node)}
+                className={`live-feed-mobile-entry${fallingUid === skin.uid ? " live-feed-entry-pending" : ""}`}
+              >
+                <SkinCard skin={skin} horizontal />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -295,13 +435,29 @@ export function LiveFeed({
         <BestDropCard />
       </div>
 
-      {/* Scrollable live feed — новые элементы появляются сверху */}
-      <div className="invisible-scroll flex-1 flex bg-block flex-col space-y-0.5 overflow-y-auto rounded-r-lg !py-1.5 pr-1.5">
-        {items.map((skin, idx) => (
-          <div key={skin.uid} className={idx === 0 ? "animate-live-feed-enter-top" : undefined}>
-            <SkinCard skin={skin} isNew={idx === 0} horizontal={false} />
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-r-lg">
+        {fallingItem && (
+          <div
+            key={`desktop-fall-${fallingItem.uid}`}
+            className="animate-live-feed-fall-overlay pointer-events-none absolute top-1.5 left-0 z-30"
+            style={{ animationDuration: `${fallDurationMs}ms` }}
+          >
+            <SkinCard skin={fallingItem} horizontal={false} interactive={false} />
           </div>
-        ))}
+        )}
+
+        {/* Scrollable live feed — новые элементы появляются сверху */}
+        <div className="invisible-scroll absolute inset-0 flex bg-block flex-col space-y-0.5 overflow-y-auto rounded-r-lg !py-1.5 pr-1.5">
+          {items.map((skin) => (
+            <div
+              key={skin.uid}
+              ref={(node) => assignItemRef(skin.uid, node)}
+              className={`live-feed-entry${fallingUid === skin.uid ? " live-feed-entry-pending" : ""}`}
+            >
+              <SkinCard skin={skin} horizontal={false} />
+            </div>
+          ))}
+        </div>
       </div>
     </aside>
   )
@@ -310,20 +466,20 @@ export function LiveFeed({
 /* ── Single skin card ── */
 function SkinCard({
   skin,
-  isNew,
   horizontal = false,
+  interactive = true,
 }: {
   skin: SkinEntry
-  isNew: boolean
   horizontal?: boolean
+  interactive?: boolean
 }) {
   return (
     <button
-      className={`group live-feed-card bg-card relative flex overflow-hidden
+      className={`${interactive ? "group " : ""}live-feed-card bg-card relative flex overflow-hidden
         ${horizontal
           ? "shrink-0 h-[3.75rem] w-[7.5rem] snap-start mr-1 rounded-lg p-1 items-end"
           : "h-[5rem] w-[11.75rem] items-end rounded-r-lg p-2"
-        } ${isNew ? "live-feed-card-new" : ""}`}
+        }`}
       style={horizontal ? { border: `1px solid ${skin.rarity}` } : undefined}
     >
       {horizontal ? (

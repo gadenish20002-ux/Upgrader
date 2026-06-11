@@ -9,6 +9,11 @@ import { UpgraderSettingsModal } from "./upgrader-settings-modal"
 import { CartModal } from "./cart-modal"
 import { COMPENSATION_BONUS_ITEMS, RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import {
+  clampPercentageTarget,
+  getUpgradeChance,
+  isEligibleUpgradeChance,
+} from "@/lib/upgrade-filter"
 import { ChevronsUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,9 +25,7 @@ import { LoseAnimationOverlay, LOSE_CASE_SOUND, preloadLoseAnimationFrames } fro
 import { useIsMobile } from "@/components/ui/use-mobile"
 import type { InventoryItem, Skin } from "@/lib/types"
 
-const WIN_FACTOR = 0.92 // house edge
 const DEFAULT_INVENTORY_RECOMMENDATION_PERCENT = 80
-const PERCENT_FILTER_SPREAD = 4
 const MULTIPLIER_FILTER_SPREAD = 0.1
 const FAST_COMPENSATION_DURATION_MS = 2450
 
@@ -113,27 +116,14 @@ function FastLossCompensationCard({
   )
 }
 
-function getFastFilterPriceRange(type: "multiplier" | "percentage", value: number, inputValue: number) {
+function getMultiplierFilterPriceRange(value: number, inputValue: number) {
   if (inputValue <= 0) return null
 
-  if (type === "multiplier") {
-    const targetPrice = inputValue * value
-    return {
-      targetPrice,
-      min: targetPrice * (1 - MULTIPLIER_FILTER_SPREAD),
-      max: targetPrice * (1 + MULTIPLIER_FILTER_SPREAD),
-    }
-  }
-
-  const targetChance = Math.min(92, Math.max(1, value))
-  const minChance = Math.max(1, targetChance - PERCENT_FILTER_SPREAD)
-  const maxChance = Math.min(92, targetChance + PERCENT_FILTER_SPREAD)
-  const targetPrice = (inputValue * WIN_FACTOR) / (targetChance / 100)
-
+  const targetPrice = inputValue * value
   return {
     targetPrice,
-    min: (inputValue * WIN_FACTOR) / (maxChance / 100),
-    max: (inputValue * WIN_FACTOR) / (minChance / 100),
+    min: targetPrice * (1 - MULTIPLIER_FILTER_SPREAD),
+    max: targetPrice * (1 + MULTIPLIER_FILTER_SPREAD),
   }
 }
 
@@ -160,6 +150,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [balanceInput, setBalanceInput] = useState(0)
   const [catalogPriceMin, setCatalogPriceMin] = useState<number | null>(null)
   const [catalogPriceMax, setCatalogPriceMax] = useState<number | null>(null)
+  const [activePercentageTarget, setActivePercentageTarget] = useState<number | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [wonItemUid, setWonItemUid] = useState<string | null>(null)
 
@@ -190,8 +181,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const targetSkin = useMemo(() => {
     if (!targetSkinRaw) return undefined
     if (inputValue > 0) {
-      const rawChance = (inputValue / targetSkinRaw.price) * WIN_FACTOR
-      if (rawChance < 0.01 || rawChance > 0.8) {
+      const rawChance = getUpgradeChance(inputValue, targetSkinRaw.price)
+      if (!isEligibleUpgradeChance(rawChance)) {
         return undefined
       }
     }
@@ -200,7 +191,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   const chance = useMemo(() => {
     if (!targetSkin || inputValue <= 0) return 0
-    const raw = (inputValue / targetSkin.price) * WIN_FACTOR
+    const raw = getUpgradeChance(inputValue, targetSkin.price)
     return Math.min(0.92, Math.max(0.01, raw))
   }, [targetSkin, inputValue])
 
@@ -215,19 +206,34 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   }, [])
 
   function applyFastFilter(type: "multiplier" | "percentage", value: number, currentInputValue: number) {
-    const range = getFastFilterPriceRange(type, value, currentInputValue)
+    if (type === "percentage") {
+      const targetPercentage = clampPercentageTarget(value)
+
+      setActivePercentageTarget(targetPercentage)
+      setCatalogPriceMin(null)
+      setCatalogPriceMax(null)
+      setTargetId(null)
+      setWonItemUid(null)
+
+      if (window.innerWidth < 1024) {
+        setMobileTab("catalog")
+      }
+      return
+    }
+
+    const range = getMultiplierFilterPriceRange(value, currentInputValue)
     if (!range) {
       setCatalogPriceMin(null)
       setCatalogPriceMax(null)
       return
     }
 
+    setActivePercentageTarget(null)
     setCatalogPriceMin(range.min)
     setCatalogPriceMax(range.max)
 
     const validSkins = state.upgradeSkins.filter(skin => {
-      const chance = (currentInputValue / skin.price) * WIN_FACTOR;
-      return chance >= 0.01 && chance <= 0.80;
+      return isEligibleUpgradeChance(getUpgradeChance(currentInputValue, skin.price))
     });
 
     const filteredSkins = validSkins.filter(skin => skin.price >= range.min && skin.price <= range.max)
@@ -313,6 +319,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setSelectedShopIds([])
     setBalanceInput(0)
     setWonItemUid(null)
+    setActivePercentageTarget(null)
     setCatalogPriceMin(null)
     setCatalogPriceMax(null)
   }
@@ -1040,11 +1047,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onSelect={(id) => {
                 setTargetId(effectiveTarget === id ? "" : id)
                 setWonItemUid(null)
+                setActivePercentageTarget(null)
                 setCatalogPriceMin(null)
                 setCatalogPriceMax(null)
               }} 
               priceMin={catalogPriceMin}
               priceMax={catalogPriceMax}
+              percentageTarget={activePercentageTarget}
+              onPercentageMatchChange={setTargetId}
               isSpinning={isUpgradeAnimating}
               inputValue={inputValue}
             />

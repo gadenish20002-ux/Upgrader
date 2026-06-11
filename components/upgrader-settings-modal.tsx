@@ -29,10 +29,14 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
   }
 
   const handleSave = () => {
+    const normalizedPercentages = fastPercentages.map((percentage) =>
+      Math.min(80, Math.max(1, Number.isFinite(percentage) ? percentage : 1))
+    ) as [number, number, number]
+
     setState((p) => ({
       ...p,
       fastMultipliers,
-      fastPercentages,
+      fastPercentages: normalizedPercentages,
       soundMode,
       fastMode
     }))
@@ -120,7 +124,7 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
                       {[0, 1, 2].map(i => (
                         <div key={`perc-${i}`} className="relative flex h-8 w-10 items-center justify-center">
                           <input 
-                            type="number" size={2} required min="0.1" max="80" 
+                            type="number" size={2} required min="1" max="80" step="0.1"
                             value={fastPercentages[i]}
                             onChange={(e) => handlePercentageChange(i, e.target.value)}
                             className="bg-[#131315] flex h-[2.4375rem] w-[3.25rem] flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md border pr-6 text-right text-white transition-colors focus:outline-none border-white/10 hover:border-[#FBD50650] focus:border-[#FBD506] appearance-none" 

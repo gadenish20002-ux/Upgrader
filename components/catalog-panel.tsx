@@ -5,6 +5,11 @@ import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import type { Skin } from "@/lib/types"
+import {
+  getUpgradeChance,
+  isEligibleUpgradeChance,
+  rankSkinsByPercentageTarget,
+} from "@/lib/upgrade-filter"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
@@ -19,6 +24,8 @@ export function CatalogPanel({
   setMobileTab,
   priceMin,
   priceMax,
+  percentageTarget,
+  onPercentageMatchChange,
   isSpinning,
   inputValue,
 }: {
@@ -27,6 +34,8 @@ export function CatalogPanel({
   setMobileTab?: (tab: "inventory" | "catalog") => void
   priceMin?: number | null
   priceMax?: number | null
+  percentageTarget?: number | null
+  onPercentageMatchChange?: (id: string | null) => void
   isSpinning?: boolean
   inputValue?: number
 }) {
@@ -49,13 +58,15 @@ export function CatalogPanel({
 
   // Sync external price range into the filter inputs
   useEffect(() => {
-    if (priceMin != null) setMin(formatFilterPrice(priceMin))
-    if (priceMax != null) setMax(formatFilterPrice(priceMax))
-  }, [priceMin, priceMax])
+    setMin(priceMin == null ? "" : formatFilterPrice(priceMin))
+    setMax(priceMax == null ? "" : formatFilterPrice(priceMax))
+  }, [priceMin, priceMax, percentageTarget])
 
   const filtered = useMemo(() => {
     // If we are looking at new items, show randomNewSkins. Otherwise show the rest.
-    const baseSkins = showNewItems 
+    const baseSkins = percentageTarget != null
+      ? state.upgradeSkins
+      : showNewItems
       ? randomNewSkins 
       : state.upgradeSkins.filter(s => !randomNewSkins.some(rn => rn.id === s.id));
 
@@ -64,23 +75,32 @@ export function CatalogPanel({
       .filter((s) => { const minVal = parseFloat(min.replace(',', '.')); return min ? s.price >= minVal : true })
       .filter((s) => { const maxVal = parseFloat(max.replace(',', '.')); return max ? s.price <= maxVal : true })
 
+    if (percentageTarget != null) {
+      return rankSkinsByPercentageTarget(base, inputValue ?? 0, percentageTarget)
+    }
+
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
-  }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder])
+  }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue])
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 20
 
+  useEffect(() => {
+    if (percentageTarget == null) return
+    onPercentageMatchChange?.(filtered[0]?.id ?? null)
+  }, [filtered, onPercentageMatchChange, percentageTarget])
+
   // Reset to first page on filter changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [query, min, max, sortOrder, showNewItems])
+  }, [query, min, max, sortOrder, showNewItems, percentageTarget, inputValue])
 
   const allItems = useMemo(() => {
-    return [
-      { type: 'button' as const },
-      ...filtered.map(skin => ({ type: 'skin' as const, skin }))
-    ];
-  }, [filtered, showNewItems])
+    const skinItems = filtered.map(skin => ({ type: 'skin' as const, skin }))
+    return percentageTarget == null
+      ? [{ type: 'button' as const }, ...skinItems]
+      : skinItems
+  }, [filtered, percentageTarget])
 
   const totalPages = Math.max(1, Math.ceil(allItems.length / ITEMS_PER_PAGE))
   const validCurrentPage = Math.min(currentPage, totalPages)
@@ -250,8 +270,8 @@ export function CatalogPanel({
               
               let isLockedByChance = false
               if (inputValue && inputValue > 0) {
-                const chance = (inputValue / skin.price) * 0.92
-                if (chance < 0.01 || chance > 0.8) {
+                const chance = getUpgradeChance(inputValue, skin.price)
+                if (!isEligibleUpgradeChance(chance)) {
                   isLockedByChance = true
                 }
               }
