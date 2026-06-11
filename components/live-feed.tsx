@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 import Lottie from "lottie-react"
 import arrowAnimIdle from "@/public/assets/lottie/arrow-anim-hover.json"
 
@@ -216,9 +216,7 @@ let uidCounter = SKIN_ITEMS.length
 type SkinEntry = (typeof SKIN_ITEMS)[0] & { uid: number }
 
 type LiveFeedMotion = {
-  fallMs: number
-  leadMs: number
-  shiftMs: number
+  enterMs: number
   totalMs: number
 }
 
@@ -229,20 +227,17 @@ function createLiveFeedMotion(): LiveFeedMotion {
   const roll = Math.random()
 
   if (roll < 0.7) {
-    const fallMs = randomBetween(80, 110)
-    const leadMs = randomBetween(30, 45)
-    return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+    const enterMs = randomBetween(110, 150)
+    return { enterMs, totalMs: enterMs + 20 }
   }
 
   if (roll < 0.9) {
-    const fallMs = randomBetween(120, 160)
-    const leadMs = randomBetween(45, 60)
-    return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+    const enterMs = randomBetween(155, 205)
+    return { enterMs, totalMs: enterMs + 20 }
   }
 
-  const fallMs = randomBetween(170, 220)
-  const leadMs = randomBetween(60, 80)
-  return { fallMs, leadMs, shiftMs: leadMs + fallMs, totalMs: leadMs + fallMs + 20 }
+  const enterMs = randomBetween(220, 280)
+  return { enterMs, totalMs: enterMs + 20 }
 }
 
 export function LiveFeed({
@@ -257,77 +252,10 @@ export function LiveFeed({
   const [items, setItems] = useState<SkinEntry[]>(() =>
     SKIN_ITEMS.slice(0, 12).map((s, i) => ({ ...s, uid: i }))
   )
-  const [fallingUid, setFallingUid] = useState<number | null>(null)
-  const [visibleFallingUid, setVisibleFallingUid] = useState<number | null>(null)
-  const [fallDurationMs, setFallDurationMs] = useState(170)
+  const [animatingUid, setAnimatingUid] = useState<number | null>(null)
+  const [enterDurationMs, setEnterDurationMs] = useState(200)
   const counterRef = useRef(12)
-  const itemRefs = useRef(new Map<number, HTMLDivElement>())
-  const previousRectsRef = useRef<Map<number, DOMRect> | null>(null)
-  const motionRef = useRef<LiveFeedMotion>({
-    fallMs: 100,
-    leadMs: 35,
-    shiftMs: 135,
-    totalMs: 155,
-  })
-  const fallStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const fallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const assignItemRef = (uid: number, node: HTMLDivElement | null) => {
-    if (node) {
-      itemRefs.current.set(uid, node)
-    } else {
-      itemRefs.current.delete(uid)
-    }
-  }
-
-  const captureCurrentRects = () => {
-    previousRectsRef.current = new Map(
-      Array.from(itemRefs.current.entries()).map(([uid, node]) => [uid, node.getBoundingClientRect()])
-    )
-  }
-
-  useLayoutEffect(() => {
-    const previousRects = previousRectsRef.current
-    if (!previousRects) return
-
-    previousRectsRef.current = null
-    const movedNodes: HTMLDivElement[] = []
-
-    itemRefs.current.forEach((node, uid) => {
-      const previousRect = previousRects.get(uid)
-      if (!previousRect) return
-
-      const nextRect = node.getBoundingClientRect()
-      const deltaX = previousRect.left - nextRect.left
-      const deltaY = previousRect.top - nextRect.top
-
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return
-
-      node.style.transition = "none"
-      node.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`
-      node.style.willChange = "transform"
-      movedNodes.push(node)
-    })
-
-    if (!movedNodes.length) return
-
-    const frameId = requestAnimationFrame(() => {
-      movedNodes.forEach((node) => {
-        const cleanup = () => {
-          node.style.transition = ""
-          node.style.transform = ""
-          node.style.willChange = ""
-          node.removeEventListener("transitionend", cleanup)
-        }
-
-        node.addEventListener("transitionend", cleanup)
-        node.style.transition = `transform ${motionRef.current.shiftMs}ms linear`
-        node.style.transform = "translate3d(0, 0, 0)"
-      })
-    })
-
-    return () => cancelAnimationFrame(frameId)
-  }, [items])
+  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -340,14 +268,10 @@ export function LiveFeed({
 
       const newEntry: SkinEntry = { ...base, uid: uidCounter }
       const motion = createLiveFeedMotion()
-      motionRef.current = motion
 
-      captureCurrentRects()
-      if (fallStartTimerRef.current) clearTimeout(fallStartTimerRef.current)
-      if (fallTimerRef.current) clearTimeout(fallTimerRef.current)
-      setFallingUid(newEntry.uid)
-      setVisibleFallingUid(null)
-      setFallDurationMs(motion.fallMs)
+      if (enterTimerRef.current) clearTimeout(enterTimerRef.current)
+      setAnimatingUid(newEntry.uid)
+      setEnterDurationMs(motion.enterMs)
 
       setItems((prev) => {
         const arr = [newEntry, ...prev]
@@ -355,15 +279,9 @@ export function LiveFeed({
         return arr
       })
 
-      fallStartTimerRef.current = setTimeout(() => {
-        setVisibleFallingUid(newEntry.uid)
-        fallStartTimerRef.current = null
-      }, motion.leadMs)
-
-      fallTimerRef.current = setTimeout(() => {
-        setFallingUid((currentUid) => currentUid === newEntry.uid ? null : currentUid)
-        setVisibleFallingUid((currentUid) => currentUid === newEntry.uid ? null : currentUid)
-        fallTimerRef.current = null
+      enterTimerRef.current = setTimeout(() => {
+        setAnimatingUid((currentUid) => currentUid === newEntry.uid ? null : currentUid)
+        enterTimerRef.current = null
       }, motion.totalMs)
 
       const rand = Math.random()
@@ -382,44 +300,32 @@ export function LiveFeed({
     timeoutId = setTimeout(addNextItem, 1000)
     return () => {
       clearTimeout(timeoutId)
-      if (fallStartTimerRef.current) clearTimeout(fallStartTimerRef.current)
-      if (fallTimerRef.current) clearTimeout(fallTimerRef.current)
+      if (enterTimerRef.current) clearTimeout(enterTimerRef.current)
     }
   }, [])
 
-  const fallingItem = visibleFallingUid === null
-    ? null
-    : items.find((item) => item.uid === visibleFallingUid) ?? null
+  const liveFeedAnimationStyle = {
+    "--live-feed-enter-ms": `${enterDurationMs}ms`,
+  } as CSSProperties
 
   /* ── Mobile: horizontal scroll ── */
   if (isMobile) {
     return (
-      <div className="w-full bg-[#17181c] p-3 overflow-visible">
+      <div className="w-full bg-[#17181c] p-3 overflow-hidden">
         <div className="flex items-center mb-2 text-[#f0c000] text-[10px] font-medium tracking-wider">
           Лучший дроп
         </div>
-        <div className="relative overflow-hidden">
-          {fallingItem && (
+        <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
+          <BestDropCard horizontal />
+          {items.map((skin) => (
             <div
-              key={`mobile-fall-${fallingItem.uid}`}
-              className="animate-live-feed-fall-overlay-mobile pointer-events-none absolute top-0 left-[8.25rem] z-30"
-              style={{ animationDuration: `${fallDurationMs}ms` }}
+              key={`m-${skin.uid}`}
+              className={animatingUid === skin.uid ? "animate-slide-in-left live-feed-mobile-entry" : "live-feed-mobile-entry"}
+              style={animatingUid === skin.uid ? liveFeedAnimationStyle : undefined}
             >
-              <SkinCard skin={fallingItem} horizontal interactive={false} />
+              <SkinCard skin={skin} horizontal />
             </div>
-          )}
-          <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
-            <BestDropCard horizontal />
-            {items.map((skin) => (
-              <div
-                key={`m-${skin.uid}`}
-                ref={(node) => assignItemRef(skin.uid, node)}
-                className={`live-feed-mobile-entry${fallingUid === skin.uid ? " live-feed-entry-pending" : ""}`}
-              >
-                <SkinCard skin={skin} horizontal />
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     )
@@ -435,29 +341,17 @@ export function LiveFeed({
         <BestDropCard />
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-r-lg">
-        {fallingItem && (
+      {/* Scrollable live feed — новые элементы появляются сверху */}
+      <div className="invisible-scroll flex-1 flex bg-block flex-col space-y-0.5 overflow-y-auto rounded-r-lg !py-1.5 pr-1.5">
+        {items.map((skin) => (
           <div
-            key={`desktop-fall-${fallingItem.uid}`}
-            className="animate-live-feed-fall-overlay pointer-events-none absolute top-1.5 left-0 z-30"
-            style={{ animationDuration: `${fallDurationMs}ms` }}
+            key={skin.uid}
+            className={animatingUid === skin.uid ? "animate-slide-in-top live-feed-entry" : "live-feed-entry"}
+            style={animatingUid === skin.uid ? liveFeedAnimationStyle : undefined}
           >
-            <SkinCard skin={fallingItem} horizontal={false} interactive={false} />
+            <SkinCard skin={skin} horizontal={false} />
           </div>
-        )}
-
-        {/* Scrollable live feed — новые элементы появляются сверху */}
-        <div className="invisible-scroll absolute inset-0 flex bg-block flex-col space-y-0.5 overflow-y-auto rounded-r-lg !py-1.5 pr-1.5">
-          {items.map((skin) => (
-            <div
-              key={skin.uid}
-              ref={(node) => assignItemRef(skin.uid, node)}
-              className={`live-feed-entry${fallingUid === skin.uid ? " live-feed-entry-pending" : ""}`}
-            >
-              <SkinCard skin={skin} horizontal={false} />
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
     </aside>
   )

@@ -192,7 +192,7 @@
 }
 
 .animate-slide-in-top {
-  animation: slide-in-top 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slide-in-top var(--live-feed-enter-ms, 0.35s) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes slide-in-left {
@@ -207,25 +207,7 @@
 }
 
 .animate-slide-in-left {
-  animation: slide-in-left 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes live-feed-fall {
-  from {
-    transform: translateY(-64px);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes live-feed-fall-mobile {
-  from {
-    transform: translateY(-48px);
-  }
-  to {
-    transform: translateY(0);
-  }
+  animation: slide-in-left var(--live-feed-enter-ms, 0.35s) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .live-feed-entry,
@@ -233,31 +215,9 @@
   flex: 0 0 auto;
 }
 
-.live-feed-entry-pending {
-  opacity: 0;
-}
-
-.animate-live-feed-fall-overlay {
-  width: 11.75rem;
-  animation: live-feed-fall 0.17s linear both;
-  will-change: transform;
-}
-
-.animate-live-feed-fall-overlay-mobile {
-  width: 7.75rem;
-  animation: live-feed-fall-mobile 0.17s linear both;
-  will-change: transform;
-}
-
-.animate-live-feed-fall-overlay *,
-.animate-live-feed-fall-overlay-mobile * {
-  animation: none !important;
-  transition: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .animate-live-feed-fall-overlay,
-  .animate-live-feed-fall-overlay-mobile {
+  .animate-slide-in-top,
+  .animate-slide-in-left {
     animation-duration: 1ms;
     animation-iteration-count: 1;
   }
