@@ -7,6 +7,7 @@ import { formatPrice, useStore } from "@/lib/store"
 import type { Skin } from "@/lib/types"
 import { formatSkinName, formatWeaponName } from "@/lib/utils"
 import { toast } from "sonner"
+import fallbackCaseFrame from "@/public/assets/lose-anim/roulette/r0040.png"
 
 interface LoseAnimationOverlayProps {
   playing: boolean
@@ -395,10 +396,12 @@ function HorizontalDropRoulette({
 
 function CaseOpeningAnimation({ active }: { active: boolean }) {
   const [frame, setFrame] = useState(0)
+  const [frameLoadFailed, setFrameLoadFailed] = useState(false)
 
   useEffect(() => {
     if (!active) {
       setFrame(0)
+      setFrameLoadFailed(false)
       return
     }
 
@@ -419,14 +422,21 @@ function CaseOpeningAnimation({ active }: { active: boolean }) {
     return () => window.cancelAnimationFrame(raf)
   }, [active])
 
+  const frameSrc = `/assets/lose-anim/roulette/r${String(frame).padStart(4, "0")}.png`
+
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
       <div className="bonus-stage-glow" />
       <img
         className="bonus-reference-case"
-        src={`/assets/lose-anim/roulette/r${String(frame).padStart(4, "0")}.png`}
+        src={frameLoadFailed ? fallbackCaseFrame.src : frameSrc}
         alt=""
         draggable={false}
+        onError={() => {
+          if (frameLoadFailed) return
+          console.warn(`[lose-animation] Failed to load case frame: ${frameSrc}`)
+          setFrameLoadFailed(true)
+        }}
       />
     </div>
   )
