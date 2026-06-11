@@ -32,6 +32,7 @@ const ROULETTE_CENTER_SLOT = Math.floor(VISIBLE_TAPE_LENGTH / 2)
 const ROULETTE_START_INDEX = 10
 export const LOSE_CASE_SOUND = "/sounds/openCompensationCase.mp3"
 const CASE_FRAME_COUNT = 81
+const CASE_FIRST_VISIBLE_FRAME = 5
 const CASE_FRAME_DURATION_MS = 2984
 const ROULETTE_SPIN_MS = 9500
 const ROULETTE_SLOWDOWN_START_MS = 5000
@@ -395,12 +396,12 @@ function HorizontalDropRoulette({
 }
 
 function CaseOpeningAnimation({ active }: { active: boolean }) {
-  const [frame, setFrame] = useState(0)
+  const [frame, setFrame] = useState(CASE_FIRST_VISIBLE_FRAME)
   const [frameLoadFailed, setFrameLoadFailed] = useState(false)
 
   useEffect(() => {
     if (!active) {
-      setFrame(0)
+      setFrame(CASE_FIRST_VISIBLE_FRAME)
       setFrameLoadFailed(false)
       return
     }
@@ -410,7 +411,8 @@ function CaseOpeningAnimation({ active }: { active: boolean }) {
     const animate = (now: number) => {
       const elapsed = Math.min(CASE_FRAME_DURATION_MS, now - startedAt)
       const progress = elapsed / CASE_FRAME_DURATION_MS
-      setFrame(Math.min(CASE_FRAME_COUNT - 1, Math.floor(progress * (CASE_FRAME_COUNT - 1))))
+      const frameRange = CASE_FRAME_COUNT - 1 - CASE_FIRST_VISIBLE_FRAME
+      setFrame(Math.min(CASE_FRAME_COUNT - 1, CASE_FIRST_VISIBLE_FRAME + Math.floor(progress * frameRange)))
 
       if (elapsed < CASE_FRAME_DURATION_MS) {
         raf = window.requestAnimationFrame(animate)
