@@ -7,7 +7,7 @@ import { InventoryPanel } from "./inventory-panel"
 import { CatalogPanel } from "./catalog-panel"
 import { SettingsModal } from "./settings-modal"
 import { CartModal } from "./cart-modal"
-import { RARITY_COLORS } from "@/lib/default-data"
+import { COMPENSATION_BONUS_ITEMS, RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { ChevronsUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -17,14 +17,101 @@ import Image from "next/image"
 import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
 import { LoseAnimationOverlay, LOSE_CASE_SOUND, preloadLoseAnimationFrames } from "./lose-animation-overlay"
-import type { InventoryItem } from "@/lib/types"
+import { useIsMobile } from "@/components/ui/use-mobile"
+import type { InventoryItem, Skin } from "@/lib/types"
 
 const WIN_FACTOR = 0.92 // house edge
 const DEFAULT_INVENTORY_RECOMMENDATION_PERCENT = 80
 const PERCENT_FILTER_SPREAD = 4
 const MULTIPLIER_FILTER_SPREAD = 0.1
+const FAST_COMPENSATION_DURATION_MS = 2450
 
 // Type removed since it's no longer stored in state
+
+function pickFastCompensationSkin() {
+  return COMPENSATION_BONUS_ITEMS[Math.floor(Math.random() * COMPENSATION_BONUS_ITEMS.length)]
+}
+
+function FastLossCompensationCard({
+  skin,
+  onComplete,
+}: {
+  skin: Skin
+  onComplete: (awardedSkinId?: string) => void
+}) {
+  const onCompleteRef = useRef(onComplete)
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => onCompleteRef.current(skin.id), FAST_COMPENSATION_DURATION_MS)
+    return () => window.clearTimeout(timeout)
+  }, [skin.id])
+
+  const rarityColor = RARITY_COLORS[skin.rarity] ?? "#8847ff"
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-md bg-transparent lg:rounded-xl">
+      <div className="absolute inset-0 z-0 rounded-md bg-[#17181C] lg:rounded-xl">
+        <div className="absolute top-0 left-0 right-0 z-10 flex min-h-[22px] flex-col items-center justify-center space-y-[0.125rem] px-2 py-3 text-center lg:min-h-0 lg:space-y-[0.5rem] lg:px-5 lg:pt-5 lg:pb-3">
+          <span className="font-exo2 text-[9px] font-bold leading-tight text-white lg:text-[13px] lg:leading-snug">
+            Выберите скины или скины и баланс для использования
+          </span>
+          <span className="text-[0.4375rem] text-[#A7A7A7] lg:text-xxs">Вы можете выбрать несколько скинов</span>
+        </div>
+        <div className="absolute inset-0 z-0">
+          <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
+          <img src="/assets/unknown-item.svg" alt="" className="absolute top-[52%] left-1/2 z-[1] h-[85%] w-[85%] -translate-x-1/2 -translate-y-1/2 object-contain" />
+        </div>
+      </div>
+
+      <div className="fast-compensation-track absolute inset-0 z-10">
+        <div className="fast-compensation-panel relative h-full w-full overflow-hidden rounded-md border border-white/5 shadow-[0_10px_24px_rgba(0,0,0,0.22)] lg:rounded-xl">
+          <div
+            className="absolute inset-0 z-0"
+            style={{
+              background: `linear-gradient(90deg, ${rarityColor}33 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C`,
+            }}
+          />
+          <div className="relative z-[2] flex h-full w-full flex-col items-center justify-between px-4 py-2 pb-8 lg:px-8 lg:py-6 lg:pb-10">
+            <div className="flex w-full flex-col items-center text-center">
+              <span className="fast-compensation-slide-1 text-[#4a4852] text-xxxxs font-semibold lg:text-xs">
+                {formatWeaponName(skin.weapon)}
+              </span>
+              <span className="fast-compensation-slide-2 max-w-full truncate text-xs font-bold text-[#f7f7f8] lg:text-2xl">
+                {formatSkinName(skin.name)}
+              </span>
+            </div>
+
+            <div className="fast-compensation-item relative w-full flex-1 min-h-0">
+              <img
+                className="absolute inset-0 z-[2] m-auto h-full max-h-full w-[82%] object-contain drop-shadow-2xl"
+                src={skin.image || "/placeholder.svg"}
+                alt={skin.name}
+              />
+              <div
+                className="absolute left-1/2 top-1/2 z-[1] h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 opacity-80"
+                style={{
+                  background: `radial-gradient(circle, ${rarityColor}59 0%, ${rarityColor}24 32%, transparent 68%)`,
+                }}
+              />
+            </div>
+
+            <div className="fast-compensation-slide-4 z-[2] flex shrink-0 items-center justify-center space-x-1">
+              <span className="text-gradient-yellow text-xxs font-bold lg:text-xl">{formatPrice(skin.price)}</span>
+              <img alt="" className="h-2.5 w-2.5 lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
+            </div>
+          </div>
+          <div className="fast-compensation-slide-3 absolute bottom-0 left-0 z-[3] flex w-full items-center justify-center bg-white/10 px-3 py-1.5 text-[0.5rem] font-semibold text-white lg:text-sm">
+            Компенсация
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function getFastFilterPriceRange(type: "multiplier" | "percentage", value: number, inputValue: number) {
   if (inputValue <= 0) return null
@@ -51,7 +138,8 @@ function getFastFilterPriceRange(type: "multiplier" | "percentage", value: numbe
 }
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, removeFromInventory, addGameHistory, addItemHistory } = useStore()
+  const { state, setState, addToInventory, removeFromInventory, addGameHistory, addItemHistory } = useStore()
+  const isMobile = useIsMobile()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
   const [selectedUids, setSelectedUids] = useState<string[]>([])
@@ -63,6 +151,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
   const [loseAnimating, setLoseAnimating] = useState(false)
+  const [fastLoseAnimating, setFastLoseAnimating] = useState(false)
+  const [fastCompensationSkin, setFastCompensationSkin] = useState<Skin | null>(null)
   const loseCaseAudioRef = useRef<HTMLAudioElement | null>(null)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
@@ -117,6 +207,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const multiplier = targetSkin && inputValue > 0 ? targetSkin.price / inputValue : 0
   const isBothSelected = !!targetSkin && selectedItems.length > 0
   const isReadyForTarget = !targetSkin && inputValue > 0
+  const isUpgradeAnimating = spinning || loseAnimating || fastLoseAnimating || winAnimating
 
   useEffect(() => {
     preloadWinAnimationFrames()
@@ -348,6 +439,38 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   // Keep the left card locked during animations so it doesn't disappear when state updates
   const lockedLeftCard = useRef<{ items: typeof selectedItems; balance: number; total: number } | null>(null)
 
+  function startFastLossCompensation() {
+    const bonusSkin = pickFastCompensationSkin()
+    addToInventory(bonusSkin.id)
+    addItemHistory([
+      {
+        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        skinId: bonusSkin.id,
+        action: "compensation",
+        date: Date.now(),
+      },
+    ])
+    setFastCompensationSkin(bonusSkin)
+    setFastLoseAnimating(true)
+  }
+
+  function handleFastLossComplete(awardedSkinId?: string) {
+    setFastLoseAnimating(false)
+    setFastCompensationSkin(null)
+
+    if (pendingHistoryEntryRef.current) {
+      if (awardedSkinId) {
+        pendingHistoryEntryRef.current.status = "compensation"
+        pendingHistoryEntryRef.current.resultSkinId = awardedSkinId
+      }
+      addGameHistory(pendingHistoryEntryRef.current)
+      pendingHistoryEntryRef.current = null
+    }
+
+    lockedLeftCard.current = null
+    clearSelection()
+  }
+
   async function handleSpin() {
     if (!state.loggedIn) {
       toast.error("Войдите через Steam, чтобы прокачивать")
@@ -378,6 +501,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       balance: balanceInput,
       total: inputValue,
     }
+    const shouldUseFastLoseAnimation = state.fastMode || isMobile
 
     syncManager.suppress(8000) // Prevent fetching state from server during animation
     setSpinning(true)
@@ -431,7 +555,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       removeFromInventory(selectedUids)
       setState((p) => ({ ...p, upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
-      if (shouldShowLoseAnim) {
+      if (shouldShowLoseAnim && shouldUseFastLoseAnimation) {
+        startFastLossCompensation()
+      } else if (shouldShowLoseAnim) {
         playLoseCaseSound()
         setLoseAnimating(true)
       } else {
@@ -520,7 +646,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             background: `linear-gradient(90deg, ${RARITY_COLORS[getSkin(state.skins, displaySkinId)?.rarity ?? ""] ?? "transparent"}26 0.05%, rgba(28, 28, 32, 0) 99.95%) #17181C` 
           } : undefined}
         >
-          {displayIsEmpty ? (
+          {fastLoseAnimating && fastCompensationSkin ? (
+            <FastLossCompensationCard skin={fastCompensationSkin} onComplete={handleFastLossComplete} />
+          ) : displayIsEmpty ? (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
                 <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug font-exo2">Выберите скины или скины и баланс для использования</span>
@@ -740,7 +868,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
                 onClick={() => {
-                  if (spinning || loseAnimating || winAnimating) return
+                  if (isUpgradeAnimating) return
                   setTargetId(null)
                 }}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
@@ -834,12 +962,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           <button
             type="button"
             onClick={wonItemUid ? handleAddWonItem : handleSpin}
-            disabled={spinning || (!wonItemUid && !state.loggedIn)}
+            disabled={isUpgradeAnimating || (!wonItemUid && !state.loggedIn)}
             className="inline-flex items-center justify-center transition-all duration-200 focus:outline-none !leading-[1.25] select-none bg-[#fcd60c] font-semibold font-exo2 text-[#1C1C20] !w-full rounded-md lg:rounded-xl px-6 py-3 shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] min-h-[41px] space-x-2 lg:space-x-3 lg:min-h-[56px] w-full flex-1 lg:max-w-[306px] text-[0.8125rem] lg:text-xl !h-[1rem] !max-h-[2rem] lg:min-w-[19.125rem] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <img alt="" draggable="false" className="pointer-events-none h-3 w-3 flex-shrink-0 select-none lg:h-4 lg:w-4" src="/assets/icons/logo-black.svg" />
             <span className="pointer-events-none select-none">
-              <span>{wonItemUid ? "Добавить в апгрейд" : spinning ? "Прокачиваем..." : "Прокачать"}</span>
+              <span>{wonItemUid ? "Добавить в апгрейд" : isUpgradeAnimating ? "Прокачиваем..." : "Прокачать"}</span>
             </span>
           </button>
         </div>
@@ -903,7 +1031,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onRemoveShopItem={removeShopItem}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickBuy={handleBuyCartItems}
-              isSpinning={spinning || loseAnimating || winAnimating}
+              isSpinning={isUpgradeAnimating}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>
@@ -917,7 +1045,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               }} 
               priceMin={catalogPriceMin}
               priceMax={catalogPriceMax}
-              isSpinning={spinning || loseAnimating || winAnimating}
+              isSpinning={isUpgradeAnimating}
               inputValue={inputValue}
             />
           </div>

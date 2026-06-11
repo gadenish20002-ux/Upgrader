@@ -757,6 +757,99 @@ input[type="number"] {
 }
 
 /* ============================================================
+   Fast loss compensation animation
+   ============================================================ */
+.fast-compensation-track {
+  transform: translateX(105%) translateY(0);
+  animation: fast-compensation-track-motion 2300ms linear forwards;
+  will-change: transform;
+}
+
+.fast-compensation-panel {
+  transform: scale(1);
+  transform-origin: center center;
+  animation: fast-compensation-panel-scale 2300ms linear forwards;
+  will-change: transform;
+}
+
+.fast-compensation-slide-1 {
+  transform: translateX(100%);
+  animation: fast-compensation-slide-in 200ms linear forwards 100ms;
+  will-change: transform;
+}
+
+.fast-compensation-slide-2 {
+  transform: translateX(100%);
+  animation: fast-compensation-slide-in 200ms linear forwards 150ms;
+  will-change: transform;
+}
+
+.fast-compensation-slide-3 {
+  transform: translateX(100%);
+  animation: fast-compensation-slide-in 200ms linear forwards 200ms;
+  will-change: transform;
+}
+
+.fast-compensation-slide-4 {
+  transform: translateX(100%);
+  animation: fast-compensation-slide-in 200ms linear forwards 250ms;
+  will-change: transform;
+}
+
+.fast-compensation-item {
+  opacity: 0;
+  transform: translateX(52%) translateY(0);
+  animation: fast-compensation-item-pop 2300ms linear forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes fast-compensation-track-motion {
+  0% {
+    transform: translateX(105%) translateY(0);
+  }
+  16%,
+  74% {
+    transform: translateX(0) translateY(0);
+  }
+  94%,
+  100% {
+    transform: translateX(0) translateY(115%);
+  }
+}
+
+@keyframes fast-compensation-panel-scale {
+  0%,
+  42% {
+    transform: scale(1);
+  }
+  56%,
+  100% {
+    transform: scale(0.86);
+  }
+}
+
+@keyframes fast-compensation-slide-in {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fast-compensation-item-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(52%) translateY(0);
+  }
+  18%,
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* ============================================================
    Lose animation: blur live feed sidebar, keep everything else sharp
    ============================================================ */
 .lose-anim-blur-target,
