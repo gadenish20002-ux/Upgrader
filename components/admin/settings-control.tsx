@@ -173,10 +173,18 @@ export function SettingsControl() {
           </div>
         </div>
 
-        <Button onClick={handleSave} className="w-full sm:w-auto">
-          <Save className="mr-2 h-4 w-4" />
-          Сохранить настройки
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={handleSave} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4" />
+            Сохранить настройки
+          </Button>
+          <Button onClick={() => {
+            setState(p => ({ ...p, upgrades: 0, userUpgrades: 0 }))
+            toast.success("Количество апгрейдов сброшено до 0")
+          }} variant="destructive" className="w-full sm:w-auto">
+            Сбросить апгрейды (0)
+          </Button>
+        </div>
       </div>
     </section>
   )

@@ -925,7 +925,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       </div>
 
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
       <CartModal 
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}

@@ -460,7 +460,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
         lottieRef.current.play();
         setTimeout(() => {
           if (!isHoveredRef.current && lottieRef.current) {
-            lottieRef.current.pause();
+            lottieRef.current.stop();
           }
         }, 2000); // 5 loops at 60fps (2.0s)
       }

@@ -2,10 +2,12 @@
 
 import { useRef, useState, useMemo } from "react"
 import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
+import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LogOut, Settings, Camera } from "lucide-react"
 import { GamesHistory } from "./games-history"
+import { SettingsModal } from "./settings-modal"
 
 const hexToRgb = (hex: string) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -15,8 +17,11 @@ const hexToRgb = (hex: string) => {
 export function UserProfile({ onClose }: { onClose?: () => void }) {
   const { state, logout, setState, removeFromInventory, setBalance, addItemHistory } = useStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [soundMode, setSoundMode] = useState<'on' | 'off'>(state.soundMode)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
   const [activeTab, setActiveTab] = useState<'inventory' | 'history' | 'games'>('inventory')
-
+  const [itemHistoryVisible, setItemHistoryVisible] = useState(8)
   const itemHistory = state.itemHistory || []
   const withdrawnEntries = itemHistory.filter(i => i.action === "withdrawn")
   const withdrawnCount = withdrawnEntries.length
@@ -98,10 +103,10 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
           <div className="shadow-block flex h-full w-full flex-col justify-between rounded-xl p-4 lg:min-h-[14.0625rem] lg:bg-[#00000066]">
             <div className="flex items-center justify-start space-x-2.5">
               <div 
-                className="group relative flex items-center justify-center rounded-[0.75rem] border-[1px] border-[#FFFFFF1A] p-1 cursor-pointer overflow-hidden"
+                className="group relative flex shrink-0 items-center justify-center rounded-[0.75rem] border-[1px] border-[#FFFFFF1A] p-1 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <img className="relative h-[3.75rem] w-[3.75rem] min-w-[3.75rem] rounded-[0.5rem] bg-[linear-gradient(175deg,#808080_-15.4%,#363636_114.09%)] lg:h-[5rem] lg:w-[5rem] lg:min-w-[5rem] object-cover transition-opacity group-hover:opacity-50" src={state.avatar || "https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp"} alt={state.username} />
+                <img className="relative h-[3.75rem] w-[3.75rem] min-w-[3.75rem] rounded-[0.5rem] object-cover transition-opacity group-hover:opacity-50" src={state.avatar || "https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp"} alt={state.username} />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="w-6 h-6 text-white" />
                 </div>
@@ -118,10 +123,33 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 </div>
               </div>
             </div>
-            <button className="flex h-11 w-full mt-4 items-center justify-center gap-1.5 rounded-[0.5rem] bg-[#FFFFFF0D] p-3 transition-all duration-200 hover:opacity-80">
-              <Settings className="h-4 w-4 text-white" />
-              <span className="text-white text-[0.875rem] leading-normal font-medium">Настройки аккаунта</span>
-            </button>
+            
+            <div className="flex flex-col mt-auto pt-4 gap-2">
+              <div className="flex w-full items-center justify-between rounded-[0.5rem] bg-[#FFFFFF0D] p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[0.5rem] bg-[#FFFFFF1A]">
+                    <img src="/assets/bell.svg" alt="bell" className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col items-start justify-center gap-1">
+                    <span className="text-[0.875rem] leading-none text-white font-medium">Пуш-уведомления</span>
+                    <span className="text-[0.75rem] leading-none text-[#a7a7a7] mt-0.5">Уникальные предложения</span>
+                  </div>
+                </div>
+                <div 
+                  tabIndex={0} 
+                  role="switch" 
+                  onClick={() => setPushEnabled(!pushEnabled)}
+                  className={`relative h-[1.25rem] w-[2.25rem] cursor-pointer rounded-[6.25rem] p-[0.125rem] transition-colors duration-200 focus:outline-none ${pushEnabled ? 'bg-[#53db42]' : 'bg-[#FFFFFF1A]'}`}
+                  aria-checked={pushEnabled}
+                >
+                  <div className={`absolute h-[1rem] w-[1rem] rounded-2xl shadow-[0px_4px_6px_0px_rgba(0,0,0,0.5)] transition-transform duration-200 bg-[#FFFFFF] ${pushEnabled ? 'translate-x-[1rem] opacity-100' : 'translate-x-0 opacity-50'}`}></div>
+                </div>
+              </div>
+              <button onClick={() => setIsSettingsModalOpen(true)} className="flex h-11 w-full items-center justify-center gap-1.5 rounded-[0.5rem] bg-[#FFFFFF0D] p-3 transition-all duration-200 hover:opacity-80">
+                <Settings className="h-4 w-4 text-white" />
+                <span className="text-white text-[0.875rem] leading-normal font-medium">Настройки аккаунта</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -180,6 +208,11 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 <img alt="" className="absolute top-1/2 -right-[2.25rem] z-[2] max-h-full w-full max-w-[18.75rem] -translate-y-1/2 object-contain" src={bestDrop.skin.image || "/unknown-item.svg"} />
                 
                 <div className="absolute top-0 -left-5 z-[0] h-[200%] w-[200%]" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.4) 0%, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.2) 30%, rgba(${hexToRgb(RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9")}, 0.1) 45%, transparent 70%)` }}></div>
+                
+                <AnimatedArrowBg 
+                  color={RARITY_COLORS[bestDrop.skin.rarity] || "#B0C3D9"} 
+                  className="absolute top-[51%] right-[4rem] z-[1] h-[90%] w-auto -translate-y-1/2 opacity-60"
+                />
                 
                 <div className="z-[3] flex items-end justify-between mt-auto mb-1">
                   <div className="flex flex-col items-start justify-start space-y-0.25">
@@ -306,13 +339,13 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
             </div>
           ) : (
             <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
-              {state.inventory.map((item) => {
+              {state.inventory.map((item, index) => {
                 const skin = getSkin(state.skins, item.skinId)
                 if (!skin) return null
                 const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
                 
                 return (
-                  <div key={item.uid} className="animate-bounce-in relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center">
+                  <div key={item.uid} className="animate-custom-bounce relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center" style={{ animationFillMode: 'both' }}>
                     <div className="absolute top-0 left-0 z-[3] flex h-full w-full flex-col items-center justify-center space-y-3 rounded-md bg-black/50 backdrop-blur-xs transition-opacity duration-300 pointer-events-none opacity-0">
                     </div>
                     <div className="pointer-events-none z-[2] h-full w-full">
@@ -326,7 +359,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                               </div>
                               <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                             </div>
-                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                             <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
                               <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
                               <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
@@ -368,59 +401,73 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
               <span className="text-[#a7a7a7]">У вас пока нет истории предметов</span>
             </div>
           ) : (
-            <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
-              {itemHistory.map((entry, i) => {
-                const skin = getSkin(state.skins, entry.skinId)
-                if (!skin) return null
-                const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
-                
-                const actionLabels: Record<string, string> = {
-                  sold: "Продано",
-                  withdrawn: "Выведено",
-                  compensation: "Компенсация",
-                  upgrade: "Апгрейд",
-                  bought: "Куплено"
-                }
-                const label = actionLabels[entry.action] || "Неизвестно"
-                
-                return (
-                  <div key={i} className="animate-bounce-in relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center">
-                    <div className="pointer-events-none z-[2] h-full w-full">
-                      <div className="w-full h-full">
-                        <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
-                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
-                            <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
-                              <div className="flex items-center justify-center space-x-0.5">
-                                <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
-                                <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+            <div className="flex flex-col w-full">
+              <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
+                {itemHistory.slice(0, itemHistoryVisible).map((entry, i) => {
+                  const skin = getSkin(state.skins, entry.skinId)
+                  if (!skin) return null
+                  const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
+                  
+                  const actionLabels: Record<string, string> = {
+                    sold: "Продано",
+                    withdrawn: "Выведено",
+                    compensation: "Компенсация",
+                    upgrade: "Апгрейд",
+                    bought: "Куплено"
+                  }
+                  const label = actionLabels[entry.action] || "Неизвестно"
+                  
+                  return (
+                    <div key={i} className="animate-custom-bounce relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center" style={{ animationFillMode: 'both' }}>
+                      <div className="pointer-events-none z-[2] h-full w-full">
+                        <div className="w-full h-full">
+                          <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
+                            <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                              <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
+                                <div className="flex items-center justify-center space-x-0.5">
+                                  <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
+                                  <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                                </div>
+                                <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                               </div>
-                              <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                              <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                              <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                                <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
+                                <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
+                              </div>
+                              <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                             </div>
-                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
-                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
-                              <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
-                              <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
-                            </div>
-                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
                           </div>
                         </div>
                       </div>
+                      
+                      <div className="relative -mt-1 flex w-full items-center justify-between">
+                        <div className="bg-[#1C1D1F] absolute top-[-1.25rem] left-1/2 z-[3] flex -translate-x-1/2 items-center justify-center rounded-md px-1.5 py-0.5">
+                          <span className="text-[10px] leading-normal font-medium text-white whitespace-nowrap"> {label} </span>
+                        </div>
+                        <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent opacity-50 lg:h-10">
+                          <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="/assets/grey-sale.svg" />
+                        </div>
+                        <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent opacity-50 lg:h-10">
+                          <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="/assets/grey-steam.svg" />
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="relative -mt-1 flex w-full items-center justify-between">
-                      <div className="bg-[#1C1D1F] absolute top-[-1.25rem] left-1/2 z-[3] flex -translate-x-1/2 items-center justify-center rounded-md px-1.5 py-0.5">
-                        <span className="text-[10px] leading-normal font-medium text-white whitespace-nowrap"> {label} </span>
-                      </div>
-                      <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent opacity-50 lg:h-10">
-                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="/assets/grey-sale.svg" />
-                      </div>
-                      <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent opacity-50 lg:h-10">
-                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="" src="/assets/grey-steam.svg" />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+              
+              {itemHistoryVisible < itemHistory.length && (
+                <div className="flex w-full items-center justify-center pt-2 pb-6 lg:pb-0">
+                  <button 
+                    onClick={() => setItemHistoryVisible(v => v + 8)}
+                    type="button" 
+                    className="flex items-center justify-center font-light transition-all duration-200 select-none bg-transparent text-[#FBD506] text-[0.8125rem] rounded-[0.375rem] px-5 py-2 min-h-[2.25rem] lg:min-h-[2.5rem] lg:px-6 lg:text-[0.9375rem] border-[1px] border-[#FBD506] cursor-pointer hover:bg-[#FBD506]/10"
+                  >
+                    Загрузить еще
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           {activeTab === 'games' && <GamesHistory />}
@@ -434,6 +481,8 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
         className="hidden"
         onChange={handleFileChange}
       />
+      
+      {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} />}
     </div>
   )
 }
