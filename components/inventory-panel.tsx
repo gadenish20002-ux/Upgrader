@@ -56,10 +56,10 @@ export function InventoryPanel({
       const skin = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
       if (!skin) return false
       
-      if (minPrice && skin.price < parseFloat(minPrice)) return false
-      if (maxPrice && skin.price > parseFloat(maxPrice)) return false
-      
-      if (searchQuery) {
+      if (mode === "shop" && minPrice && skin.price < parseFloat(minPrice)) return false
+      if (mode === "shop" && maxPrice && skin.price > parseFloat(maxPrice)) return false
+
+      if (mode === "shop" && searchQuery) {
         const nameMatch = skin.name?.toLowerCase().includes(searchQuery.toLowerCase())
         const weaponMatch = skin.weapon?.toLowerCase().includes(searchQuery.toLowerCase())
         if (!nameMatch && !weaponMatch) return false

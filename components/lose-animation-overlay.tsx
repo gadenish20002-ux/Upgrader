@@ -759,15 +759,14 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
 
   return (
     <div
-      className="pointer-events-none absolute -top-4 lg:-top-6 bottom-[4.5rem] lg:bottom-[5.5rem] -left-2 -right-2 z-[100] flex items-center justify-center transition-opacity duration-300 ease-out"
+      className="pointer-events-none absolute top-12 bottom-[4.5rem] -left-2 -right-2 z-[100] flex items-center justify-center transition-opacity duration-300 ease-out lg:top-14 lg:bottom-[5.5rem]"
       style={{ opacity: visible ? 1 : 0 }}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#111216] shadow-[0_18px_60px_rgba(0,0,0,0.48)] lg:rounded-2xl"
+        className="pointer-events-auto relative z-[110] flex w-full h-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#1c1d21] shadow-[0_18px_60px_rgba(0,0,0,0.48)] lg:rounded-2xl"
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(251,213,6,0.1),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(211,44,230,0.1),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent_25%)]" />
         <button
           type="button"
           aria-label="Закрыть"

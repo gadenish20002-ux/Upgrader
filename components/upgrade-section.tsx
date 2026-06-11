@@ -5,7 +5,7 @@ import { useStore, getSkin, formatPrice, syncManager } from "@/lib/store"
 import { UpgradeWheel, type UpgradeWheelHandle } from "./upgrade-wheel"
 import { InventoryPanel } from "./inventory-panel"
 import { CatalogPanel } from "./catalog-panel"
-import { SettingsModal } from "./settings-modal"
+import { UpgraderSettingsModal } from "./upgrader-settings-modal"
 import { CartModal } from "./cart-modal"
 import { COMPENSATION_BONUS_ITEMS, RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
@@ -604,7 +604,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       {/* Relative wrapper so LoseAnimationOverlay can be absolute within it */}
       <div className="relative w-full flex flex-col items-center">
       {/* Top: Logo */}
-      <div className="flex items-center justify-center gap-[0.3125rem] lg:gap-2 mb-2 lg:mb-2 mt-2 lg:mt-0">
+      <div className="relative z-[120] flex items-center justify-center gap-[0.3125rem] lg:gap-2 mb-2 lg:mb-2 mt-2 lg:mt-0">
         <SiteLogo className="h-[1.5125rem] w-[1.5125rem] lg:h-8 lg:w-8" />
         <span className="font-tektur text-xl font-extrabold text-white lg:text-2xl"> UPGRADER </span>
       </div>
@@ -1053,7 +1053,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       </div>
 
 
-      {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
+      {isSettingsOpen && <UpgraderSettingsModal onClose={() => setIsSettingsOpen(false)} />}
       <CartModal 
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}

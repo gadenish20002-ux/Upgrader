@@ -272,8 +272,13 @@ export function LiveFeed({
         </div>
         <div className="flex w-full overflow-x-auto pb-1 custom-scroll snap-x items-center">
           <BestDropCard horizontal />
-          {items.map((skin) => (
-            <SkinCard key={`m-${skin.uid}`} skin={skin} isNew={false} horizontal />
+          {items.map((skin, idx) => (
+            <div
+              key={`m-${skin.uid}`}
+              className={idx === 0 ? "animate-live-feed-enter-mobile" : "live-feed-mobile-entry"}
+            >
+              <SkinCard skin={skin} isNew={idx === 0} horizontal />
+            </div>
           ))}
         </div>
       </div>
@@ -293,7 +298,7 @@ export function LiveFeed({
       {/* Scrollable live feed — новые элементы появляются сверху */}
       <div className="invisible-scroll flex-1 flex bg-block flex-col space-y-0.5 overflow-y-auto rounded-r-lg !py-1.5 pr-1.5">
         {items.map((skin, idx) => (
-          <div key={skin.uid} className="animate-slide-in-top">
+          <div key={skin.uid} className={idx === 0 ? "animate-live-feed-enter-top" : undefined}>
             <SkinCard skin={skin} isNew={idx === 0} horizontal={false} />
           </div>
         ))}
@@ -314,11 +319,11 @@ function SkinCard({
 }) {
   return (
     <button
-      className={`group bg-card relative flex overflow-hidden
+      className={`group live-feed-card bg-card relative flex overflow-hidden
         ${horizontal
           ? "shrink-0 h-[3.75rem] w-[7.5rem] snap-start mr-1 rounded-lg p-1 items-end"
           : "h-[5rem] w-[11.75rem] items-end rounded-r-lg p-2"
-        } ${isNew && horizontal ? "animate-slide-in-left" : ""}`}
+        } ${isNew ? "live-feed-card-new" : ""}`}
       style={horizontal ? { border: `1px solid ${skin.rarity}` } : undefined}
     >
       {horizontal ? (
@@ -640,4 +645,3 @@ function BestDropCard({ horizontal = false }: { horizontal?: boolean }) {
     </div>
   )
 }
-

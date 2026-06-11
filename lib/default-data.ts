@@ -101,7 +101,7 @@ export const COMPENSATION_BONUS_ITEMS: Skin[] = [
     price: 6.24,
     rarity: "mythical",
     image:
-      "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0Mi0MSnHtwM6547z1UrsVBH9hKnl8CBJ4PuqbbZoJL6WDGLFlux14Oc5S33mlx90tWWEmNutci7GOlIkXJdyQ-UOuxi_k4bmKaq8sAE_Zr6K/360fx360f",
+      "https://community.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM6547z1UrsVBH9hKnl8CBJ4PuqbbZoJL6WDGLFlux14Oc5S33mlx90tWWEmNutci7GOlIkXJdyQ-UOuxi_k4bmKaq8sAE_Zr6K/360fx360f",
   },
   {
     id: "bonus-sticker-mercury-austin-2025",
