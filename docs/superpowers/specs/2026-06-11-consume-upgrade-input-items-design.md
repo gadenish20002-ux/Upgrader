@@ -6,8 +6,10 @@ When an upgrade succeeds, the target skin is added to the user's inventory, but
 the inventory items used as the upgrade input remain there. The losing path
 already removes those items.
 
-An upgrade must consume every selected inventory item regardless of whether the
-result is a win or a loss.
+An upgrade must consume every selected inventory item as soon as the user starts
+a valid upgrade, regardless of whether the eventual result is a win or a loss.
+The consumed items remain visible only in the locked left-side bet card while
+the animation runs.
 
 ## Scope
 
@@ -18,15 +20,18 @@ balance-only inputs, shop purchases, item selection limits, or game history.
 
 ## Behavior
 
-When an upgrade finishes:
+When the user presses `Прокачать` and the existing validations pass:
 
 1. Capture the unique `uid` of every selected inventory item used for the
    upgrade.
-2. Remove exactly those inventory entries for both winning and losing results.
-3. On a win, add one new inventory entry for the selected target skin.
-4. On a loss, add no target skin. Existing compensation behavior remains
+2. Copy the selected item data into the locked left-side bet card.
+3. Immediately remove exactly those inventory entries from persisted state.
+4. Keep rendering the copied items in the left-side bet card until the upgrade
+   animation completes.
+5. On a win, add one new inventory entry for the selected target skin.
+6. On a loss, add no target skin. Existing compensation behavior remains
    unchanged.
-5. Deduct the balance portion of the input once and increment upgrade counters
+7. Deduct the balance portion of the input once and increment upgrade counters
    once.
 
 If multiple inventory entries refer to the same skin, only the selected
@@ -35,17 +40,18 @@ the inventory.
 
 ## State Update
 
-The winning path will perform inventory consumption and reward insertion in the
-same `setState` update:
+The upgrade-start path will remove the captured input items from state before
+the wheel animation begins:
 
-`inventory = [wonItem, ...previousInventory excluding selectedUids]`
+`inventory = previousInventory excluding selectedUids`
 
-The losing path will use the same `uid`-based filtering rule without inserting
-a target item.
+The locked left-side card stores the selected inventory item objects before that
+update. Its display does not depend on the items still existing in
+`state.inventory`.
 
-Keeping each result's inventory, balance, and counter changes in one state
-update prevents an intermediate state from being synchronized where the reward
-has been added but the input items have not been removed.
+The winning result adds the target item to the already-consumed inventory. The
+losing result does not perform a second removal. Balance deduction and counter
+updates happen exactly once in the result flow.
 
 The selected input `uid` values must be captured when the upgrade starts so the
 operation is based on the locked bet rather than later UI state.
@@ -56,16 +62,19 @@ operation is based on the locked bet rather than later UI state.
   place.
 - While an upgrade animation is active, the existing disabled controls prevent
   starting a second upgrade with the same items.
-- Filtering by `uid` is idempotent: an already missing selected item is not
-  recreated and does not cause an unrelated item to be removed.
+- The immediate removal runs only after all synchronous validations pass, so an
+  invalid click does not consume inventory.
+- Filtering by `uid` does not remove unselected instances of the same skin.
 
 ## Verification
 
-- A winning upgrade with one selected item removes that item and adds one target
-  item.
-- A winning upgrade with several selected items removes all selected items and
-  adds one target item.
-- A losing upgrade continues to remove all selected items.
+- Immediately after a valid click on `Прокачать`, all selected items disappear
+  from the inventory list and persisted inventory state.
+- During the animation, the consumed items remain visible in the locked
+  left-side bet card.
+- A winning upgrade adds one target item without restoring the consumed items.
+- A losing upgrade does not run a second removal and does not restore the
+  consumed items.
 - If selected and unselected inventory entries have the same `skinId`, only the
   selected `uid` values are removed.
 - A balance-only portion is deducted exactly once on either result.
