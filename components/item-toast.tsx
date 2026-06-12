@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 // Standalone toast system used ONLY for item sold/withdrawn notifications.
 // Intentionally independent from sonner so no other app toasts (wins, admin,
@@ -74,8 +75,10 @@ export function notifyItemWithdrawn() {
 
 export function ItemToaster() {
   const [items, setItems] = useState<ToastEntry[]>([])
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const listener = (t: ToastEntry[]) => setItems(t)
     listeners.push(listener)
     setItems([...toasts])
@@ -84,9 +87,11 @@ export function ItemToaster() {
     }
   }, [])
 
-  if (items.length === 0) return null
+  if (!mounted || items.length === 0) return null
 
-  return (
+  // Portal to <body> so the fixed container always anchors to the viewport
+  // (top-right corner), independent of any transformed/positioned ancestor.
+  return createPortal(
     <div className="toast-container">
       {items.map((t) => (
         <div
@@ -118,6 +123,7 @@ export function ItemToaster() {
           </div>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   )
 }
