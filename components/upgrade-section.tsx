@@ -608,8 +608,12 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   }
 
   // Resolved display values for the left card
-  // While animating, keep showing the locked target so the right card doesn't blank out.
-  const displayTargetSkin = isUpgradeAnimating && lockedTarget.current ? lockedTarget.current : targetSkin
+  // Right card should always show the currently selected skin (decoupled from bet-chance
+  // eligibility), so it never blanks while the stake is being built or items are consumed
+  // mid-spin. During animations we additionally fall back to the locked snapshot in case
+  // the target is cleared. `targetSkinRaw` stays defined through a spin (targetId isn't
+  // cleared), which is what keeps the item visible during the wheel animation.
+  const displayTargetSkin = (isUpgradeAnimating && lockedTarget.current) ? lockedTarget.current : targetSkinRaw
   const displayItems = lockedLeftCard.current ? lockedLeftCard.current.items : selectedItems
   const displayBalance = lockedLeftCard.current ? lockedLeftCard.current.balance : balanceInput
   const displayTotal = lockedLeftCard.current ? lockedLeftCard.current.total : inputValue
