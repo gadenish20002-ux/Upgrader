@@ -151,6 +151,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [catalogPriceMin, setCatalogPriceMin] = useState<number | null>(null)
   const [catalogPriceMax, setCatalogPriceMax] = useState<number | null>(null)
   const [activePercentageTarget, setActivePercentageTarget] = useState<number | null>(null)
+  // Whether the catalog should auto-pick the best recommended skin. Turned off when the user
+  // manually selects a skin, so the recommendation list stays put (no reshuffle / page-1 jump).
+  const [autoMatchEnabled, setAutoMatchEnabled] = useState(true)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [wonItemUid, setWonItemUid] = useState<string | null>(null)
 
@@ -210,6 +213,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       const targetPercentage = clampPercentageTarget(value)
 
       setActivePercentageTarget(targetPercentage)
+      setAutoMatchEnabled(true)
       setCatalogPriceMin(null)
       setCatalogPriceMax(null)
       setTargetId(null)
@@ -320,6 +324,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setBalanceInput(0)
     setWonItemUid(null)
     setActivePercentageTarget(null)
+    setAutoMatchEnabled(true)
     setCatalogPriceMin(null)
     setCatalogPriceMax(null)
   }
@@ -1063,16 +1068,19 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             <CatalogPanel 
               targetId={effectiveTarget} 
               onSelect={(id) => {
-                setTargetId(effectiveTarget === id ? "" : id)
+                const newId = effectiveTarget === id ? "" : id
+                setTargetId(newId)
                 setWonItemUid(null)
-                setActivePercentageTarget(null)
-                setCatalogPriceMin(null)
-                setCatalogPriceMax(null)
+                // Keep the active recommendation/price filter so the catalog list doesn't
+                // reshuffle back to the default view and jump to page 1. Just stop auto-picking
+                // so the user's manual choice sticks; re-enable auto-match when they deselect.
+                setAutoMatchEnabled(newId === "")
               }} 
               priceMin={catalogPriceMin}
               priceMax={catalogPriceMax}
               percentageTarget={activePercentageTarget}
               onPercentageMatchChange={setTargetId}
+              autoMatchEnabled={autoMatchEnabled}
               isSpinning={isUpgradeAnimating}
               inputValue={inputValue}
             />
