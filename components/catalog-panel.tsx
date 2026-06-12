@@ -57,10 +57,17 @@ export function CatalogPanel({
     }
   }, [state.upgradeSkins])
 
-  // Sync external price range into the filter inputs
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 20
+
+  // Sync external price range into the filter inputs. Reset to page 1 only when a price
+  // filter is being applied (a non-null range arrives), not when it's cleared on selection.
   useEffect(() => {
     setMin(priceMin == null ? "" : formatFilterPrice(priceMin))
     setMax(priceMax == null ? "" : formatFilterPrice(priceMax))
+    if (priceMin != null || priceMax != null) {
+      setCurrentPage(1)
+    }
   }, [priceMin, priceMax, percentageTarget])
 
   const filtered = useMemo(() => {
@@ -83,19 +90,16 @@ export function CatalogPanel({
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue])
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const ITEMS_PER_PAGE = 20
-
   useEffect(() => {
     if (percentageTarget == null) return
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
   }, [filtered, onPercentageMatchChange, percentageTarget])
 
-  // Reset to first page on genuine user-driven filter changes only.
-  // NOTE: min/max are intentionally NOT in this dependency list. They are reset
-  // programmatically (via the priceMin/priceMax sync effect) when a skin is
-  // selected manually, which previously bounced the catalog back to page 1.
-  // User-typed price changes call setCurrentPage(1) directly in the inputs.
+  // Reset to first page on filter changes. NOTE: `min`/`max` are intentionally excluded
+  // here because they are also written by the prop-sync effect above when a skin is
+  // selected (which clears external price filters). Resetting on those programmatic
+  // changes would kick the user back to page 1 on selection. User-driven price edits
+  // call setCurrentPage(1) directly in their onChange handlers instead.
   useEffect(() => {
     setCurrentPage(1)
   }, [query, sortOrder, showNewItems])
