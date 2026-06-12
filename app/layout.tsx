@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Tektur, Exo_2 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
 import { SiteGate } from '@/components/site-gate'
-import { Toaster } from '@/components/ui/sonner'
+import { ItemToaster } from '@/components/item-toast'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -57,7 +57,7 @@ export default function RootLayout({
             {children}
           </SiteGate>
         </StoreProvider>
-        <Toaster position="top-right" />
+        <ItemToaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
