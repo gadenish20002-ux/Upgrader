@@ -26,6 +26,7 @@ export function CatalogPanel({
   priceMax,
   percentageTarget,
   onPercentageMatchChange,
+  autoMatchEnabled = true,
   isSpinning,
   inputValue,
 }: {
@@ -36,6 +37,7 @@ export function CatalogPanel({
   priceMax?: number | null
   percentageTarget?: number | null
   onPercentageMatchChange?: (id: string | null) => void
+  autoMatchEnabled?: boolean
   isSpinning?: boolean
   inputValue?: number
 }) {
@@ -90,10 +92,13 @@ export function CatalogPanel({
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue])
 
+  // Auto-pick the best-matching skin while in recommendation mode. Disabled once the user
+  // manually picks a skin, so their choice sticks and the recommendation list stays visible
+  // (no reshuffle back to the default catalog / jump to page 1).
   useEffect(() => {
-    if (percentageTarget == null) return
+    if (percentageTarget == null || !autoMatchEnabled) return
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
-  }, [filtered, onPercentageMatchChange, percentageTarget])
+  }, [filtered, onPercentageMatchChange, percentageTarget, autoMatchEnabled])
 
   // Reset to first page on filter changes. NOTE: `min`/`max` are intentionally excluded
   // here because they are also written by the prop-sync effect above when a skin is
