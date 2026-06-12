@@ -189,6 +189,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     return targetSkinRaw
   }, [targetSkinRaw, inputValue])
 
+  // Display target is decoupled from bet-chance eligibility: the right card should
+  // always show the currently selected skin, even when the current stake makes the
+  // chance fall outside the eligible range (e.g. right after a win, while the bet is
+  // being re-built, or when too few items are staked). Otherwise the image vanishes
+  // and the user just sees an empty placeholder. Upgrade gating still uses `targetSkin`.
+  const displayTargetSkin = targetSkinRaw
+
   const chance = useMemo(() => {
     if (!targetSkin || inputValue <= 0) return 0
     const raw = getUpgradeChance(inputValue, targetSkin.price)
@@ -873,9 +880,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Right Card */}
         <div 
           className="col-span-1 lg:col-span-1 lg:col-start-3 lg:row-start-2 order-4 flex flex-col rounded-md lg:rounded-xl bg-[#17181C] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.25)] overflow-hidden w-full lg:self-center aspect-[10.275/9.625] lg:aspect-[23.1875/21.5] relative"
-          style={targetSkin ? { background: `linear-gradient(270deg, rgba(28, 28, 32, 0) 0.05%, ${RARITY_COLORS[targetSkin.rarity]}26 99.95%) #17181C` } : undefined}
+          style={displayTargetSkin ? { background: `linear-gradient(270deg, rgba(28, 28, 32, 0) 0.05%, ${RARITY_COLORS[displayTargetSkin.rarity]}26 99.95%) #17181C` } : undefined}
         >
-          {targetSkin ? (
+          {displayTargetSkin ? (
             <div className="relative flex h-full w-full flex-col items-center justify-between px-4 py-2 lg:px-8 lg:py-6">
               <button 
                 onClick={() => {
@@ -888,22 +895,22 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </button>
               
               <div className="z-[2] mb-0.5 flex flex-col items-center justify-between text-center">
-                <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(targetSkin.weapon)} </span>
-                <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(targetSkin.name)} </span>
+                <span className="text-[#4a4852] text-xxxxs text-center font-semibold lg:text-xs"> {formatWeaponName(displayTargetSkin.weapon)} </span>
+                <span className="text-[#f7f7f8] text-center text-xs font-bold lg:text-2xl"> {formatSkinName(displayTargetSkin.name)} </span>
               </div>
               
               <div className="relative w-full flex-1 min-h-0 my-1 lg:my-2">
                 <img
                   key={`weapon-${winAnimKey}`}
                   className={`absolute inset-0 m-auto z-[2] w-[80%] max-h-full object-contain drop-shadow-2xl${winAnimating ? " animate-win-rock will-change-transform" : ""}`}
-                  src={targetSkin.image || "/placeholder.svg"}
-                  alt={targetSkin.name}
+                  src={displayTargetSkin.image || "/placeholder.svg"}
+                  alt={displayTargetSkin.name}
                 />
               </div>
               
               <div className="z-[2] flex items-center justify-between space-x-0.5 lg:space-x-1.5 shrink-0">
                 <span className={`text-xxs font-bold lg:text-xl transition-colors duration-300${winAnimating ? " text-[#4ade80]" : " text-gradient-yellow"}`}>
-                  {formatPrice(targetSkin.price)}
+                  {formatPrice(displayTargetSkin.price)}
                 </span>
                 <img
                   key={`coin-${winAnimKey}`}
