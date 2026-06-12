@@ -189,13 +189,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     return targetSkinRaw
   }, [targetSkinRaw, inputValue])
 
-  // Display target is decoupled from bet-chance eligibility: the right card should
-  // always show the currently selected skin, even when the current stake makes the
-  // chance fall outside the eligible range (e.g. right after a win, while the bet is
-  // being re-built, or when too few items are staked). Otherwise the image vanishes
-  // and the user just sees an empty placeholder. Upgrade gating still uses `targetSkin`.
-  const displayTargetSkin = targetSkinRaw
-
   const chance = useMemo(() => {
     if (!targetSkin || inputValue <= 0) return 0
     const raw = getUpgradeChance(inputValue, targetSkin.price)
@@ -452,6 +445,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
   // Keep the left card locked during animations so it doesn't disappear when state updates
   const lockedLeftCard = useRef<{ items: typeof selectedItems; balance: number; total: number } | null>(null)
+  // Keep the target (right card) locked during animations: consuming inventory items drops
+  // inputValue, which can make the upgrade chance ineligible and clear targetSkin mid-spin.
+  const lockedTarget = useRef<typeof targetSkin>(undefined)
 
   function startFastLossCompensation() {
     const bonusSkin = pickFastCompensationSkin()
@@ -482,6 +478,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     }
 
     lockedLeftCard.current = null
+    lockedTarget.current = undefined
     clearSelection()
   }
 
@@ -515,6 +512,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       balance: balanceInput,
       total: inputValue,
     }
+    lockedTarget.current = targetSkin
     const consumedUids = new Set(selectedItems.map((item) => item!.uid))
     const shouldUseFastLoseAnimation = state.fastMode || isMobile
 
@@ -585,6 +583,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           pendingHistoryEntryRef.current = null
         }
         lockedLeftCard.current = null
+        lockedTarget.current = undefined
         clearSelection()
       }
     }
@@ -609,6 +608,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   }
 
   // Resolved display values for the left card
+  // While animating, keep showing the locked target so the right card doesn't blank out.
+  const displayTargetSkin = isUpgradeAnimating && lockedTarget.current ? lockedTarget.current : targetSkin
   const displayItems = lockedLeftCard.current ? lockedLeftCard.current.items : selectedItems
   const displayBalance = lockedLeftCard.current ? lockedLeftCard.current.balance : balanceInput
   const displayTotal = lockedLeftCard.current ? lockedLeftCard.current.total : inputValue
@@ -943,6 +944,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 pendingHistoryEntryRef.current = null
               }
               lockedLeftCard.current = null
+              lockedTarget.current = undefined
               clearSelection()
               if (pendingWonItemUidRef.current) {
                 setWonItemUid(pendingWonItemUidRef.current)
@@ -1009,6 +1011,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           }
 
           lockedLeftCard.current = null
+          lockedTarget.current = undefined
           clearSelection()
         }}
         onStopSound={stopLoseCaseSound}
