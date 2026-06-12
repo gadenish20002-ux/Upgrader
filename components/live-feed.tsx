@@ -224,20 +224,21 @@ const randomBetween = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min
 
 function createLiveFeedMotion(): LiveFeedMotion {
+  // Reference entry feel: ~0.3–0.5s bouncy slide (cubic-bezier(.34,1.2,.64,1))
   const roll = Math.random()
 
   if (roll < 0.7) {
-    const enterMs = randomBetween(110, 150)
-    return { enterMs, totalMs: enterMs + 20 }
+    const enterMs = randomBetween(300, 360)
+    return { enterMs, totalMs: enterMs + 30 }
   }
 
   if (roll < 0.9) {
-    const enterMs = randomBetween(155, 205)
-    return { enterMs, totalMs: enterMs + 20 }
+    const enterMs = randomBetween(360, 430)
+    return { enterMs, totalMs: enterMs + 30 }
   }
 
-  const enterMs = randomBetween(220, 280)
-  return { enterMs, totalMs: enterMs + 20 }
+  const enterMs = randomBetween(430, 500)
+  return { enterMs, totalMs: enterMs + 30 }
 }
 
 export function LiveFeed({
@@ -284,20 +285,21 @@ export function LiveFeed({
         enterTimerRef.current = null
       }, motion.totalMs)
 
+      // Faster appearance of new skins — tighter intervals than before.
       const rand = Math.random()
       let nextInterval = 0
-      if (rand < 0.3) {
-        nextInterval = Math.floor(Math.random() * 250) + 100
+      if (rand < 0.45) {
+        nextInterval = Math.floor(Math.random() * 120) + 60
       } else if (rand < 0.9) {
-        nextInterval = Math.floor(Math.random() * 1200) + 600
+        nextInterval = Math.floor(Math.random() * 450) + 220
       } else {
-        nextInterval = Math.floor(Math.random() * 3000) + 2500
+        nextInterval = Math.floor(Math.random() * 1200) + 800
       }
 
-      timeoutId = setTimeout(addNextItem, Math.max(motion.totalMs + 60, nextInterval))
+      timeoutId = setTimeout(addNextItem, Math.max(motion.totalMs + 30, nextInterval))
     }
 
-    timeoutId = setTimeout(addNextItem, 1000)
+    timeoutId = setTimeout(addNextItem, 500)
     return () => {
       clearTimeout(timeoutId)
       if (enterTimerRef.current) clearTimeout(enterTimerRef.current)

@@ -179,10 +179,19 @@ export function SettingsControl() {
             Сохранить настройки
           </Button>
           <Button onClick={() => {
-            setState(p => ({ ...p, upgrades: 0, userUpgrades: 0 }))
-            toast.success("Количество апгрейдов сброшено до 0")
+            if (!window.confirm("Сбросить ВСЮ историю аккаунта к нулю? Будут очищены: инвентарь, история игр, история предметов и счётчик апгрейдов пользователя. Это действие необратимо.")) return
+            setState(p => ({
+              ...p,
+              inventory: [],
+              gameHistory: [],
+              itemHistory: [],
+              withdrawnItems: undefined,
+              userUpgrades: 0,
+            }))
+            setItemHistoryInput([])
+            toast.success("История аккаунта полностью сброшена к нулю")
           }} variant="destructive" className="w-full sm:w-auto">
-            Сбросить апгрейды (0)
+            Сбросить историю аккаунта
           </Button>
         </div>
       </div>

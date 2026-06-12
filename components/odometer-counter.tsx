@@ -22,11 +22,13 @@ export function OdometerCounter({ value, className = "", format = "( ddd)" }: Od
       if (!instanceRef.current) {
         instanceRef.current = new (OdometerClass as new (opts: object) => { update: (v: number) => void })({
           el: elRef.current,
-          value: 0,
+          value, // seed with the initial value so only live changes roll
           format,
           theme: "default",
           animation: "count",
         })
+        // First render is already at `value`; nothing else to do this tick.
+        return
       }
 
       ;(instanceRef.current as { update: (v: number) => void }).update(value)

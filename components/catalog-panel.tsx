@@ -91,11 +91,14 @@ export function CatalogPanel({
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
   }, [filtered, onPercentageMatchChange, percentageTarget])
 
-  // Reset to first page on filter changes. Clearing percentageTarget happens when
-  // a skin is selected manually, so that transition must keep the current page.
+  // Reset to first page on genuine user-driven filter changes only.
+  // NOTE: min/max are intentionally NOT in this dependency list. They are reset
+  // programmatically (via the priceMin/priceMax sync effect) when a skin is
+  // selected manually, which previously bounced the catalog back to page 1.
+  // User-typed price changes call setCurrentPage(1) directly in the inputs.
   useEffect(() => {
     setCurrentPage(1)
-  }, [query, min, max, sortOrder, showNewItems])
+  }, [query, sortOrder, showNewItems])
 
   useEffect(() => {
     const previousPercentageTarget = previousPercentageTargetRef.current
@@ -178,6 +181,7 @@ export function CatalogPanel({
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^\d.,]/g, "")
                         setMin(val)
+                        setCurrentPage(1)
                         if (val && !max) setSortOrder("asc")
                       }} 
                       className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 
@@ -192,6 +196,7 @@ export function CatalogPanel({
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^\d.,]/g, "")
                         setMax(val)
+                        setCurrentPage(1)
                         if (val && !min) setSortOrder("desc")
                       }} 
                       className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-l-0 border-[#FFFFFF1A] px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6 bg-transparent font-exo2" 

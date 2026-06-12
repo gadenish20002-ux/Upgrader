@@ -6,6 +6,7 @@ import { Logo } from "./logo"
 import { LogOut, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoginButton } from "./login-button"
+import { OdometerCounter } from "./odometer-counter"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -23,21 +24,33 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
     setLocalUpgrades(state.upgrades)
   }, [state.online, state.upgrades])
 
-  // Имитация изменения онлайна и количества апгрейдов
+  // Имитация живых счётчиков (онлайн + апгрейды), как на референсе:
+  // апгрейды тикают часто и небольшими шагами, чтобы одометр плавно прокручивался.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLocalOnline((prev) => {
-        const onlineChange = Math.floor(Math.random() * 11) - 5
-        const newOnline = prev + onlineChange
-        return newOnline < 0 ? 0 : newOnline
-      })
-      setLocalUpgrades((prev) => {
-        const upgradesChange = Math.floor(Math.random() * 41) + 10
-        return prev + upgradesChange
-      })
-    }, 1500) // каждые 1.5 секунды
+    let upgradesTimer: ReturnType<typeof setTimeout>
+    let onlineTimer: ReturnType<typeof setTimeout>
 
-    return () => clearInterval(interval)
+    const bumpUpgrades = () => {
+      setLocalUpgrades((prev) => prev + (Math.floor(Math.random() * 3) + 1))
+      // 0.6–1.4s между апгрейдами — живой, но реалистичный темп прокрутки
+      upgradesTimer = setTimeout(bumpUpgrades, Math.floor(Math.random() * 800) + 600)
+    }
+
+    const bumpOnline = () => {
+      setLocalOnline((prev) => {
+        const next = prev + (Math.floor(Math.random() * 11) - 5)
+        return next < 0 ? 0 : next
+      })
+      onlineTimer = setTimeout(bumpOnline, 2500)
+    }
+
+    upgradesTimer = setTimeout(bumpUpgrades, 800)
+    onlineTimer = setTimeout(bumpOnline, 2500)
+
+    return () => {
+      clearTimeout(upgradesTimer)
+      clearTimeout(onlineTimer)
+    }
   }, [])
 
   function handleLogout() {
@@ -75,9 +88,10 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
                 <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-gray tablet:block hidden text-sm font-exo2">Апгрейдов</span>
-                  <span className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]">
-                    {formatNumber(localUpgrades)}
-                  </span>
+                  <OdometerCounter
+                    value={localUpgrades}
+                    className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]"
+                  />
                 </div>
               </div>
             </div>

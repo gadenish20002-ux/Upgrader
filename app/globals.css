@@ -191,8 +191,22 @@
   }
 }
 
+/* Soft shadow that pops on entry and settles — matches reference "realisticShadow" */
+@keyframes live-feed-shadow {
+  0% {
+    box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
 .animate-slide-in-top {
-  animation: slide-in-top var(--live-feed-enter-ms, 0.35s) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation:
+    slide-in-top var(--live-feed-enter-ms, 0.5s) cubic-bezier(0.34, 1.2, 0.64, 1) both,
+    live-feed-shadow 0.8s ease-out both;
+  transform-origin: center;
+  will-change: transform, box-shadow;
 }
 
 @keyframes slide-in-left {
@@ -207,7 +221,7 @@
 }
 
 .animate-slide-in-left {
-  animation: slide-in-left var(--live-feed-enter-ms, 0.35s) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slide-in-left var(--live-feed-enter-ms, 0.5s) cubic-bezier(0.34, 1.2, 0.64, 1) both;
 }
 
 .live-feed-entry,
@@ -257,6 +271,23 @@
 
 .invisible-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* Item sold / withdrawn toast — slide in from the right (reference: .toast-item) */
+@keyframes toast-slide-in-right {
+  0% {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.item-toast-badge {
+  animation: toast-slide-in-right 0.3s ease-in-out both;
+  will-change: transform, opacity;
 }
 .invisible-scroll {
   -ms-overflow-style: none;

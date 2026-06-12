@@ -8,6 +8,7 @@ import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LogOut, Settings, Camera } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
+import { notifyItemSold, notifyItemsSold, notifyItemWithdrawn } from "./item-toast"
 import type { InventoryItem, Skin } from "@/lib/types"
 
 const hexToRgb = (hex: string) => {
@@ -87,6 +88,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
       date: Date.now()
     }])
     setWithdrawItem(null)
+    notifyItemWithdrawn()
   }
 
   return (
@@ -340,6 +342,11 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                     removeFromInventory(idsToSell)
                     setBalance(state.balance + total)
                     addItemHistory(historyEntries)
+                    if (idsToSell.length === 1) {
+                      notifyItemSold()
+                    } else {
+                      notifyItemsSold()
+                    }
                   }
                 }}
                 disabled={state.inventory.length === 0}
@@ -397,6 +404,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                             action: "sold",
                             date: Date.now()
                           }])
+                          notifyItemSold()
                         }}
                         className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
                         title="Продать"
