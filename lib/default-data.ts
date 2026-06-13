@@ -13,9 +13,11 @@ const DEFAULT_INVENTORY: InventoryItem[] = [
 // Глобальный счётчик «Апгрейдов» привязан к реальному времени: он всегда
 // показывает значение референса на текущий момент и продолжает расти со
 // временем (в т.ч. между перезагрузками страницы), как на настоящем сайте.
-const UPGRADES_ANCHOR_MS = Date.UTC(2026, 5, 13, 4, 3, 0) // 2026-06-13 07:03 МСК
-const UPGRADES_ANCHOR_VALUE = 167_451_283
-const UPGRADES_PER_SECOND = 2 // ~совпадает с темпом «живого» тика в шапке
+// Перепривязка на 2026-06-13 13:40 МСК (10:40 UTC), значение = старая формула на тот момент,
+// чтобы не было скачка назад при деплое. Темп увеличен (быстрее растёт).
+const UPGRADES_ANCHOR_MS = Date.UTC(2026, 5, 13, 10, 40, 0) // 2026-06-13 13:40 МСК
+const UPGRADES_ANCHOR_VALUE = 167_498_923
+const UPGRADES_PER_SECOND = 4 // быстрее, чем раньше (было 2)
 
 export function currentGlobalUpgrades(now: number = Date.now()): number {
   const elapsedSec = Math.max(0, (now - UPGRADES_ANCHOR_MS) / 1000)
