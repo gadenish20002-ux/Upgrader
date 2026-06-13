@@ -85,7 +85,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ...DEFAULT_STATE, 
               ...serverState, 
               skins: DEFAULT_STATE.skins, 
-              upgradeSkins: DEFAULT_STATE.skins 
+              upgradeSkins: DEFAULT_STATE.skins,
+              upgrades: currentGlobalUpgrades(), // глобальный счётчик — по времени, не из сохранёнки
             }
             try {
               window.localStorage.removeItem(STORAGE_KEY)
@@ -170,7 +171,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...DEFAULT_STATE, 
             ...parsed,
             skins: DEFAULT_STATE.skins,
-            upgradeSkins: DEFAULT_STATE.skins
+            upgradeSkins: DEFAULT_STATE.skins,
+            upgrades: currentGlobalUpgrades(),
           })
         } catch {}
       }
