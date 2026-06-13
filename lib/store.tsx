@@ -8,6 +8,11 @@ import { DEFAULT_STATE, currentGlobalUpgrades } from "./default-data"
 let syncTimeout: NodeJS.Timeout | null = null
 const pendingAccountChanges: Record<string, any> = {}
 const pendingGlobalChanges: Record<string, any> = {}
+// Account fields that were written locally (optimistically) but not yet confirmed
+// by the server. While a field is "dirty" the background poll must NOT overwrite it
+// with stale server data — otherwise a just-consumed skin reappears after a loss
+// (the "через раз" bug). field -> JSON of the value we last wrote locally.
+const dirtyAccountFields: Record<string, string> = {}
 
 // Per-account fields (synced to /api/account?key=). Everything else is global
 // site state (synced to /api/state). KEEP IN SYNC with ACCOUNT_FIELDS in lib/keys.ts.
@@ -132,6 +137,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setReady(false)
     setInternal(loadState(storageKey))
 
+    // Switching accounts → drop any un-acked optimistic state from the previous one
+    // so it can't leak into / block the freshly loaded account.
+    for (const k in dirtyAccountFields) delete dirtyAccountFields[k]
+    for (const k in pendingAccountChanges) delete pendingAccountChanges[k]
+
     let cancelled = false
 
     async function fetchState() {
@@ -176,6 +186,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             skins: DEFAULT_STATE.skins,
             upgradeSkins: DEFAULT_STATE.skins,
             upgrades: currentGlobalUpgrades(),
+          }
+          // Keep optimistic, not-yet-confirmed local account changes (e.g. the
+          // inventory after a spin) instead of clobbering them with stale server data.
+          for (const k in dirtyAccountFields) {
+            ;(next as any)[k] = (prev as any)[k]
           }
           try {
             window.localStorage.setItem(storageKey, JSON.stringify(next))
@@ -234,8 +249,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         // split changes into account vs global buckets
         for (const key in changes) {
-          if (ACCOUNT_FIELDS.has(key)) pendingAccountChanges[key] = (changes as any)[key]
-          else pendingGlobalChanges[key] = (changes as any)[key]
+          if (ACCOUNT_FIELDS.has(key)) {
+            pendingAccountChanges[key] = (changes as any)[key]
+            // mark as un-acked so the poll won't overwrite it until the server confirms
+            dirtyAccountFields[key] = JSON.stringify((changes as any)[key])
+          } else {
+            pendingGlobalChanges[key] = (changes as any)[key]
+          }
         }
 
         if (syncTimeout) clearTimeout(syncTimeout)
@@ -254,7 +274,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               headers: authHeaders(key),
               body: JSON.stringify(accountToSend),
               cache: "no-store",
-            }).catch((err) => console.error("Failed to sync account", err))
+            })
+              .then((res) => {
+                if (!res || !res.ok) return
+                // Server confirmed these values → stop protecting them from the poll,
+                // but only if they haven't been re-written locally in the meantime.
+                for (const k in accountToSend) {
+                  if (dirtyAccountFields[k] === JSON.stringify((accountToSend as any)[k])) {
+                    delete dirtyAccountFields[k]
+                  }
+                }
+              })
+              .catch((err) => console.error("Failed to sync account", err))
           }
 
           // Only the admin scope may mutate global/site state.
