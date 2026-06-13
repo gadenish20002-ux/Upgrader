@@ -631,10 +631,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   // already dropped inputValue (→ chance recomputes to 0), which made the colored arc snap back
   // to 50% the instant the pointer stopped. Keep the arc frozen at the spin's locked chance
   // until the animation fully finishes (locked refs are cleared in the overlay onComplete).
+  // When both cards hold something (raw target + stake) the arc must show the real chance even
+  // if it's outside the spin-eligible range — `chance` (and `targetSkin`) go to 0/undefined when
+  // the combo is ineligible, which would otherwise snap the scale back to 50% with both cards full.
   const wheelChance =
     isUpgradeAnimating && lockedLeftCard.current && lockedTarget.current
       ? Math.min(0.92, Math.max(0.01, getUpgradeChance(lockedLeftCard.current.total, lockedTarget.current.price)))
-      : chance
+      : targetSkinRaw && inputValue > 0
+        ? Math.min(0.92, Math.max(0.01, getUpgradeChance(inputValue, targetSkinRaw.price)))
+        : chance
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto px-2">
@@ -672,7 +677,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Center Wheel */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
-            <UpgradeWheel ref={wheelRef} chance={wheelChance} hasSelection={isUpgradeAnimating || (!!targetSkin && inputValue > 0)} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
+            <UpgradeWheel ref={wheelRef} chance={wheelChance} hasSelection={isUpgradeAnimating || (!!targetSkinRaw && inputValue > 0)} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
           </div>
         </div>
 
