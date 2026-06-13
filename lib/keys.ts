@@ -17,6 +17,13 @@ export const KEYS_KV = "upgrader_access_keys"
 export const GLOBAL_KV = "upgrader_global_state"
 export const ADMIN_ACCOUNT = "__default__" // template account the admin edits with no key selected
 
+// Normalize an incoming key/account code. Real keys are upper-case (A-Z2-9);
+// the ADMIN_ACCOUNT sentinel must be preserved verbatim (it contains lowercase).
+export function normalizeCode(raw: string | null | undefined): string {
+  const c = (raw || "").trim()
+  return c === ADMIN_ACCOUNT ? ADMIN_ACCOUNT : c.toUpperCase()
+}
+
 export interface AccessKey {
   code: string
   label: string

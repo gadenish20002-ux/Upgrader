@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import {
   getKey,
+  normalizeCode,
   keyStatus,
   daysLeft,
   getAccount,
@@ -43,7 +44,7 @@ async function authorize(
 // GET /api/account?key=CODE → { account, key }
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const code = (searchParams.get("key") || "").toUpperCase().trim()
+  const code = normalizeCode(searchParams.get("key"))
   const auth = await authorize(code, request)
   if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
 // PATCH /api/account?key=CODE  body: partial account fields → merge
 export async function PATCH(request: Request) {
   const { searchParams } = new URL(request.url)
-  const code = (searchParams.get("key") || "").toUpperCase().trim()
+  const code = normalizeCode(searchParams.get("key"))
   const auth = await authorize(code, request)
   if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 

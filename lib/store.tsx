@@ -42,11 +42,17 @@ function resolveAccountKey(adminScope: boolean): string | null {
   return window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
 }
 
-function adminHeaders(adminScope: boolean): Record<string, string> {
+// Attach the admin password when we are on an admin page OR when the active
+// account is the admin's own account (admin "logged in as administrator" on the
+// public site). Both cases require x-admin-password on /api/account & /api/state.
+function authHeaders(accountKey: string | null): Record<string, string> {
   const h: Record<string, string> = { "Content-Type": "application/json" }
-  if (adminScope && typeof window !== "undefined") {
-    const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE)
-    if (pwd) h["x-admin-password"] = pwd
+  if (typeof window !== "undefined") {
+    const onAdminPath = isAdminPath(window.location.pathname)
+    if (onAdminPath || accountKey === ADMIN_ACCOUNT) {
+      const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE)
+      if (pwd) h["x-admin-password"] = pwd
+    }
   }
   return h
 }
@@ -135,7 +141,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           wantAccount && accountKey
             ? fetch(`/api/account?key=${encodeURIComponent(accountKey)}&t=${Date.now()}`, {
                 cache: "no-store",
-                headers: adminHeaders(adminScope),
+                headers: authHeaders(accountKey),
               })
             : Promise.resolve(null as any),
         ])
@@ -241,7 +247,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (key && Object.keys(accountToSend).length > 0) {
             fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
               method: "PATCH",
-              headers: adminHeaders(admin),
+              headers: authHeaders(key),
               body: JSON.stringify(accountToSend),
               cache: "no-store",
             }).catch((err) => console.error("Failed to sync account", err))
@@ -251,7 +257,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (admin && Object.keys(globalToSend).length > 0) {
             fetch(`/api/state?t=${Date.now()}`, {
               method: "PATCH",
-              headers: adminHeaders(admin),
+              headers: authHeaders(ADMIN_ACCOUNT),
               body: JSON.stringify(globalToSend),
               cache: "no-store",
             }).catch((err) => console.error("Failed to sync global state", err))

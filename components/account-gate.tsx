@@ -8,6 +8,21 @@ import { KeyRound } from "lucide-react"
 import { Logo } from "@/components/logo"
 
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
+const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+const ADMIN_ACCOUNT = "__default__"
+
+// Verify the admin password against the admin account endpoint.
+async function checkAdmin(pwd: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/account?key=${ADMIN_ACCOUNT}&t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "x-admin-password": pwd },
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
 
 export function AccountGate({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -47,6 +62,24 @@ export function AccountGate({ children }: { children: ReactNode }) {
       setChecked(true)
       setAuthed(false)
       return
+    }
+    // Admin "logged in as administrator" on the public site — verify the stored
+    // admin password instead of the access-key endpoint.
+    if (stored === ADMIN_ACCOUNT) {
+      const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE) || ""
+      checkAdmin(pwd).then((ok) => {
+        if (cancelled) return
+        if (!ok) {
+          try {
+            window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
+          } catch {}
+        }
+        setAuthed(ok)
+        setChecked(true)
+      })
+      return () => {
+        cancelled = true
+      }
     }
     validate(stored).then((ok) => {
       if (cancelled) return
@@ -96,6 +129,25 @@ export function AccountGate({ children }: { children: ReactNode }) {
     }
   }
 
+  async function loginAsAdmin() {
+    const pwd = window.prompt("Пароль администратора")
+    if (pwd === null) return
+    setSubmitting(true)
+    setError("")
+    const ok = await checkAdmin(pwd)
+    setSubmitting(false)
+    if (ok) {
+      try {
+        window.localStorage.setItem(ADMIN_PWD_STORAGE, pwd)
+        window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
+      } catch {}
+      window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
+      setAuthed(true)
+    } else {
+      setError("Неверный пароль администратора")
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
@@ -125,6 +177,19 @@ export function AccountGate({ children }: { children: ReactNode }) {
         <Button type="submit" disabled={submitting} className="mt-4 w-full font-bold">
           {submitting ? "Проверка..." : "Войти"}
         </Button>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">или</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <button
+          type="button"
+          onClick={loginAsAdmin}
+          disabled={submitting}
+          className="mt-3 w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50"
+        >
+          Войти как администратор
+        </button>
         {daysLeft !== null && authed && (
           <p className="mt-3 text-center text-xs text-muted-foreground">Доступ активен ещё {daysLeft} дн.</p>
         )}
