@@ -1,17 +1,60 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
+import { usePathname } from "next/navigation"
 import type { AppState, Skin, InventoryItem } from "./types"
 import { DEFAULT_STATE, currentGlobalUpgrades } from "./default-data"
 
 let syncTimeout: NodeJS.Timeout | null = null
-const pendingSyncChanges: Record<string, any> = {}
+const pendingAccountChanges: Record<string, any> = {}
+const pendingGlobalChanges: Record<string, any> = {}
 
-const STORAGE_KEY = "upgrader_state_v3"
+// Per-account fields (synced to /api/account?key=). Everything else is global
+// site state (synced to /api/state). KEEP IN SYNC with ACCOUNT_FIELDS in lib/keys.ts.
+const ACCOUNT_FIELDS = new Set<string>([
+  "balance",
+  "inventory",
+  "loggedIn",
+  "username",
+  "userId",
+  "avatar",
+  "userUpgrades",
+  "itemHistory",
+  "withdrawnItems",
+  "predict",
+  "gameHistory",
+])
+
+const ADMIN_ACCOUNT = "__default__"
+const ACCOUNT_KEY_STORAGE = "upgrader_account_key" // player's key
+const ADMIN_ACTIVE_KEY_STORAGE = "upgrader_admin_active_key" // account the admin is managing
+const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+
+function isAdminPath(pathname: string | null): boolean {
+  return !!pathname && pathname.startsWith("/admin")
+}
+
+function resolveAccountKey(adminScope: boolean): string | null {
+  if (typeof window === "undefined") return null
+  if (adminScope) {
+    return window.localStorage.getItem(ADMIN_ACTIVE_KEY_STORAGE) || ADMIN_ACCOUNT
+  }
+  return window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
+}
+
+function adminHeaders(adminScope: boolean): Record<string, string> {
+  const h: Record<string, string> = { "Content-Type": "application/json" }
+  if (adminScope && typeof window !== "undefined") {
+    const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE)
+    if (pwd) h["x-admin-password"] = pwd
+  }
+  return h
+}
 
 interface StoreContextValue {
   state: AppState
   ready: boolean
+  accountKey: string | null
   setState: (updater: (prev: AppState) => AppState) => void
   // helpers
   login: () => void
@@ -26,75 +69,109 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null)
 
-function loadState(): AppState {
+function storageKeyFor(accountKey: string | null): string {
+  return `upgrader_state_v4:${accountKey || "none"}`
+}
+
+function loadState(storageKey: string): AppState {
   if (typeof window === "undefined") return DEFAULT_STATE
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = window.localStorage.getItem(storageKey)
     if (!raw) return DEFAULT_STATE
     const parsed = JSON.parse(raw)
-    // Always use fresh skins from DEFAULT_STATE — never cache skin data
-    // (image paths, prices, etc. may change between deployments)
-    const migratedState = {
+    return {
       ...DEFAULT_STATE,
       ...parsed,
-      skins: DEFAULT_STATE.skins,  // always use latest skins list
-      upgradeSkins: DEFAULT_STATE.skins, // DO NOT cache upgrade skins
-      upgrades: currentGlobalUpgrades(), // глобальный счётчик всегда свежий (время), не из localStorage
+      skins: DEFAULT_STATE.skins, // always use latest skins list
+      upgradeSkins: DEFAULT_STATE.skins,
+      upgrades: currentGlobalUpgrades(),
     }
-    
-    // Migrate old withdrawnItems string array to itemHistory if needed
-    if (parsed.withdrawnItems && Array.isArray(parsed.withdrawnItems) && (!parsed.itemHistory || parsed.itemHistory.length === 0)) {
-      migratedState.itemHistory = parsed.withdrawnItems.map((skinId: string, idx: number) => ({
-        id: `ih-${Date.now()}-${idx}`,
-        skinId,
-        action: "withdrawn",
-        date: Date.now() - idx * 1000 // fake past dates
-      }))
-    }
-    
-    return migratedState
   } catch {
     return DEFAULT_STATE
   }
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+  const adminScope = isAdminPath(pathname)
+
+  const [accountKey, setAccountKey] = useState<string | null>(null)
   const [state, setInternal] = useState<AppState>(DEFAULT_STATE)
   const [ready, setReady] = useState(false)
   const lastSyncTime = useRef<number>(0)
+  const accountKeyRef = useRef<string | null>(null)
+  accountKeyRef.current = accountKey
+
+  // Resolve the active account key for this scope (and react to changes made by
+  // the gate / admin account selector in other parts of the app).
+  useEffect(() => {
+    function refresh() {
+      setAccountKey(resolveAccountKey(adminScope))
+    }
+    refresh()
+    window.addEventListener("storage", refresh)
+    window.addEventListener("upgrader-account-key-changed", refresh as EventListener)
+    return () => {
+      window.removeEventListener("storage", refresh)
+      window.removeEventListener("upgrader-account-key-changed", refresh as EventListener)
+    }
+  }, [adminScope])
 
   useEffect(() => {
-    // Clean up old cache keys from previous versions
-    try {
-      window.localStorage.removeItem("upgrader_state_v1")
-      window.localStorage.removeItem("upgrader_state_v2")
-    } catch {}
-    setInternal(loadState())
+    const storageKey = storageKeyFor(accountKey)
+    setReady(false)
+    setInternal(loadState(storageKey))
 
-    // Fetch global state from server
+    let cancelled = false
+
     async function fetchState() {
       if (Date.now() < syncManager.suppressUntil) return
       if (Date.now() - lastSyncTime.current < 1500) return
-      
+
       try {
-        const res = await fetch(`/api/state?t=${Date.now()}`, { cache: "no-store" })
-        if (res.ok) {
-          const serverState = await res.json()
-          setInternal((prev) => {
-            const next = { 
-              ...DEFAULT_STATE, 
-              ...serverState, 
-              skins: DEFAULT_STATE.skins, 
-              upgradeSkins: DEFAULT_STATE.skins,
-              upgrades: currentGlobalUpgrades(), // глобальный счётчик — по времени, не из сохранёнки
-            }
-            try {
-              window.localStorage.removeItem(STORAGE_KEY)
-              window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-            } catch {}
-            return next
-          })
+        const wantAccount = adminScope || !!accountKey
+        const [globalRes, accountRes] = await Promise.all([
+          fetch(`/api/state?t=${Date.now()}`, { cache: "no-store" }),
+          wantAccount && accountKey
+            ? fetch(`/api/account?key=${encodeURIComponent(accountKey)}&t=${Date.now()}`, {
+                cache: "no-store",
+                headers: adminHeaders(adminScope),
+              })
+            : Promise.resolve(null as any),
+        ])
+
+        if (cancelled) return
+
+        // Player key no longer valid → kick back to the gate.
+        if (!adminScope && accountKey && accountRes && (accountRes.status === 403 || accountRes.status === 401)) {
+          try {
+            window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
+          } catch {}
+          window.dispatchEvent(new CustomEvent("upgrader-account-invalid"))
+          return
         }
+
+        const globalState = globalRes.ok ? await globalRes.json() : {}
+        let accountState: Record<string, unknown> = {}
+        if (accountRes && accountRes.ok) {
+          const j = await accountRes.json()
+          accountState = j.account || {}
+        }
+
+        setInternal((prev) => {
+          const next: AppState = {
+            ...DEFAULT_STATE,
+            ...globalState,
+            ...accountState,
+            skins: DEFAULT_STATE.skins,
+            upgradeSkins: DEFAULT_STATE.skins,
+            upgrades: currentGlobalUpgrades(),
+          }
+          try {
+            window.localStorage.setItem(storageKey, JSON.stringify(next))
+          } catch {}
+          return next
+        })
       } catch (err) {
         console.error("Failed to fetch state", err)
       }
@@ -103,72 +180,99 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     let interval: NodeJS.Timeout
     async function init() {
       await fetchState()
+      if (cancelled) return
       setReady(true)
       interval = setInterval(fetchState, 2000)
     }
 
     init()
     return () => {
+      cancelled = true
       if (interval) clearInterval(interval)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountKey, adminScope])
 
+  // persist + route changes to the correct backend (account vs global)
+  const setState = useCallback(
+    (updater: (prev: AppState) => AppState) => {
+      setInternal((prev) => {
+        const next = updater(prev)
+        const { skins, upgradeSkins, ...strippedNext } = next
 
-  // persist + broadcast across tabs and sync to server
-  const setState = useCallback((updater: (prev: AppState) => AppState) => {
-    setInternal((prev) => {
-      const next = updater(prev)
-      
-      const { skins, upgradeSkins, ...strippedNext } = next
-      
-      const changes: Partial<AppState> = {}
-      let hasChanges = false
-      for (const key in strippedNext) {
-        if (JSON.stringify(strippedNext[key as keyof typeof strippedNext]) !== JSON.stringify(prev[key as keyof AppState])) {
-          changes[key as keyof AppState] = strippedNext[key as keyof typeof strippedNext] as any
-          hasChanges = true
+        const changes: Partial<AppState> = {}
+        let hasChanges = false
+        for (const key in strippedNext) {
+          if (
+            JSON.stringify(strippedNext[key as keyof typeof strippedNext]) !==
+            JSON.stringify(prev[key as keyof AppState])
+          ) {
+            changes[key as keyof AppState] = strippedNext[key as keyof typeof strippedNext] as any
+            hasChanges = true
+          }
         }
-      }
 
-      if (!hasChanges) return prev
+        if (!hasChanges) return prev
 
-      const finalState = { ...prev, ...changes }
+        const finalState = { ...prev, ...changes }
+        const storageKey = storageKeyFor(accountKeyRef.current)
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(finalState))
+        } catch {}
 
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(finalState))
-      } catch {}
-      
-      if (hasChanges) {
         lastSyncTime.current = Date.now()
-        
-        // Debounce server updates to prevent race conditions when multiple setStates are called synchronously
-        Object.assign(pendingSyncChanges, changes)
+
+        // split changes into account vs global buckets
+        for (const key in changes) {
+          if (ACCOUNT_FIELDS.has(key)) pendingAccountChanges[key] = (changes as any)[key]
+          else pendingGlobalChanges[key] = (changes as any)[key]
+        }
+
         if (syncTimeout) clearTimeout(syncTimeout)
         syncTimeout = setTimeout(() => {
-          const toSend = { ...pendingSyncChanges }
-          for (const key in pendingSyncChanges) delete pendingSyncChanges[key]
-          
-          fetch(`/api/state?t=${Date.now()}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(toSend),
-            cache: "no-store"
-          }).catch(err => console.error("Failed to sync state", err))
-        }, 200)
-      }
-      
-      return finalState
-    })
-  }, [])
+          const key = accountKeyRef.current
+          const admin = isAdminPath(window.location.pathname)
 
-  // listen for changes from other tabs (the "two users" share the same browser storage)
+          const accountToSend = { ...pendingAccountChanges }
+          const globalToSend = { ...pendingGlobalChanges }
+          for (const k in pendingAccountChanges) delete pendingAccountChanges[k]
+          for (const k in pendingGlobalChanges) delete pendingGlobalChanges[k]
+
+          if (key && Object.keys(accountToSend).length > 0) {
+            fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
+              method: "PATCH",
+              headers: adminHeaders(admin),
+              body: JSON.stringify(accountToSend),
+              cache: "no-store",
+            }).catch((err) => console.error("Failed to sync account", err))
+          }
+
+          // Only the admin scope may mutate global/site state.
+          if (admin && Object.keys(globalToSend).length > 0) {
+            fetch(`/api/state?t=${Date.now()}`, {
+              method: "PATCH",
+              headers: adminHeaders(admin),
+              body: JSON.stringify(globalToSend),
+              cache: "no-store",
+            }).catch((err) => console.error("Failed to sync global state", err))
+          }
+        }, 200)
+
+        return finalState
+      })
+    },
+    [],
+  )
+
+  // cross-tab sync
   useEffect(() => {
+    const storageKey = storageKeyFor(accountKey)
     function onStorage(e: StorageEvent) {
-      if (e.key === STORAGE_KEY && e.newValue) {
+      if (e.key === storageKey && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue)
-          setInternal({ 
-            ...DEFAULT_STATE, 
+          setInternal({
+            ...DEFAULT_STATE,
             ...parsed,
             skins: DEFAULT_STATE.skins,
             upgradeSkins: DEFAULT_STATE.skins,
@@ -179,7 +283,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener("storage", onStorage)
     return () => window.removeEventListener("storage", onStorage)
-  }, [])
+  }, [accountKey])
 
   const login = useCallback(() => {
     setState((p) => ({ ...p, loggedIn: true }))
@@ -226,16 +330,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [setState],
   )
 
-  const addItemHistory = useCallback((entries: import("./types").ItemHistoryEntry[]) => {
-    setState((prev) => ({
-      ...prev,
-      itemHistory: [...entries, ...prev.itemHistory].slice(0, 500) // keep latest 500 entries
-    }))
-  }, [setState])
+  const addItemHistory = useCallback(
+    (entries: import("./types").ItemHistoryEntry[]) => {
+      setState((prev) => ({
+        ...prev,
+        itemHistory: [...entries, ...prev.itemHistory].slice(0, 500),
+      }))
+    },
+    [setState],
+  )
 
   const contextValue: StoreContextValue = {
     state,
     ready,
+    accountKey,
     setState,
     login,
     logout,
@@ -247,13 +355,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addItemHistory,
   }
 
-  return (
-    <StoreContext.Provider
-      value={contextValue}
-    >
-      {children}
-    </StoreContext.Provider>
-  )
+  return <StoreContext.Provider value={contextValue}>{children}</StoreContext.Provider>
 }
 
 export function useStore() {
@@ -283,5 +385,5 @@ export const syncManager = {
   suppressUntil: 0,
   suppress(ms: number) {
     this.suppressUntil = Date.now() + ms
-  }
+  },
 }
