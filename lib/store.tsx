@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
 import type { AppState, Skin, InventoryItem } from "./types"
-import { DEFAULT_STATE } from "./default-data"
+import { DEFAULT_STATE, currentGlobalUpgrades } from "./default-data"
 
 let syncTimeout: NodeJS.Timeout | null = null
 const pendingSyncChanges: Record<string, any> = {}
@@ -39,6 +39,7 @@ function loadState(): AppState {
       ...parsed,
       skins: DEFAULT_STATE.skins,  // always use latest skins list
       upgradeSkins: DEFAULT_STATE.skins, // DO NOT cache upgrade skins
+      upgrades: currentGlobalUpgrades(), // глобальный счётчик всегда свежий (время), не из localStorage
     }
     
     // Migrate old withdrawnItems string array to itemHistory if needed
