@@ -136,6 +136,24 @@ export async function resetAccount(code: string): Promise<void> {
   await kv.set(accountKvKey(code), defaultAccount())
 }
 
+// Fields cleared by a "reset history" — same set the old single account wiped:
+// inventory, game/item history, withdrawn items and the user's upgrade counter.
+// Balance, username and predict settings are kept.
+export const HISTORY_FIELDS = [
+  "inventory",
+  "userUpgrades",
+  "itemHistory",
+  "withdrawnItems",
+  "gameHistory",
+] as const
+
+export async function resetAccountHistory(code: string): Promise<void> {
+  const def = defaultAccount() as any
+  const patch: any = {}
+  for (const f of HISTORY_FIELDS) patch[f] = def[f]
+  await patchAccount(code, patch)
+}
+
 export async function touchKey(code: string): Promise<void> {
   const map = await getAllKeys()
   const k = map[code.toUpperCase()]

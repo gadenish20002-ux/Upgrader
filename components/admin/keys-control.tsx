@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { KeyRound, Plus, Copy, Check, Trash2, RotateCcw, Ban, Play, CalendarPlus } from "lucide-react"
+import { KeyRound, Plus, Copy, Check, Trash2, RotateCcw, Eraser, Ban, Play, CalendarPlus } from "lucide-react"
 import { toast } from "sonner"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
@@ -91,8 +91,11 @@ export function KeysControl() {
       headers,
       body: JSON.stringify({ code, action, days: extraDays }),
     })
-    if (res.ok) load()
-    else toast.error("Ошибка операции")
+    if (res.ok) {
+      load()
+      if (action === "reset-history") toast.success("История аккаунта сброшена")
+      else if (action === "reset") toast.success("Аккаунт сброшен")
+    } else toast.error("Ошибка операции")
   }
 
   async function remove(code: string) {
@@ -212,9 +215,24 @@ export function KeysControl() {
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      if (window.confirm(`Сбросить аккаунт ключа ${k.code} к стартовому состоянию?`)) mutate(k.code, "reset")
+                      if (
+                        window.confirm(
+                          `Сбросить историю аккаунта ${k.code}? Очистятся: инвентарь, история игр, история предметов, выведенные предметы и счётчик апгрейдов. Баланс сохранится.`,
+                        )
+                      )
+                        mutate(k.code, "reset-history")
                     }}
-                    title="Сбросить аккаунт"
+                    title="Сбросить историю (баланс сохраняется)"
+                  >
+                    <Eraser className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (window.confirm(`Сбросить аккаунт ключа ${k.code} полностью к стартовому состоянию (включая баланс)?`)) mutate(k.code, "reset")
+                    }}
+                    title="Полный сброс аккаунта (включая баланс)"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </Button>

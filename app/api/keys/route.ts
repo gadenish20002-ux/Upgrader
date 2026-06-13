@@ -7,6 +7,7 @@ import {
   keyStatus,
   daysLeft,
   resetAccount,
+  resetAccountHistory,
   type AccessKey,
 } from "@/lib/keys"
 import { kv } from "@vercel/kv"
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Mutate a key (admin only). body: { code, action: "revoke"|"restore"|"extend"|"reset", days? }
+// Mutate a key (admin only). body: { code, action: "revoke"|"restore"|"extend"|"reset"|"reset-history", days? }
 export async function PATCH(request: Request) {
   const deny = await requireAdmin(request)
   if (deny) return deny
@@ -94,6 +95,8 @@ export async function PATCH(request: Request) {
       key.days += days
     } else if (action === "reset") {
       await resetAccount(code)
+    } else if (action === "reset-history") {
+      await resetAccountHistory(code)
     } else {
       return NextResponse.json({ error: "unknown action" }, { status: 400 })
     }
