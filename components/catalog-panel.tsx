@@ -85,20 +85,32 @@ export function CatalogPanel({
       .filter((s) => { const minVal = parseFloat(min.replace(',', '.')); return min ? s.price >= minVal : true })
       .filter((s) => { const maxVal = parseFloat(max.replace(',', '.')); return max ? s.price <= maxVal : true })
 
-    if (percentageTarget != null) {
+    // When the user has typed an explicit price filter, honor it as a plain price filter
+    // (price-sorted, full catalog) instead of the percentage eligibility-ranking — otherwise
+    // a selected/recommended skin keeps us in percentage mode and the от/до filter appears
+    // to do nothing (it gets masked by the chance-eligibility window). Without a price filter
+    // the recommendation ranking is preserved so the list doesn't reshuffle on selection.
+    const priceFilterActive = min.trim() !== "" || max.trim() !== ""
+    if (percentageTarget != null && !priceFilterActive) {
       return rankSkinsByPercentageTarget(base, inputValue ?? 0, percentageTarget)
     }
 
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
   }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue])
 
+  // True once the user typed something into the от/до price fields.
+  const hasPriceFilter = min.trim() !== "" || max.trim() !== ""
+
   // Auto-pick the best-matching skin while in recommendation mode. Disabled once the user
   // manually picks a skin, so their choice sticks and the recommendation list stays visible
   // (no reshuffle back to the default catalog / jump to page 1).
+  // Skip auto-pick while a price filter is active: the list is then price-sorted, so
+  // filtered[0] would be the top-priced item and would hijack the target on every keystroke.
+  // The user's current/last pick stays; auto-recommendation resumes once they clear the filter.
   useEffect(() => {
-    if (percentageTarget == null || !autoMatchEnabled) return
+    if (percentageTarget == null || !autoMatchEnabled || hasPriceFilter) return
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
-  }, [filtered, onPercentageMatchChange, percentageTarget, autoMatchEnabled])
+  }, [filtered, onPercentageMatchChange, percentageTarget, autoMatchEnabled, hasPriceFilter])
 
   // Reset to first page on filter changes. NOTE: `min`/`max` are intentionally excluded
   // here because they are also written by the prop-sync effect above when a skin is
