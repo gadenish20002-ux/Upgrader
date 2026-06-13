@@ -49,7 +49,10 @@ export function InventoryPanel({
 
   const displayedSkins = useMemo(() => {
     const skins = mode === "shop" ? state.skins : state.inventory.filter((item) => {
-      if (isSpinning && selectedUids.includes(item.uid)) return false
+      // Hide items that are already selected for the upgrade ("в обмене") from the
+      // available inventory list ("на обмен") so the same skin never shows in both
+      // places. Deselect them from the stake card in the center. (was: only while spinning)
+      if (selectedUids.includes(item.uid)) return false
       return getSkin(state.skins, item.skinId)
     })
     return [...skins].filter((a) => {

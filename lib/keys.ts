@@ -35,7 +35,11 @@ export interface AccessKey {
 }
 
 // Fields that belong to an individual account (per key). Everything else in
-// AppState is global/site-wide (online, upgrades counter, fastMode, sound…).
+// AppState is global/site-wide (online, upgrades counter…).
+// NOTE: fastMultipliers/fastPercentages/soundMode/fastMode are per-user
+// preferences (set via the upgrade settings modal / header toggles). They must
+// be account-scoped — otherwise a non-admin player can't persist them and the
+// 2s /api/state poll resets them back to the global defaults after ~2s.
 export const ACCOUNT_FIELDS = [
   "balance",
   "inventory",
@@ -48,6 +52,10 @@ export const ACCOUNT_FIELDS = [
   "withdrawnItems",
   "predict",
   "gameHistory",
+  "fastMultipliers",
+  "fastPercentages",
+  "soundMode",
+  "fastMode",
 ] as const
 
 export type AccountState = Pick<AppState, (typeof ACCOUNT_FIELDS)[number]>

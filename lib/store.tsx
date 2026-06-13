@@ -23,6 +23,10 @@ const ACCOUNT_FIELDS = new Set<string>([
   "withdrawnItems",
   "predict",
   "gameHistory",
+  "fastMultipliers",
+  "fastPercentages",
+  "soundMode",
+  "fastMode",
 ])
 
 const ADMIN_ACCOUNT = "__default__"
