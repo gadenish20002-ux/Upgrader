@@ -1,0 +1,19 @@
+{
+  "name": "upgrader-sync-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Фоновый воркер: тянет скины/цены/картинки и статистику с донора (upgrader.pro), проходя Cloudflare через headless-браузер.",
+  "scripts": {
+    "start": "node index.js",
+    "sync:skins": "node syncSkins.js",
+    "sync:stats": "node syncStats.js",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.47.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

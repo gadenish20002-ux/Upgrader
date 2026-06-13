@@ -12,17 +12,42 @@ import Link from "next/link"
 
 
 export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: () => void, onLogoClick?: () => void }) {
-  const { state, logout, setState } = useStore()
+  const { state, logout } = useStore()
 
   // Локальные счетчики, чтобы не дергать базу данных каждые 1.5 секунды
   const [localOnline, setLocalOnline] = useState(state.online)
   const [localUpgrades, setLocalUpgrades] = useState(state.upgrades)
 
-  // Обновляем локальные счетчики, если они сильно отстают или при загрузке
+  // Источник правды для онлайна/апгрейдов в шапке — наш /api/v1/stats
+  // (наполняется воркером, парсящим донора), а не общий store-стейт,
+  // который симулирует апгрейды по времени. Поэтому ре-сид из state убран,
+  // чтобы 2-секундная синхронизация store не затирала реальные цифры.
+
+  // Тянем реальные онлайн/апгрейды с нашего внутреннего API (его наполняет
+  // фоновый воркер, парсящий донора). Раз в 60с обновляем «затравку» счётчиков.
   useEffect(() => {
-    setLocalOnline(state.online)
-    setLocalUpgrades(state.upgrades)
-  }, [state.online, state.upgrades])
+    let cancelled = false
+    async function fetchStats() {
+      try {
+        const res = await fetch(`/api/v1/stats?t=${Date.now()}`, { cache: "no-store" })
+        if (!res.ok) return
+        const { online, upgrades } = await res.json()
+        if (cancelled) return
+        // Пере-засеиваем локальные счётчики реальными цифрами; локальная
+        // «живая» анимация ниже продолжает плавно их прокручивать между запросами.
+        if (Number.isFinite(online)) setLocalOnline(online)
+        if (Number.isFinite(upgrades)) setLocalUpgrades(upgrades)
+      } catch {
+        /* сеть/CF — просто оставляем текущие значения */
+      }
+    }
+    fetchStats()
+    const id = setInterval(fetchStats, 60000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   // Имитация живых счётчиков (онлайн + апгрейды), как на референсе:
   // апгрейды тикают часто и небольшими шагами, чтобы одометр плавно прокручивался.
