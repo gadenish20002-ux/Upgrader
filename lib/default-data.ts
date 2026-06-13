@@ -10,6 +10,18 @@ const DEFAULT_INVENTORY: InventoryItem[] = [
   { uid: "inv-4", skinId: "skin-4" },
 ]
 
+// Глобальный счётчик «Апгрейдов» привязан к реальному времени: он всегда
+// показывает значение референса на текущий момент и продолжает расти со
+// временем (в т.ч. между перезагрузками страницы), как на настоящем сайте.
+const UPGRADES_ANCHOR_MS = Date.UTC(2026, 5, 13, 4, 3, 0) // 2026-06-13 07:03 МСК
+const UPGRADES_ANCHOR_VALUE = 167_451_283
+const UPGRADES_PER_SECOND = 2 // ~совпадает с темпом «живого» тика в шапке
+
+export function currentGlobalUpgrades(now: number = Date.now()): number {
+  const elapsedSec = Math.max(0, (now - UPGRADES_ANCHOR_MS) / 1000)
+  return UPGRADES_ANCHOR_VALUE + Math.floor(elapsedSec * UPGRADES_PER_SECOND)
+}
+
 export const DEFAULT_STATE: AppState = {
   balance: 1500,
   inventory: DEFAULT_INVENTORY,
@@ -20,7 +32,7 @@ export const DEFAULT_STATE: AppState = {
   userId: "1021165",
   avatar: null,
   online: 2172,
-  upgrades: 132860345,
+  upgrades: currentGlobalUpgrades(),
   userUpgrades: 0,
   itemHistory: [],
   withdrawnItems: undefined,
