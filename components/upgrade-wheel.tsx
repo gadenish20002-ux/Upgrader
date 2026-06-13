@@ -32,24 +32,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const spinDurationMsRef = useRef<number>(7300)
 
   const prevHasSelectionRef = useRef(hasSelection)
-  // After ANY spin (win or lose), keep the arc frozen at the just-played chance
-  // instead of snapping back to the empty-state 50%. It stays frozen until the
-  // next selection is made, at which point the arc updates to the real chance.
-  // 50% is only the fresh/initial state (no skins selected, no prior spin).
-  const frozenChanceRef = useRef<number | null>(null)
 
   // Clear result and reset wheel on new selection or after a loss
   useEffect(() => {
     const newlySelected = hasSelection && !prevHasSelectionRef.current
-    // Clear the post-spin hold ONLY when the user starts a NEW selection
-    // (transition no-selection → selection). We must NOT clear it merely because
-    // hasSelection is currently true: right after a spin the arc resolves while
-    // the win/lose animation is still running (hasSelection still true), so
-    // clearing here would wipe the frozen value before the selection clears,
-    // snapping the arc back to 50%.
-    if (newlySelected) {
-      frozenChanceRef.current = null
-    }
     if (result !== "none" && !isResolving) {
       if (newlySelected) {
         setResult("none")
@@ -79,9 +65,12 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     prevHasSelectionRef.current = hasSelection
   }, [hasSelection, result, resetTimer, isResolving])
 
+  // Scale follows the reference: real chance only while a target + source are both
+  // active (hasSelection). Once the source is empty — including right after a spin,
+  // when the staked items are consumed — the arc returns to the 50% baseline.
   const displayChance = hasSelection
     ? (lockedChanceRef.current ?? chance)
-    : (frozenChanceRef.current ?? 0.5)
+    : 0.5
   const segAngle = Math.min(0.999, Math.max(0.0001, displayChance)) * 360
 
   const circumference = 779.115
@@ -103,7 +92,6 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
         const duration = isFast ? 1800 : 7300
         spinDurationMsRef.current = duration     // used by JSX transition style
         lockedChanceRef.current = chance          // freeze arc sector
-        frozenChanceRef.current = null            // drop any previous post-spin hold
 
         // ── 2. Compute the target rotation angle ──
         const halfSeg = segAngle / 2
@@ -151,10 +139,9 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             flushSync(() => {
               setIsResolving(true)
               setSpinning(false)
-              // Hold the just-played chance on the arc after ANY spin (win or
-              // lose). It stays until the user picks a new skin; only a truly
-              // fresh/empty state (initial load) shows 50%.
-              frozenChanceRef.current = lockedChanceRef.current
+              // Source items are consumed on resolve, so the arc returns to the
+              // 50% baseline (via displayChance) once hasSelection drops — matching
+              // the reference behaviour for both win and lose.
               lockedChanceRef.current = null
               setResult(win ? "win" : "lose")
             })
