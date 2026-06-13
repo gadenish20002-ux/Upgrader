@@ -67,7 +67,7 @@ export function SettingsControl() {
       <div className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground">
-            Пароль для доступа к сайту
+            Пароль администратора
           </label>
           <Input 
             type="text" 
@@ -76,7 +76,7 @@ export function SettingsControl() {
             placeholder="Оставьте пустым для отключения пароля" 
           />
           <p className="text-xs text-muted-foreground">
-            Установка пароля защитит весь сайт. Ввод пароля будет запрашиваться раз в сутки с одного устройства.
+            Защищает доступ к админ-панели. Сам сайт открывается по ключам доступа (см. блок «Ключи доступа» выше).
           </p>
         </div>
 

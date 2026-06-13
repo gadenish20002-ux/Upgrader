@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Tektur, Exo_2 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
-import { SiteGate } from '@/components/site-gate'
+import { AccountGate } from '@/components/account-gate'
 import { ItemToaster } from '@/components/item-toast'
 import './globals.css'
 
@@ -53,9 +53,9 @@ export default function RootLayout({
       </head>
       <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg-PEFHGDDX.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
         <StoreProvider>
-          <SiteGate>
+          <AccountGate>
             {children}
-          </SiteGate>
+          </AccountGate>
         </StoreProvider>
         <ItemToaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}

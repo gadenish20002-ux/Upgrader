@@ -1,5 +1,10 @@
+import { AdminGate } from "@/components/admin/admin-gate"
 import { PredictPageClient } from "@/components/admin/predict-page-client"
 
 export default function PredictPage() {
-  return <PredictPageClient />
+  return (
+    <AdminGate>
+      <PredictPageClient />
+    </AdminGate>
+  )
 }
