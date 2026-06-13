@@ -41,8 +41,13 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   // Clear result and reset wheel on new selection or after a loss
   useEffect(() => {
     const newlySelected = hasSelection && !prevHasSelectionRef.current
-    // A fresh selection (choosing the weapon to upgrade) clears the post-spin hold.
-    if (hasSelection && frozenChanceRef.current !== null) {
+    // Clear the post-spin hold ONLY when the user starts a NEW selection
+    // (transition no-selection → selection). We must NOT clear it merely because
+    // hasSelection is currently true: right after a spin the arc resolves while
+    // the win/lose animation is still running (hasSelection still true), so
+    // clearing here would wipe the frozen value before the selection clears,
+    // snapping the arc back to 50%.
+    if (newlySelected) {
       frozenChanceRef.current = null
     }
     if (result !== "none" && !isResolving) {
