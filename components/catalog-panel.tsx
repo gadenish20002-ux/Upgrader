@@ -29,6 +29,7 @@ export function CatalogPanel({
   autoMatchEnabled = true,
   isSpinning,
   inputValue,
+  excludedSkinIds,
 }: {
   targetId: string | null
   onSelect: (id: string) => void
@@ -40,6 +41,8 @@ export function CatalogPanel({
   autoMatchEnabled?: boolean
   isSpinning?: boolean
   inputValue?: number
+  // Skin ids currently used as the upgrade source — must never appear as a target option
+  excludedSkinIds?: string[]
 }) {
   const { state } = useStore()
   const [query, setQuery] = useState("")
@@ -72,6 +75,8 @@ export function CatalogPanel({
     }
   }, [priceMin, priceMax, percentageTarget])
 
+  const excludedSet = useMemo(() => new Set(excludedSkinIds ?? []), [excludedSkinIds])
+
   const filtered = useMemo(() => {
     // If we are looking at new items, show randomNewSkins. Otherwise show the rest.
     const baseSkins = percentageTarget != null
@@ -81,6 +86,9 @@ export function CatalogPanel({
       : state.upgradeSkins.filter(s => !randomNewSkins.some(rn => rn.id === s.id));
 
     const base = baseSkins
+      // A skin already selected as the upgrade source can't also be the target (no two
+      // identical items across the panels) — drop it so a different skin is shown/picked.
+      .filter((s) => !excludedSet.has(s.id))
       .filter((s) => `${s.weapon} ${s.name}`.toLowerCase().includes(query.toLowerCase()))
       .filter((s) => { const minVal = parseFloat(min.replace(',', '.')); return min ? s.price >= minVal : true })
       .filter((s) => { const maxVal = parseFloat(max.replace(',', '.')); return max ? s.price <= maxVal : true })
@@ -96,7 +104,7 @@ export function CatalogPanel({
     }
 
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
-  }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue])
+  }, [state.upgradeSkins, randomNewSkins, showNewItems, query, min, max, sortOrder, percentageTarget, inputValue, excludedSet])
 
   // True once the user typed something into the от/до price fields.
   const hasPriceFilter = min.trim() !== "" || max.trim() !== ""
@@ -111,6 +119,15 @@ export function CatalogPanel({
     if (percentageTarget == null || !autoMatchEnabled || hasPriceFilter) return
     onPercentageMatchChange?.(filtered[0]?.id ?? null)
   }, [filtered, onPercentageMatchChange, percentageTarget, autoMatchEnabled, hasPriceFilter])
+
+  // Safety net for the manual-pick case (auto-match disabled): if the currently chosen
+  // target becomes identical to a skin that's now selected as the source — e.g. the won
+  // item is added back after an upgrade — auto-substitute a different eligible skin so the
+  // same item is never on both sides at once.
+  useEffect(() => {
+    if (!targetId || !excludedSet.has(targetId)) return
+    onPercentageMatchChange?.(filtered[0]?.id ?? null)
+  }, [targetId, excludedSet, filtered, onPercentageMatchChange])
 
   // Reset to first page on filter changes. NOTE: `min`/`max` are intentionally excluded
   // here because they are also written by the prop-sync effect above when a skin is

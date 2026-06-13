@@ -170,6 +170,22 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     [selectedShopIds, state.skins],
   )
 
+  // Skin ids currently used as the upgrade source (left panel): inventory items by their
+  // skinId + selected shop skins. The same skin must never be both a source and the target
+  // (the right "Выберите предмет для апгрейда" panel), so we exclude these from the target
+  // catalog and auto-substitute a different skin. This notably happens right after an
+  // upgrade win, when the won item is added back as the source.
+  const excludedTargetSkinIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of selectedItems) {
+      if (item) ids.add(item.skinId)
+    }
+    for (const shopSkin of selectedShopItems) {
+      if (shopSkin) ids.add(shopSkin.id)
+    }
+    return Array.from(ids)
+  }, [selectedItems, selectedShopItems])
+
   const selectedInventoryValue = useMemo(() => {
     return selectedItems.reduce((sum, item) => {
       const skin = getSkin(state.skins, item!.skinId)
@@ -254,7 +270,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setCatalogPriceMin(range.min)
     setCatalogPriceMax(range.max)
 
+    const excludedSet = new Set(excludedTargetSkinIds)
     const validSkins = state.upgradeSkins.filter(skin => {
+      // Never recommend a skin that's already selected as the source (identical item)
+      if (excludedSet.has(skin.id)) return false
       return isEligibleUpgradeChance(getUpgradeChance(currentInputValue, skin.price))
     });
 
@@ -1115,6 +1134,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               autoMatchEnabled={autoMatchEnabled}
               isSpinning={isUpgradeAnimating}
               inputValue={inputValue}
+              excludedSkinIds={excludedTargetSkinIds}
             />
           </div>
         </div>
