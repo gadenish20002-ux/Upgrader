@@ -6,7 +6,6 @@ import { Logo } from "./logo"
 import { LogOut, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoginButton } from "./login-button"
-import { OdometerCounter } from "./odometer-counter"
 import { currentGlobalUpgrades } from "@/lib/default-data"
 import Image from "next/image"
 import Link from "next/link"
@@ -39,8 +38,8 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
         return next > prev ? next : prev
       })
     }
-    // частый тик => одометр плавно прокручивается, значение всегда растёт
-    const upgradesInterval = setInterval(tickUpgrades, 700)
+    // частый тик => число обновляется на месте (tabular-nums, без анимации), как «Онлайн»
+    const upgradesInterval = setInterval(tickUpgrades, 300)
 
     const bumpOnline = () => {
       setLocalOnline((prev) => {
@@ -92,10 +91,9 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
                 <img src="/assets/images/header/logo.svg" alt="Upgrades" className="h-[1.125rem] w-[1.125rem] shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-gray tablet:block hidden text-sm font-exo2">Апгрейдов</span>
-                  <OdometerCounter
-                    value={localUpgrades}
-                    className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]"
-                  />
+                  <span className="text-[0.875rem] font-semibold font-exo2 tabular-nums leading-5 pb-[2.4px] tracking-[0.04em]">
+                    {formatNumber(localUpgrades)}
+                  </span>
                 </div>
               </div>
             </div>
