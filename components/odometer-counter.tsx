@@ -25,7 +25,11 @@ export function OdometerCounter({ value, className = "", format = "( ddd)" }: Od
           value, // seed with the initial value so only live changes roll
           format,
           theme: "default",
-          animation: "count",
+          // "count" numerically interpolates and can overshoot/correct on rapid
+          // updates → the last digit visibly dips by 1 ("дёргается"). The default
+          // digit-slide animation only rolls ribbons toward the new value, so a
+          // monotonically increasing value never appears to go down.
+          animation: "slide",
         })
         // First render is already at `value`; nothing else to do this tick.
         return
