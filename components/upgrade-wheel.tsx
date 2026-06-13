@@ -32,15 +32,16 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const spinDurationMsRef = useRef<number>(7300)
 
   const prevHasSelectionRef = useRef(hasSelection)
-  // After a WIN, keep the arc frozen at the just-won chance instead of snapping
-  // back to the empty-state 50%. It stays frozen until the next selection (the
-  // weapon to upgrade) is made, at which point the arc updates to the real chance.
+  // After ANY spin (win or lose), keep the arc frozen at the just-played chance
+  // instead of snapping back to the empty-state 50%. It stays frozen until the
+  // next selection is made, at which point the arc updates to the real chance.
+  // 50% is only the fresh/initial state (no skins selected, no prior spin).
   const frozenChanceRef = useRef<number | null>(null)
 
   // Clear result and reset wheel on new selection or after a loss
   useEffect(() => {
     const newlySelected = hasSelection && !prevHasSelectionRef.current
-    // A fresh selection (choosing the weapon to upgrade) clears the post-win hold.
+    // A fresh selection (choosing the weapon to upgrade) clears the post-spin hold.
     if (hasSelection && frozenChanceRef.current !== null) {
       frozenChanceRef.current = null
     }
@@ -97,7 +98,7 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
         const duration = isFast ? 1800 : 7300
         spinDurationMsRef.current = duration     // used by JSX transition style
         lockedChanceRef.current = chance          // freeze arc sector
-        frozenChanceRef.current = null            // drop any previous post-win hold
+        frozenChanceRef.current = null            // drop any previous post-spin hold
 
         // ── 2. Compute the target rotation angle ──
         const halfSeg = segAngle / 2
@@ -145,7 +146,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             flushSync(() => {
               setIsResolving(true)
               setSpinning(false)
-              if (win) frozenChanceRef.current = lockedChanceRef.current
+              // Hold the just-played chance on the arc after ANY spin (win or
+              // lose). It stays until the user picks a new skin; only a truly
+              // fresh/empty state (initial load) shows 50%.
+              frozenChanceRef.current = lockedChanceRef.current
               lockedChanceRef.current = null
               setResult(win ? "win" : "lose")
             })
