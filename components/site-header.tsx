@@ -7,6 +7,7 @@ import { LogOut, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoginButton } from "./login-button"
 import { OdometerCounter } from "./odometer-counter"
+import { currentGlobalUpgrades } from "@/lib/default-data"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -16,25 +17,30 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
 
   // Локальные счетчики, чтобы не дергать базу данных каждые 1.5 секунды
   const [localOnline, setLocalOnline] = useState(state.online)
-  const [localUpgrades, setLocalUpgrades] = useState(state.upgrades)
+  // Апгрейды — глобальный счётчик, привязанный к времени: монотонно растёт,
+  // одинаков для всех. НЕ синхронизируем его с state.upgrades, иначе сброс
+  // каждые 2с конфликтует с локальным тиком и счётчик «дёргается» вверх-вниз.
+  const [localUpgrades, setLocalUpgrades] = useState(() => currentGlobalUpgrades())
 
-  // Обновляем локальные счетчики, если они сильно отстают или при загрузке
+  // Онлайн обновляем при загрузке/изменении с сервера
   useEffect(() => {
     setLocalOnline(state.online)
-    setLocalUpgrades(state.upgrades)
-  }, [state.online, state.upgrades])
+  }, [state.online])
 
-  // Имитация живых счётчиков (онлайн + апгрейды), как на референсе:
-  // апгрейды тикают часто и небольшими шагами, чтобы одометр плавно прокручивался.
+  // Живые счётчики: апгрейды читаем из функции времени (монотонно, без рывков),
+  // онлайн — небольшие случайные колебания, как на референсе.
   useEffect(() => {
-    let upgradesTimer: ReturnType<typeof setTimeout>
     let onlineTimer: ReturnType<typeof setTimeout>
 
-    const bumpUpgrades = () => {
-      setLocalUpgrades((prev) => prev + (Math.floor(Math.random() * 3) + 1))
-      // 0.6–1.4s между апгрейдами — живой, но реалистичный темп прокрутки
-      upgradesTimer = setTimeout(bumpUpgrades, Math.floor(Math.random() * 800) + 600)
+    const tickUpgrades = () => {
+      setLocalUpgrades((prev) => {
+        const next = currentGlobalUpgrades()
+        // защита от любого отката назад
+        return next > prev ? next : prev
+      })
     }
+    // частый тик => одометр плавно прокручивается, значение всегда растёт
+    const upgradesInterval = setInterval(tickUpgrades, 700)
 
     const bumpOnline = () => {
       setLocalOnline((prev) => {
@@ -43,12 +49,10 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
       })
       onlineTimer = setTimeout(bumpOnline, 2500)
     }
-
-    upgradesTimer = setTimeout(bumpUpgrades, 800)
     onlineTimer = setTimeout(bumpOnline, 2500)
 
     return () => {
-      clearTimeout(upgradesTimer)
+      clearInterval(upgradesInterval)
       clearTimeout(onlineTimer)
     }
   }, [])
