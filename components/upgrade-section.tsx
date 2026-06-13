@@ -203,6 +203,24 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const isReadyForTarget = !targetSkin && inputValue > 0
   const isUpgradeAnimating = spinning || loseAnimating || fastLoseAnimating || winAnimating
 
+  // Keep the per-account background state-sync (the 2s /api/account + /api/state poll in
+  // lib/store) suppressed for the WHOLE spin → win/lose animation flow. handleSpin only
+  // suppresses a fixed 8s, but the wheel spin + the Lottie win animation run longer than
+  // that, so a poll would fire mid-animation and overwrite optimistic local state (the
+  // just-consumed stake / freshly-won item that hasn't finished PATCHing to the server yet)
+  // — which made the target skin vanish and the chance/percentages reset. We re-suppress
+  // while animating and add a short grace window after so the trailing PATCH lands first.
+  const wasAnimatingRef = useRef(false)
+  useEffect(() => {
+    if (isUpgradeAnimating) {
+      syncManager.suppress(20000)
+      wasAnimatingRef.current = true
+    } else if (wasAnimatingRef.current) {
+      wasAnimatingRef.current = false
+      syncManager.suppress(2500)
+    }
+  }, [isUpgradeAnimating])
+
   useEffect(() => {
     preloadWinAnimationFrames()
     void preloadLoseAnimationFrames()
