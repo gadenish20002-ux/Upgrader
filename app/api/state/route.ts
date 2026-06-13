@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { kv } from "@vercel/kv"
-import { DEFAULT_STATE } from "@/lib/default-data"
+import { DEFAULT_STATE, currentGlobalUpgrades } from "@/lib/default-data"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -18,9 +18,12 @@ export async function GET() {
     const data = await kv.get(KV_KEY)
     if (!data) {
       const defaultStripped = stripSkins(DEFAULT_STATE)
-      return NextResponse.json(defaultStripped)
+      // Глобальный счётчик «Апгрейдов» всегда привязан к реальному времени
+      return NextResponse.json({ ...defaultStripped, upgrades: currentGlobalUpgrades() })
     }
-    return NextResponse.json(data)
+    // Никогда не отдаём сохранённое (устаревшее) значение upgrades — оно
+    // вычисляется по времени, чтобы соответствовать референсу и расти.
+    return NextResponse.json({ ...(data as Record<string, unknown>), upgrades: currentGlobalUpgrades() })
   } catch (error: any) {
     console.error("KV GET Error:", error)
     return NextResponse.json({ error: "Failed to fetch state from KV" }, { status: 500 })
