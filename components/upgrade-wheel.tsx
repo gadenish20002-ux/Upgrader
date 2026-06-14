@@ -68,10 +68,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
         }, 2000)
         setResetTimer(timer)
       } else if (!hasSelection && result === "win") {
+        // After a win: clear the win text but LEAVE the pointer where it landed
+        // (matching the held chance). It is reset to the neutral position only on
+        // the next new selection (the newlySelected branch above).
         setResult("none")
-        const target = Math.round(rotationRef.current / 360) * 360
-        setRotation(target)
-        rotationRef.current = target
       }
     }
     prevHasSelectionRef.current = hasSelection
