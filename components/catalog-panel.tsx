@@ -100,7 +100,12 @@ export function CatalogPanel({
     // the recommendation ranking is preserved so the list doesn't reshuffle on selection.
     const priceFilterActive = min.trim() !== "" || max.trim() !== ""
     if (percentageTarget != null && !priceFilterActive) {
-      return rankSkinsByPercentageTarget(base, inputValue ?? 0, percentageTarget)
+      const ranked = rankSkinsByPercentageTarget(base, inputValue ?? 0, percentageTarget)
+      // Never leave the catalog blank. When no stake is active (e.g. mid-spin the source
+      // is consumed and inputValue is 0, or the stake makes no skin eligible) the ranking
+      // returns nothing — fall back to a price-sorted list so skins stay visible.
+      if (ranked.length > 0) return ranked
+      return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)
     }
 
     return base.sort((a, b) => sortOrder === "desc" ? b.price - a.price : a.price - b.price)

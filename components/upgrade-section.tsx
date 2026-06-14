@@ -612,9 +612,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setState((p) => ({
         ...p,
         balance: Math.max(0, p.balance - balanceInput),
+        // Defensively re-strip the consumed source items before adding the won skin.
+        // A stale in-flight server poll can re-insert a just-consumed source item into
+        // local inventory between the spin-start consume and this win resolve, which
+        // made the source skin come back into the inventory together with the won skin.
         inventory: [
           { uid: newUid!, skinId: targetSkin.id },
-          ...p.inventory,
+          ...p.inventory.filter((item) => !consumedUids.has(item.uid)),
         ],
         upgrades: p.upgrades + 1,
         userUpgrades: p.userUpgrades + 1,
@@ -1154,7 +1158,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onPercentageMatchChange={setTargetId}
               autoMatchEnabled={autoMatchEnabled}
               isSpinning={isUpgradeAnimating}
-              inputValue={inputValue}
+              // Use the locked stake total during a spin: the raw inputValue drops to 0 the
+              // instant the source items are consumed, which made the catalog rank against 0
+              // and go blank ("Выберите скин" empty) mid-spin. The locked total keeps it stable.
+              inputValue={displayTotal}
               excludedSkinIds={excludedTargetSkinIds}
             />
           </div>
