@@ -366,6 +366,20 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setCatalogPriceMax(null)
   }
 
+  // Post-spin reset (reference behaviour): clear only the SOURCE side (staked items /
+  // balance) and keep the chosen target skin in the right panel. Auto-match stays
+  // disabled so the target persists until the user changes it or picks new source
+  // items. The wheel returns to 50% on its own once the source is empty.
+  function clearSourceKeepTarget() {
+    setSelectedUids([])
+    setSelectedShopIds([])
+    setBalanceInput(0)
+    setWonItemUid(null)
+    setActivePercentageTarget(null)
+    setCatalogPriceMin(null)
+    setCatalogPriceMax(null)
+  }
+
   function handleAddWonItem() {
     if (wonItemUid) {
       setSelectedUids([wonItemUid])
@@ -521,7 +535,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
     lockedLeftCard.current = null
     lockedTarget.current = undefined
-    clearSelection()
+    clearSourceKeepTarget()
   }
 
   async function handleSpin() {
@@ -555,6 +569,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       total: inputValue,
     }
     lockedTarget.current = targetSkin
+    // Freeze the catalog auto-match for the whole spin. Consuming the staked items
+    // drops inputValue → the catalog would otherwise re-rank and swap/clear the
+    // selected target mid-spin, so the chosen skin must stay put in the right panel.
+    setAutoMatchEnabled(false)
     const consumedUids = new Set(selectedItems.map((item) => item!.uid))
     const shouldUseFastLoseAnimation = state.fastMode || isMobile
 
@@ -626,7 +644,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         }
         lockedLeftCard.current = null
         lockedTarget.current = undefined
-        clearSelection()
+        clearSourceKeepTarget()
       }
     }
     
@@ -949,6 +967,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 onClick={() => {
                   if (isUpgradeAnimating) return
                   setTargetId(null)
+                  // Resume catalog auto-recommendation once the target is removed
+                  // (it was frozen during the spin to keep the skin in place).
+                  setAutoMatchEnabled(true)
                 }}
                 className="absolute top-2 right-2 z-10 flex h-[0.875rem] w-[0.875rem] cursor-pointer items-center justify-center rounded-full bg-[#1c1d21] transition-colors hover:bg-gray-700 lg:top-3 lg:right-3 lg:h-8 lg:w-8"
               >
@@ -1005,7 +1026,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               }
               lockedLeftCard.current = null
               lockedTarget.current = undefined
-              clearSelection()
+              clearSourceKeepTarget()
               if (pendingWonItemUidRef.current) {
                 setWonItemUid(pendingWonItemUidRef.current)
                 pendingWonItemUidRef.current = null
@@ -1072,7 +1093,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
           lockedLeftCard.current = null
           lockedTarget.current = undefined
-          clearSelection()
+          clearSourceKeepTarget()
         }}
         onStopSound={stopLoseCaseSound}
       />
