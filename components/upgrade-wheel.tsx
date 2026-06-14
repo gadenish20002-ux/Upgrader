@@ -58,19 +58,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
           clearTimeout(resetTimer)
           setResetTimer(null)
         }
-      } else if (!hasSelection && !resetTimer && result === "lose") {
-        const timer = setTimeout(() => {
-          setResult("none")
-          const target = Math.round(rotationRef.current / 360) * 360
-          setRotation(target)
-          rotationRef.current = target
-          setResetTimer(null)
-        }, 2000)
-        setResetTimer(timer)
-      } else if (!hasSelection && result === "win") {
-        // After a win: clear the win text but LEAVE the pointer where it landed
-        // (matching the held chance). It is reset to the neutral position only on
-        // the next new selection (the newlySelected branch above).
+      } else if (!hasSelection && (result === "win" || result === "lose")) {
+        // After ANY spin (win or loss): clear the result text but LEAVE the pointer
+        // and the held chance where they landed. They are reset to the neutral /
+        // 50% baseline only on the next new selection (the newlySelected branch).
         setResult("none")
       }
     }
@@ -151,10 +142,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             flushSync(() => {
               setIsResolving(true)
               setSpinning(false)
-              // After a WIN, hold the just-played chance on the arc until the user
-              // picks the next source weapon (cleared on the next new selection).
-              // After a LOSS, leave it null so the arc drops back to the 50% baseline.
-              frozenChanceRef.current = win ? lockedChanceRef.current : null
+              // After ANY spin (win OR loss), hold the just-played chance on the arc
+              // until the user picks the next source weapon (cleared on the next new
+              // selection). 50% is only the fresh/empty baseline.
+              frozenChanceRef.current = lockedChanceRef.current
               lockedChanceRef.current = null
               setResult(win ? "win" : "lose")
             })
