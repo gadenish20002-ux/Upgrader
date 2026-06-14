@@ -32,10 +32,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const spinDurationMsRef = useRef<number>(7300)
 
   const prevHasSelectionRef = useRef(hasSelection)
-  // After a WIN, the arc holds the just-played chance (e.g. 72%) instead of
-  // snapping to 50%. It stays held until the user picks the next source weapon
-  // (no-selection → selection transition), then updates to the real chance.
-  // A LOSS does NOT set this, so the arc drops back to the 50% baseline.
+  // After ANY spin (win OR loss), the arc holds the just-played chance (e.g. 72%)
+  // instead of snapping to 50%. It stays held until the user picks the next source
+  // weapon (no-selection → selection transition), then updates to the real chance.
+  // Only pointer.png resets to neutral after a spin — the arc/held chance stays.
   const frozenChanceRef = useRef<number | null>(null)
 
   // Clear result and reset wheel on new selection or after a loss
@@ -59,18 +59,22 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
           setResetTimer(null)
         }
       } else if (!hasSelection && (result === "win" || result === "lose")) {
-        // After ANY spin (win or loss): clear the result text but LEAVE the pointer
-        // and the held chance where they landed. They are reset to the neutral /
-        // 50% baseline only on the next new selection (the newlySelected branch).
+        // After ANY spin (win or loss): clear the result text and reset ONLY the
+        // pointer (pointer.png) to its neutral position. The held chance/arc
+        // (frozenChanceRef) is intentionally NOT touched — it stays until the next
+        // new selection.
         setResult("none")
+        const target = Math.round(rotationRef.current / 360) * 360
+        setRotation(target)
+        rotationRef.current = target
       }
     }
     prevHasSelectionRef.current = hasSelection
   }, [hasSelection, result, resetTimer, isResolving])
 
   // Real chance while a target + source are both active (hasSelection). When the
-  // source is empty: hold the just-won chance after a WIN (frozenChanceRef), else
-  // fall back to the 50% baseline (fresh state / after a LOSS).
+  // source is empty: hold the just-played chance after ANY spin (frozenChanceRef),
+  // else fall back to the 50% baseline (fresh/empty state only).
   const displayChance = hasSelection
     ? (lockedChanceRef.current ?? chance)
     : (frozenChanceRef.current ?? 0.5)
