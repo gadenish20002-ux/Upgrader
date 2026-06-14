@@ -32,10 +32,22 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const spinDurationMsRef = useRef<number>(7300)
 
   const prevHasSelectionRef = useRef(hasSelection)
+  // After a WIN, the arc holds the just-played chance (e.g. 72%) instead of
+  // snapping to 50%. It stays held until the user picks the next source weapon
+  // (no-selection → selection transition), then updates to the real chance.
+  // A LOSS does NOT set this, so the arc drops back to the 50% baseline.
+  const frozenChanceRef = useRef<number | null>(null)
 
   // Clear result and reset wheel on new selection or after a loss
   useEffect(() => {
     const newlySelected = hasSelection && !prevHasSelectionRef.current
+    // Drop the post-win hold ONLY on a genuine new selection. We must NOT clear it
+    // merely because hasSelection is currently true: the arc resolves while the win
+    // animation still runs (parent keeps hasSelection true via isUpgradeAnimating),
+    // so clearing on hasSelection would wipe the held value and snap it to 50%.
+    if (newlySelected) {
+      frozenChanceRef.current = null
+    }
     if (result !== "none" && !isResolving) {
       if (newlySelected) {
         setResult("none")
@@ -65,12 +77,12 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     prevHasSelectionRef.current = hasSelection
   }, [hasSelection, result, resetTimer, isResolving])
 
-  // Scale follows the reference: real chance only while a target + source are both
-  // active (hasSelection). Once the source is empty — including right after a spin,
-  // when the staked items are consumed — the arc returns to the 50% baseline.
+  // Real chance while a target + source are both active (hasSelection). When the
+  // source is empty: hold the just-won chance after a WIN (frozenChanceRef), else
+  // fall back to the 50% baseline (fresh state / after a LOSS).
   const displayChance = hasSelection
     ? (lockedChanceRef.current ?? chance)
-    : 0.5
+    : (frozenChanceRef.current ?? 0.5)
   const segAngle = Math.min(0.999, Math.max(0.0001, displayChance)) * 360
 
   const circumference = 779.115
@@ -139,9 +151,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             flushSync(() => {
               setIsResolving(true)
               setSpinning(false)
-              // Source items are consumed on resolve, so the arc returns to the
-              // 50% baseline (via displayChance) once hasSelection drops — matching
-              // the reference behaviour for both win and lose.
+              // After a WIN, hold the just-played chance on the arc until the user
+              // picks the next source weapon (cleared on the next new selection).
+              // After a LOSS, leave it null so the arc drops back to the 50% baseline.
+              frozenChanceRef.current = win ? lockedChanceRef.current : null
               lockedChanceRef.current = null
               setResult(win ? "win" : "lose")
             })
