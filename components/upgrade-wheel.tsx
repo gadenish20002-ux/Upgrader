@@ -35,7 +35,8 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   // After ANY spin (win OR loss), the arc holds the just-played chance (e.g. 72%)
   // instead of snapping to 50%. It stays held until the user picks the next source
   // weapon (no-selection → selection transition), then updates to the real chance.
-  // Only pointer.png resets to neutral after a spin — the arc/held chance stays.
+  // The pointer also stays where it landed after a spin; it resets to neutral only
+  // when the user picks a new source weapon (same moment the held chance updates).
   const frozenChanceRef = useRef<number | null>(null)
 
   // Clear result and reset wheel on new selection or after a loss
@@ -46,27 +47,28 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     // animation still runs (parent keeps hasSelection true via isUpgradeAnimating),
     // so clearing on hasSelection would wipe the held value and snap it to 50%.
     if (newlySelected) {
+      // New source weapon picked → drop the held chance AND reset the pointer to
+      // neutral (к нулям). This runs regardless of `result` (after a spin result is
+      // already "none" by selection time), so the pointer resets when a weapon is
+      // selected — not right after the spin.
       frozenChanceRef.current = null
+      const target = Math.round(rotationRef.current / 360) * 360
+      setRotation(target)
+      rotationRef.current = target
     }
     if (result !== "none" && !isResolving) {
       if (newlySelected) {
         setResult("none")
-        const target = Math.round(rotationRef.current / 360) * 360
-        setRotation(target)
-        rotationRef.current = target
         if (resetTimer) {
           clearTimeout(resetTimer)
           setResetTimer(null)
         }
       } else if (!hasSelection && (result === "win" || result === "lose")) {
-        // After ANY spin (win or loss): clear the result text and reset ONLY the
-        // pointer (pointer.png) to its neutral position. The held chance/arc
-        // (frozenChanceRef) is intentionally NOT touched — it stays until the next
-        // new selection.
+        // After ANY spin (win or loss): just clear the result text. The pointer
+        // stays where it landed and the held chance/arc (frozenChanceRef) stays
+        // too. The pointer is reset to neutral ONLY when the user picks a new
+        // source weapon (the newlySelected branch above) — not right after the spin.
         setResult("none")
-        const target = Math.round(rotationRef.current / 360) * 360
-        setRotation(target)
-        rotationRef.current = target
       }
     }
     prevHasSelectionRef.current = hasSelection
