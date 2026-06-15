@@ -338,6 +338,15 @@
   font-family: var(--font-exo2), "Exo 2", sans-serif;
 }
 
+/* Streamer Battle header badge — gold gradient text */
+.text-gradient-streamer-battle {
+  background: linear-gradient(90deg, #ECD591 0%, #FFF6DE 50%, #A68B47 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 .toast-close {
   flex-shrink: 0;
   margin-left: 12px;
