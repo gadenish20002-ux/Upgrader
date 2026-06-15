@@ -340,7 +340,7 @@
 
 /* Streamer Battle header badge — gold gradient text */
 .text-gradient-streamer-battle {
-  background: linear-gradient(90deg, #ECD591 0%, #FFF6DE 50%, #A68B47 100%);
+  background: linear-gradient(270deg, rgb(236, 213, 145), rgb(166, 139, 71), rgb(236, 213, 145));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
