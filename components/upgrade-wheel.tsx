@@ -247,19 +247,19 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
               <div className="flex flex-col items-center justify-center text-center">
                 {result === "lose" ? (
                   <>
-                    <span className="font-sans bg-clip-text bg-gradient-to-b font-bold from-[#FF7474] lg:text-4xl text-2xl text-transparent to-[#FFC4C4] transition-all duration-500 ease-in-out uppercase">
+                    <span className="font-exo bg-clip-text bg-gradient-to-b font-bold from-[#FF7474] lg:text-4xl text-2xl text-transparent to-[#FFC4C4] transition-all duration-500 ease-in-out uppercase">
                       НЕ БЕДА
                     </span>
-                    <span className="font-sans lg:text-sm text-xs text-[#d1d1d1] transition-all duration-500 ease-in-out mt-1">
+                    <span className="font-exo lg:text-sm text-xs text-[#d1d1d1] transition-all duration-500 ease-in-out mt-1">
                       попробуем еще?
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className="font-sans bg-clip-text bg-gradient-to-b font-bold from-[#FFE02D] lg:text-4xl text-2xl text-transparent to-[#53DB42] transition-all duration-500 ease-in-out">
+                    <span className="font-exo bg-clip-text bg-gradient-to-b font-bold from-[#FFE02D] lg:text-4xl text-2xl text-transparent to-[#53DB42] transition-all duration-500 ease-in-out">
                       {(displayChance * 100).toFixed(2)}{showPercentages ? "%" : ""}
                     </span>
-                    <span className="font-sans bg-clip-text bg-gradient-to-b from-[#FFE02D] lg:text-sm text-transparent text-xs to-[#53DB42] transition-all duration-500 ease-in-out">
+                    <span className="font-exo bg-clip-text bg-gradient-to-b from-[#FFE02D] lg:text-sm text-transparent text-xs to-[#53DB42] transition-all duration-500 ease-in-out">
                       {getChanceText(displayChance)}
                     </span>
                   </>
@@ -268,10 +268,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
             </div>
           </div>
           
-          <span className="font-sans text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-white/50 lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
-          <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-white/50 lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
-          <span className="font-sans text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-white/50 lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
-          <span className="font-sans text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-white/50 lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
+          <span className="font-exo text-xxxs lg:text-xxs absolute top-[1.275rem] left-[6.275rem] text-white/50 lg:top-[2.375rem] lg:left-[10.125rem] z-[4]"> 100% </span>
+          <span className="font-exo text-xxxs lg:text-xxs absolute top-[6.625rem] left-[1.175rem] text-white/50 lg:top-[10.475rem] lg:left-[2.125rem] z-[4]"> 50% </span>
+          <span className="font-exo text-xxxs lg:text-xxs absolute top-[6.625rem] left-[11.675rem] text-white/50 lg:top-[10.475rem] lg:left-[18.375rem] z-[4]"> 50% </span>
+          <span className="font-exo text-xxxs lg:text-xxs absolute top-[11.657rem] left-[6.5rem] text-white/50 lg:top-[18.625rem] lg:left-[10.5625rem] z-[4]"> 0% </span>
         </div>
       </div>
     </div>
