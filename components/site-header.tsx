@@ -99,7 +99,7 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
             </div>
 
             {/* Streamer Battle badge */}
-            <div className="hidden tablet:flex h-[2.5rem] w-[11.875rem] shrink-0 items-center">
+            <div className="hidden tablet:flex h-[2.375rem] w-[13.4375rem] shrink-0 items-center justify-center rounded-[0.375rem] bg-[linear-gradient(90deg,#ECD591_0%,#897237_50%,#ECD591_100%)] p-[0.0625rem] transition-all duration-300">
               <div className="tablet:rounded-[0.375rem] tablet:bg-cover tablet:px-[0.5625rem] tablet:py-[0.5625rem] relative flex h-full w-full items-center justify-between overflow-hidden rounded-t-none rounded-b-[0.375rem] bg-[linear-gradient(90deg,rgba(23,24,28,0.70)_0%,rgba(23,24,28,0.40)_100%),linear-gradient(183deg,#595977_-97.81%,#28282D_141%)] px-[0.625rem] py-[0.6875rem]">
                 <img alt="event" className="tablet:-right-6 absolute right-5 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-dots.svg" />
                 <img alt="event" className="tablet:right-2 tablet:left-auto absolute right-auto left-22 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-center.svg" />
