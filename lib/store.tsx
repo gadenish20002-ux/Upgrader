@@ -116,6 +116,22 @@ function applyCatalogPriceMap(prices: Record<string, unknown>): Skin[] {
   })
 }
 
+function isSkin(value: unknown): value is Skin {
+  if (!value || typeof value !== "object") return false
+  const skin = value as Partial<Skin>
+  return (
+    typeof skin.id === "string" &&
+    typeof skin.name === "string" &&
+    typeof skin.weapon === "string" &&
+    typeof skin.wear === "string" &&
+    typeof skin.price === "number" &&
+    Number.isFinite(skin.price) &&
+    skin.price > 0 &&
+    typeof skin.image === "string" &&
+    typeof skin.rarity === "string"
+  )
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const adminScope = isAdminPath(pathname)
@@ -128,15 +144,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const catalogSkinsRef = useRef<Skin[]>(DEFAULT_STATE.skins)
   accountKeyRef.current = accountKey
 
-  // Prices are a compact, daily-updated overlay. IDs, images and rarity remain
-  // the same bundled objects, so inventories/history cannot lose references.
+  // Prices are a compact, daily-updated overlay. Existing IDs remain stable;
+  // newly released Steam skins are appended with their own deterministic IDs.
   useEffect(() => {
     let cancelled = false
     fetch(`/api/v1/skin-prices?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
         if (cancelled || !payload || !payload.prices) return
-        const catalogSkins = applyCatalogPriceMap(payload.prices)
+        const additions: Skin[] = Array.isArray(payload.skins) ? payload.skins.filter(isSkin) : []
+        const catalogSkins = [...applyCatalogPriceMap(payload.prices), ...additions]
         catalogSkinsRef.current = catalogSkins
         setInternal((prev) => ({ ...prev, skins: catalogSkins, upgradeSkins: catalogSkins }))
       })
