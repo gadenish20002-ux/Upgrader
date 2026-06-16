@@ -6,7 +6,7 @@ export const revalidate = 0
 export const maxDuration = 60
 
 const MIN_SYNC_INTERVAL_MS = 20 * 60 * 60 * 1000
-const EXPECTED_SCHEDULE = "15 3 * * *"
+const EXPECTED_SCHEDULE = "0 0 * * *"
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
