@@ -16,6 +16,7 @@ import type { AppState } from "./types"
 export const KEYS_KV = "upgrader_access_keys"
 export const GLOBAL_KV = "upgrader_global_state"
 export const ADMIN_ACCOUNT = "__default__" // template account the admin edits with no key selected
+const KEY_LAST_SEEN_PREFIX = "upgrader_access_key_last_seen:"
 
 // Normalize an incoming key/account code. Real keys are upper-case (A-Z2-9);
 // the ADMIN_ACCOUNT sentinel must be preserved verbatim (it contains lowercase).
@@ -64,6 +65,10 @@ export function accountKvKey(code: string): string {
   return `upgrader_account:${code}`
 }
 
+function keyLastSeenKvKey(code: string): string {
+  return `${KEY_LAST_SEEN_PREFIX}${code}`
+}
+
 export function defaultAccount(): AccountState {
   const out: any = {}
   for (const f of ACCOUNT_FIELDS) out[f] = (DEFAULT_STATE as any)[f]
@@ -91,8 +96,32 @@ export function generateCode(): string {
 }
 
 export async function getAllKeys(): Promise<Record<string, AccessKey>> {
-  const data = await kv.get<Record<string, AccessKey>>(KEYS_KV)
-  return data || {}
+  const data = (await kv.get<Record<string, AccessKey>>(KEYS_KV)) || {}
+  const codes = Object.keys(data)
+  if (codes.length === 0) return data
+
+  // lastSeen is stored separately so a login cannot overwrite the whole key map
+  // with a stale snapshot while an administrator creates/revokes/extends a key.
+  const lastSeenValues = await Promise.all(
+    codes.map(async (code) => {
+      try {
+        return await kv.get<number>(keyLastSeenKvKey(code))
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  const result: Record<string, AccessKey> = {}
+  codes.forEach((code, index) => {
+    const key = data[code]
+    const separateLastSeen = lastSeenValues[index]
+    result[code] = {
+      ...key,
+      lastSeen: typeof separateLastSeen === "number" ? separateLastSeen : key.lastSeen,
+    }
+  })
+  return result
 }
 
 export async function saveAllKeys(map: Record<string, AccessKey>): Promise<void> {
@@ -170,10 +199,11 @@ export async function resetAccountHistory(code: string): Promise<void> {
 }
 
 export async function touchKey(code: string): Promise<void> {
-  const map = await getAllKeys()
-  const k = map[code.toUpperCase()]
-  if (k) {
-    k.lastSeen = Date.now()
-    await saveAllKeys(map)
-  }
+  const normalized = normalizeCode(code)
+  if (!normalized || normalized === ADMIN_ACCOUNT) return
+
+  // Keep this as an independent write. Updating the entire KEYS_KV map here
+  // caused concurrent account polling/login requests to restore stale key maps,
+  // which intermittently made valid keys disappear and forced another login.
+  await kv.set(keyLastSeenKvKey(normalized), Date.now())
 }
