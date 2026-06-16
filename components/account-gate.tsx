@@ -40,8 +40,13 @@ function clearKeySession(): void {
   } catch {}
 }
 
-// True when a stored key session is older than 24h (or has no timestamp).
+// True when a stored player-key session is older than 24h (or has no timestamp).
+// The administrator session does not use the player-key timestamp and must never
+// be expired by this timer.
 function keySessionExpired(): boolean {
+  try {
+    if (window.localStorage.getItem(ACCOUNT_KEY_STORAGE) === ADMIN_ACCOUNT) return false
+  } catch {}
   return Date.now() - readKeyTs() >= SESSION_TTL_MS
 }
 
@@ -196,6 +201,7 @@ export function AccountGate({ children }: { children: ReactNode }) {
       try {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, pwd)
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
+        window.localStorage.removeItem(ACCOUNT_KEY_TS_STORAGE)
       } catch {}
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
