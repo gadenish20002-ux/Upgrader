@@ -2,14 +2,15 @@ import { NextResponse } from "next/server"
 import {
   STATIC_SKINS,
   applyCatalogPrices,
+  getCatalogAdditionalSkins,
   getCatalogPriceMeta,
   getCatalogPrices,
   type CatalogPriceMap,
   type CatalogPriceMeta,
 } from "@/lib/catalog-prices"
 
-// Внутренний эндпоинт для фронтенда: статичные id/картинки/редкость остаются
-// стабильными, а цены поверх них обновляются ежедневной синхронизацией Steam.
+// Внутренний эндпоинт для фронтенда: статичные id остаются стабильными, а
+// ежедневная синхронизация добавляет новые Steam-скины и обновляет цены.
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
@@ -23,13 +24,15 @@ export async function GET(request: Request) {
 
   let prices: CatalogPriceMap = {}
   let meta: CatalogPriceMeta | null = null
+  let additions = []
   try {
     ;[prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
+    additions = await getCatalogAdditionalSkins(meta)
   } catch {
     // KV failure must not take the existing catalog offline.
   }
 
-  const priced = applyCatalogPrices(STATIC_SKINS, prices)
+  const priced = [...applyCatalogPrices(STATIC_SKINS, prices), ...additions]
   const all = query
     ? priced.filter((skin) => `${skin.weapon} ${skin.name} ${skin.wear}`.toLocaleLowerCase("en-US").includes(query))
     : priced
