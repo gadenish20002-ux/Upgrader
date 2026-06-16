@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
-import { getCatalogPriceMeta, getCatalogPrices } from "@/lib/catalog-prices"
+import {
+  getCatalogAdditionalSkins,
+  getCatalogPriceMeta,
+  getCatalogPrices,
+} from "@/lib/catalog-prices"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -11,9 +15,10 @@ const CACHE_HEADERS = {
 export async function GET() {
   try {
     const [prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
-    return NextResponse.json({ prices, meta }, { headers: CACHE_HEADERS })
+    const skins = await getCatalogAdditionalSkins(meta)
+    return NextResponse.json({ prices, skins, meta }, { headers: CACHE_HEADERS })
   } catch {
     // The client always has the bundled catalog as a fallback.
-    return NextResponse.json({ prices: {}, meta: null }, { headers: CACHE_HEADERS })
+    return NextResponse.json({ prices: {}, skins: [], meta: null }, { headers: CACHE_HEADERS })
   }
 }
