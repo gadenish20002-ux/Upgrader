@@ -4,6 +4,8 @@ import {
   applyCatalogPrices,
   getCatalogPriceMeta,
   getCatalogPrices,
+  type CatalogPriceMap,
+  type CatalogPriceMeta,
 } from "@/lib/catalog-prices"
 
 // Внутренний эндпоинт для фронтенда: статичные id/картинки/редкость остаются
@@ -17,16 +19,20 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const limitParam = searchParams.get("limit")
   const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10) || 0)
+  const query = (searchParams.get("q") || "").trim().toLocaleLowerCase("en-US")
 
-  let prices = {}
-  let meta = null
+  let prices: CatalogPriceMap = {}
+  let meta: CatalogPriceMeta | null = null
   try {
     ;[prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
   } catch {
     // KV failure must not take the existing catalog offline.
   }
 
-  const all = applyCatalogPrices(STATIC_SKINS, prices)
+  const priced = applyCatalogPrices(STATIC_SKINS, prices)
+  const all = query
+    ? priced.filter((skin) => `${skin.weapon} ${skin.name} ${skin.wear}`.toLocaleLowerCase("en-US").includes(query))
+    : priced
 
   if (limitParam == null) {
     return NextResponse.json({ items: all, total: all.length, meta }, { headers: CACHE_HEADERS })
