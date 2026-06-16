@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server"
-import skinsData from "@/lib/skins-data.json"
-import type { Skin } from "@/lib/types"
+import {
+  STATIC_SKINS,
+  applyCatalogPrices,
+  getCatalogPriceMeta,
+  getCatalogPrices,
+} from "@/lib/catalog-prices"
 
-// Внутренний эндпоинт для нашего фронтенда: отдаёт актуальную базу скинов.
-// Данные обновляет фоновый воркер (worker/syncSkins.js), переписывая lib/skins-data.json.
-//
-// Поддерживает пагинацию ?offset=&limit= (по умолчанию отдаёт весь список).
-// Данные бандлятся на билде (lib/skins-data.json), поэтому ответ кэшируется на CDN.
+// Внутренний эндпоинт для фронтенда: статичные id/картинки/редкость остаются
+// стабильными, а цены поверх них обновляются ежедневной синхронизацией Steam.
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 
-const ALL = skinsData as Skin[]
-// Кэш на CDN: свежесть данных определяется ре-деплоем/обновлением воркера.
 const CACHE_HEADERS = { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" }
 
 export async function GET(request: Request) {
@@ -18,19 +18,30 @@ export async function GET(request: Request) {
   const limitParam = searchParams.get("limit")
   const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10) || 0)
 
+  let prices = {}
+  let meta = null
+  try {
+    ;[prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
+  } catch {
+    // KV failure must not take the existing catalog offline.
+  }
+
+  const all = applyCatalogPrices(STATIC_SKINS, prices)
+
   if (limitParam == null) {
-    return NextResponse.json({ items: ALL, total: ALL.length }, { headers: CACHE_HEADERS })
+    return NextResponse.json({ items: all, total: all.length, meta }, { headers: CACHE_HEADERS })
   }
 
   const limit = Math.max(1, Math.min(500, parseInt(limitParam, 10) || 19))
-  const items = ALL.slice(offset, offset + limit)
+  const items = all.slice(offset, offset + limit)
   return NextResponse.json(
     {
       items,
-      total: ALL.length,
+      total: all.length,
       offset,
       limit,
-      hasMore: offset + limit < ALL.length,
+      hasMore: offset + limit < all.length,
+      meta,
     },
     { headers: CACHE_HEADERS },
   )
