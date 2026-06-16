@@ -8,8 +8,42 @@ import { KeyRound } from "lucide-react"
 import { Logo } from "@/components/logo"
 
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
+const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts" // when the key was last entered
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ADMIN_ACCOUNT = "__default__"
+
+// A key login lasts 24h in the browser. After that the site asks for the key
+// again (the key itself stays valid until its own expiry — this is only the
+// per-browser re-prompt). Admin "logged in as administrator" is exempt.
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000
+
+function readKeyTs(): number {
+  try {
+    const raw = window.localStorage.getItem(ACCOUNT_KEY_TS_STORAGE)
+    const n = raw ? parseInt(raw, 10) : 0
+    return Number.isFinite(n) ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+function writeKeyTs(ts: number): void {
+  try {
+    window.localStorage.setItem(ACCOUNT_KEY_TS_STORAGE, String(ts))
+  } catch {}
+}
+
+function clearKeySession(): void {
+  try {
+    window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
+    window.localStorage.removeItem(ACCOUNT_KEY_TS_STORAGE)
+  } catch {}
+}
+
+// True when a stored key session is older than 24h (or has no timestamp).
+function keySessionExpired(): boolean {
+  return Date.now() - readKeyTs() >= SESSION_TTL_MS
+}
 
 // Verify the admin password against the admin account endpoint.
 async function checkAdmin(pwd: string): Promise<boolean> {
@@ -81,12 +115,18 @@ export function AccountGate({ children }: { children: ReactNode }) {
         cancelled = true
       }
     }
+    // 24h per-browser re-prompt: if the stored key session is older than a day,
+    // ask for the key again (without contacting the server).
+    if (keySessionExpired()) {
+      clearKeySession()
+      setAuthed(false)
+      setChecked(true)
+      return
+    }
     validate(stored).then((ok) => {
       if (cancelled) return
       if (!ok) {
-        try {
-          window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
-        } catch {}
+        clearKeySession()
       }
       setAuthed(ok)
       setChecked(true)
@@ -95,6 +135,21 @@ export function AccountGate({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [isAdmin, validate])
+
+  // While the tab stays open, flip back to the gate the moment the 24h session
+  // window elapses, so a long-running stream still re-asks for the key.
+  useEffect(() => {
+    if (isAdmin || !authed) return
+    function check() {
+      if (keySessionExpired()) {
+        clearKeySession()
+        setAuthed(false)
+        setError("Прошли сутки — введите ключ снова.")
+      }
+    }
+    const id = window.setInterval(check, 60_000)
+    return () => window.clearInterval(id)
+  }, [isAdmin, authed])
 
   // react to mid-session expiry / revocation dispatched by the store
   useEffect(() => {
@@ -122,6 +177,7 @@ export function AccountGate({ children }: { children: ReactNode }) {
       try {
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, code)
       } catch {}
+      writeKeyTs(Date.now())
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
     } else {

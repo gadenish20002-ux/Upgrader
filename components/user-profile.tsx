@@ -5,7 +5,7 @@ import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
 import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
-import { LogOut, Settings, Camera } from "lucide-react"
+import { LogOut, Settings, Camera, KeyRound } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
 import { notifyItemSold, notifyItemsSold, notifyItemWithdrawn } from "./item-toast"
@@ -167,6 +167,10 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 <Settings className="h-4 w-4 text-white" />
                 <span className="text-white text-[0.875rem] leading-normal font-medium">Настройки аккаунта</span>
               </button>
+              <a href="/cabinet" className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-[0.5rem] bg-[#FBD5061A] p-3 transition-all duration-200 hover:opacity-80">
+                <KeyRound className="h-4 w-4 text-[#FBD506]" />
+                <span className="text-[#FBD506] text-[0.875rem] leading-normal font-medium">Личная админка</span>
+              </a>
             </div>
           </div>
         </div>
