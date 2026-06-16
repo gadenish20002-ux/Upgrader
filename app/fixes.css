@@ -4,3 +4,9 @@
     min-height: 309px;
   }
 }
+
+/* The personal cabinet remains available directly at /cabinet, but it must not
+   be exposed as a button in the ordinary profile interface. */
+body .font-exo2 a[href="/cabinet"] {
+  display: none !important;
+}
