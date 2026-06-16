@@ -4,6 +4,7 @@ import type { Skin } from "./types"
 
 export const CATALOG_PRICES_KV = "upgrader_catalog_prices_v1"
 export const CATALOG_META_KV = "upgrader_catalog_prices_meta_v1"
+const CATALOG_ADDITIONS_PREFIX = "upgrader_catalog_additions_v1:"
 
 export const STATIC_SKINS = skinsData as Skin[]
 
@@ -14,10 +15,13 @@ export interface CatalogPriceMeta {
   source: "steam-market-sales"
   multiplier: number
   total: number
+  staticTotal: number
   matched: number
   updated: number
   missing: number
   rejected: number
+  additional: number
+  chunks: number
 }
 
 type SteamPriceRecord = {
@@ -27,10 +31,24 @@ type SteamPriceRecord = {
   last_90d?: number | null
 }
 
+type SteamSkinMetadata = {
+  id?: string
+  market_hash_name?: string
+  image?: string
+  weapon?: { name?: string }
+  pattern?: { name?: string }
+  wear?: { name?: string }
+  rarity?: { color?: string; id?: string }
+  stattrak?: boolean
+  souvenir?: boolean
+}
+
 const STEAM_PRICES_URL = "https://prices.csgotrader.app/latest/steam.json"
+const STEAM_SKINS_URL = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json"
 const DEFAULT_MULTIPLIER = 78
 const MIN_REASONABLE_RATIO = 0.1
 const MAX_REASONABLE_RATIO = 10
+const ADDITION_CHUNK_SIZE = 400
 
 function cleanPrefix(value: string, prefix: string): string {
   return value.replace(new RegExp(prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "").trim()
@@ -92,6 +110,40 @@ function selectSteamUsd(record: SteamPriceRecord | null | undefined): number | n
   return null
 }
 
+function rarityFromMetadata(item: SteamSkinMetadata): Skin["rarity"] {
+  const color = String(item.rarity?.color || "").replace(/^#/, "").toLowerCase()
+  if (color === "b0c3d9" || color === "5e98d9") return "common"
+  if (color === "4b69ff") return "uncommon"
+  if (color === "8847ff") return "rare"
+  if (color === "d32ce6") return "legendary"
+  if (color === "eb4b4b" || color === "e4ae39" || color === "ffd700") return "ancient"
+  return "rare"
+}
+
+function metadataToSkin(item: SteamSkinMetadata, price: number): Skin | null {
+  const marketHash = String(item.market_hash_name || "").trim()
+  const wear = String(item.wear?.name || "").trim()
+  const image = String(item.image || "").trim()
+  if (!marketHash || !wear || !image || !item.id) return null
+
+  const pipe = marketHash.indexOf(" | ")
+  if (pipe < 1) return null
+  const weapon = marketHash.slice(0, pipe).trim()
+  const fallbackName = marketHash.slice(pipe + 3).replace(/\s*\([^)]+\)\s*$/, "").trim()
+  const name = String(item.pattern?.name || fallbackName).trim()
+  if (!weapon || !name) return null
+
+  return {
+    id: `steam-${item.id}`,
+    name,
+    weapon,
+    wear,
+    price,
+    image,
+    rarity: rarityFromMetadata(item),
+  }
+}
+
 export function catalogMultiplier(): number {
   const configured = Number(process.env.CATALOG_STEAM_USD_MULTIPLIER)
   return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_MULTIPLIER
@@ -105,6 +157,17 @@ export async function getCatalogPriceMeta(): Promise<CatalogPriceMeta | null> {
   return (await kv.get<CatalogPriceMeta>(CATALOG_META_KV)) || null
 }
 
+export async function getCatalogAdditionalSkins(meta?: CatalogPriceMeta | null): Promise<Skin[]> {
+  const currentMeta = meta === undefined ? await getCatalogPriceMeta() : meta
+  const chunks = Math.max(0, currentMeta?.chunks || 0)
+  if (chunks === 0) return []
+
+  const values = await Promise.all(
+    Array.from({ length: chunks }, (_, index) => kv.get<Skin[]>(`${CATALOG_ADDITIONS_PREFIX}${index}`)),
+  )
+  return values.flatMap((chunk) => chunk || [])
+}
+
 export function applyCatalogPrices(skins: Skin[], prices: CatalogPriceMap): Skin[] {
   if (!prices || Object.keys(prices).length === 0) return skins
   return skins.map((skin) => {
@@ -116,25 +179,42 @@ export function applyCatalogPrices(skins: Skin[], prices: CatalogPriceMap): Skin
 }
 
 export async function syncCatalogPrices(): Promise<CatalogPriceMeta> {
-  const response = await fetch(STEAM_PRICES_URL, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      "User-Agent": "Mozilla/5.0 (compatible; UpgraderCatalog/1.0)",
-    },
-  })
+  const [priceResponse, metadataResponse] = await Promise.all([
+    fetch(STEAM_PRICES_URL, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; UpgraderCatalog/1.0)",
+      },
+    }),
+    fetch(STEAM_SKINS_URL, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; UpgraderCatalog/1.0)",
+      },
+    }),
+  ])
 
-  if (!response.ok) {
-    throw new Error(`Steam price feed returned HTTP ${response.status}`)
-  }
+  if (!priceResponse.ok) throw new Error(`Steam price feed returned HTTP ${priceResponse.status}`)
+  if (!metadataResponse.ok) throw new Error(`Steam metadata feed returned HTTP ${metadataResponse.status}`)
 
-  const steamPrices = (await response.json()) as Record<string, SteamPriceRecord>
-  if (!steamPrices || typeof steamPrices !== "object") {
-    throw new Error("Steam price feed returned invalid JSON")
-  }
+  const [steamPrices, steamSkins] = await Promise.all([
+    priceResponse.json() as Promise<Record<string, SteamPriceRecord>>,
+    metadataResponse.json() as Promise<SteamSkinMetadata[]>,
+  ])
+  if (!steamPrices || typeof steamPrices !== "object") throw new Error("Steam price feed returned invalid JSON")
+  if (!Array.isArray(steamSkins)) throw new Error("Steam metadata feed returned invalid JSON")
 
   const multiplier = catalogMultiplier()
   const prices: CatalogPriceMap = {}
+  const staticByMarketHash = new Map<string, Skin>()
+  for (const skin of STATIC_SKINS) {
+    for (const candidate of marketHashCandidates(skin)) {
+      if (!staticByMarketHash.has(candidate)) staticByMarketHash.set(candidate, skin)
+    }
+  }
+
   let matched = 0
   let rejected = 0
 
@@ -166,22 +246,59 @@ export async function syncCatalogPrices(): Promise<CatalogPriceMeta> {
     prices[skin.id] = nextPrice
   }
 
-  if (Object.keys(prices).length === 0) {
-    throw new Error("Steam sync matched zero safe catalog prices; previous snapshot preserved")
+  const additions: Skin[] = []
+  const seenMarketHashes = new Set<string>()
+  for (const item of steamSkins) {
+    const marketHash = String(item.market_hash_name || "").trim()
+    if (!marketHash || seenMarketHashes.has(marketHash) || staticByMarketHash.has(marketHash)) continue
+    seenMarketHashes.add(marketHash)
+
+    const steamUsd = selectSteamUsd(steamPrices[marketHash])
+    if (steamUsd === null) continue
+    const nextPrice = Math.round(steamUsd * multiplier * 100) / 100
+    if (!Number.isFinite(nextPrice) || nextPrice <= 0) continue
+
+    const skin = metadataToSkin(item, nextPrice)
+    if (skin) additions.push(skin)
+  }
+
+  if (Object.keys(prices).length === 0 && additions.length === 0) {
+    throw new Error("Steam sync matched zero safe catalog items; previous snapshot preserved")
+  }
+
+  const additionChunks: Skin[][] = []
+  for (let index = 0; index < additions.length; index += ADDITION_CHUNK_SIZE) {
+    additionChunks.push(additions.slice(index, index + ADDITION_CHUNK_SIZE))
+  }
+
+  const previousMeta = await getCatalogPriceMeta()
+  await Promise.all(
+    additionChunks.map((chunk, index) => kv.set(`${CATALOG_ADDITIONS_PREFIX}${index}`, chunk)),
+  )
+  if ((previousMeta?.chunks || 0) > additionChunks.length) {
+    await Promise.all(
+      Array.from(
+        { length: (previousMeta?.chunks || 0) - additionChunks.length },
+        (_, index) => kv.del(`${CATALOG_ADDITIONS_PREFIX}${additionChunks.length + index}`),
+      ),
+    )
   }
 
   const meta: CatalogPriceMeta = {
     updatedAt: Date.now(),
     source: "steam-market-sales",
     multiplier,
-    total: STATIC_SKINS.length,
+    total: STATIC_SKINS.length + additions.length,
+    staticTotal: STATIC_SKINS.length,
     matched,
     updated: Object.keys(prices).length,
     missing: STATIC_SKINS.length - matched,
     rejected,
+    additional: additions.length,
+    chunks: additionChunks.length,
   }
 
-  // Write prices first and metadata second. Readers either see the previous
+  // Write prices first and metadata last. Readers either see the previous
   // complete snapshot or the new complete snapshot; an empty result is never saved.
   await kv.set(CATALOG_PRICES_KV, prices)
   await kv.set(CATALOG_META_KV, meta)
