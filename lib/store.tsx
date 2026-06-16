@@ -88,22 +88,32 @@ function storageKeyFor(accountKey: string | null): string {
   return `upgrader_state_v4:${accountKey || "none"}`
 }
 
-function loadState(storageKey: string): AppState {
-  if (typeof window === "undefined") return DEFAULT_STATE
+function loadState(storageKey: string, catalogSkins: Skin[] = DEFAULT_STATE.skins): AppState {
+  if (typeof window === "undefined") return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
   try {
     const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return DEFAULT_STATE
+    if (!raw) return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
     const parsed = JSON.parse(raw)
     return {
       ...DEFAULT_STATE,
       ...parsed,
-      skins: DEFAULT_STATE.skins, // always use latest skins list
-      upgradeSkins: DEFAULT_STATE.skins,
+      skins: catalogSkins,
+      upgradeSkins: catalogSkins,
       upgrades: currentGlobalUpgrades(),
     }
   } catch {
-    return DEFAULT_STATE
+    return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
   }
+}
+
+function applyCatalogPriceMap(prices: Record<string, unknown>): Skin[] {
+  if (!prices || typeof prices !== "object") return DEFAULT_STATE.skins
+  return DEFAULT_STATE.skins.map((skin) => {
+    const price = prices[skin.id]
+    return typeof price === "number" && Number.isFinite(price) && price > 0
+      ? { ...skin, price }
+      : skin
+  })
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -115,7 +125,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const lastSyncTime = useRef<number>(0)
   const accountKeyRef = useRef<string | null>(null)
+  const catalogSkinsRef = useRef<Skin[]>(DEFAULT_STATE.skins)
   accountKeyRef.current = accountKey
+
+  // Prices are a compact, daily-updated overlay. IDs, images and rarity remain
+  // the same bundled objects, so inventories/history cannot lose references.
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/v1/skin-prices?t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (cancelled || !payload || !payload.prices) return
+        const catalogSkins = applyCatalogPriceMap(payload.prices)
+        catalogSkinsRef.current = catalogSkins
+        setInternal((prev) => ({ ...prev, skins: catalogSkins, upgradeSkins: catalogSkins }))
+      })
+      .catch(() => {
+        // Keep the bundled catalog when Steam/KV is temporarily unavailable.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Resolve the active account key for this scope (and react to changes made by
   // the gate / admin account selector in other parts of the app).
@@ -135,7 +166,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storageKey = storageKeyFor(accountKey)
     setReady(false)
-    setInternal(loadState(storageKey))
+    setInternal(loadState(storageKey, catalogSkinsRef.current))
 
     // Switching accounts → drop any un-acked optimistic state from the previous one
     // so it can't leak into / block the freshly loaded account.
@@ -183,8 +214,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...DEFAULT_STATE,
             ...globalState,
             ...accountState,
-            skins: DEFAULT_STATE.skins,
-            upgradeSkins: DEFAULT_STATE.skins,
+            skins: catalogSkinsRef.current,
+            upgradeSkins: catalogSkinsRef.current,
             upgrades: currentGlobalUpgrades(),
           }
           // Keep optimistic, not-yet-confirmed local account changes (e.g. the
@@ -315,8 +346,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setInternal({
             ...DEFAULT_STATE,
             ...parsed,
-            skins: DEFAULT_STATE.skins,
-            upgradeSkins: DEFAULT_STATE.skins,
+            skins: catalogSkinsRef.current,
+            upgradeSkins: catalogSkinsRef.current,
             upgrades: currentGlobalUpgrades(),
           })
         } catch {}
