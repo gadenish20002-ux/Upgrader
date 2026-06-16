@@ -6,17 +6,22 @@ export const revalidate = 0
 export const maxDuration = 60
 
 const MIN_SYNC_INTERVAL_MS = 20 * 60 * 60 * 1000
+const EXPECTED_SCHEDULE = "15 3 * * *"
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
   const authorization = request.headers.get("authorization")
+  const cronSchedule = request.headers.get("x-vercel-cron-schedule")
   const isPreview = process.env.VERCEL_ENV === "preview"
   const forcePreview = isPreview && new URL(request.url).searchParams.get("force") === "1"
 
-  // When CRON_SECRET is configured, Vercel automatically sends this bearer
-  // header. Without it the endpoint still remains safe: a 20-hour cooldown and
-  // atomic snapshot replacement prevent repeated or partial catalog rewrites.
-  if (secret && authorization !== `Bearer ${secret}`) {
+  // CRON_SECRET is preferred. Until it is configured, accept only a request
+  // carrying Vercel's exact configured schedule header. Preview force runs are
+  // available solely for deployment validation.
+  const authorized = forcePreview || (secret
+    ? authorization === `Bearer ${secret}`
+    : cronSchedule === EXPECTED_SCHEDULE)
+  if (!authorized) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
