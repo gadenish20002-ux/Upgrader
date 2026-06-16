@@ -1,0 +1,6 @@
+@media (min-width: 1024px) {
+  body .lg\:h-\[309px\] {
+    height: auto !important;
+    min-height: 309px;
+  }
+}
