@@ -41,14 +41,21 @@ export async function GET() {
   let bulk: any = null
   try { bulk = JSON.parse(bulkText) } catch {}
 
+  const arraySample = Array.isArray(bulk) ? bulk.slice(0, 5) : null
+  const objectKeys = bulk && typeof bulk === "object" && !Array.isArray(bulk)
+    ? Object.keys(bulk).slice(0, 10)
+    : []
+
   return NextResponse.json({
     steam,
     bulk: {
       status: bulkRes.status,
       bytes: bulkText.length,
-      xray: bulk?.[ITEMS[0]] ?? null,
-      runic: bulk?.[ITEMS[1]] ?? null,
-      sampleKeys: bulk && typeof bulk === "object" ? Object.keys(bulk).slice(0, 3) : [],
+      kind: Array.isArray(bulk) ? "array" : typeof bulk,
+      length: Array.isArray(bulk) ? bulk.length : null,
+      arraySample,
+      objectKeys,
+      textStart: bulkText.slice(0, 500),
     },
   })
 }
