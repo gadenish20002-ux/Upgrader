@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import type { Skin } from "@/lib/types"
 import {
   STATIC_SKINS,
   applyCatalogPrices,
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
 
   let prices: CatalogPriceMap = {}
   let meta: CatalogPriceMeta | null = null
-  let additions = []
+  let additions: Skin[] = []
   try {
     ;[prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
     additions = await getCatalogAdditionalSkins(meta)
