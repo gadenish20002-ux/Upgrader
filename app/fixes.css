@@ -10,3 +10,14 @@
 body .font-exo2 a[href="/cabinet"] {
   display: none !important;
 }
+
+/* When the existing "show multipliers" setting is disabled, React already
+   removes the x and leaves the numeric value. Add only the requested visual
+   asterisk to the three multiplier buttons; percentage buttons stay unchanged. */
+.hide-multiplier-xs
+  .lose-anim-upgrade-control
+  > div
+  > button:nth-child(-n + 3)
+  > span::before {
+  content: "*";
+}
