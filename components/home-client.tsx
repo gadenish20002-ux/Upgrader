@@ -11,7 +11,7 @@ import { preloadWinAnimationFrames } from "./win-animation-overlay"
 import { UserProfile } from "./user-profile"
 
 export function HomeClient() {
-  const { ready } = useStore()
+  const { ready, state } = useStore()
   const [sidebarTargetId, setSidebarTargetId] = useState<string | null>(null)
   const [showProfile, setShowProfile] = useState(false)
 
@@ -23,8 +23,10 @@ export function HomeClient() {
     return <div className="min-h-screen bg-transparent" />
   }
 
+  const hideMultiplierXs = state.predict.showMultipliers === false
+
   return (
-    <div className="min-h-screen bg-transparent text-foreground flex flex-col">
+    <div className={`min-h-screen bg-transparent text-foreground flex flex-col${hideMultiplierXs ? " hide-multiplier-xs" : ""}`}>
       <SiteHeader onProfileClick={() => setShowProfile((prev) => !prev)} onLogoClick={() => setShowProfile(false)} />
       <div className="flex flex-1 flex-col lg:flex-row pt-[3.25rem] md:pt-[4.25rem]">
         {/* Mobile: Top Live Feed */}
