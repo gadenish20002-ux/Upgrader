@@ -123,8 +123,10 @@ async function restCommand(parts: Array<string | number>): Promise<RedisValue> {
     headers: {
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
+      connection: "close",
     },
     body: JSON.stringify(parts),
+    signal: AbortSignal.timeout(15_000),
   })
   const payload = (await response.json()) as { result?: RedisValue; error?: string }
   if (!response.ok || payload.error) throw new Error(payload.error || `Redis REST returned HTTP ${response.status}`)
@@ -170,5 +172,11 @@ export const kv = {
   async del(key: string): Promise<unknown> {
     if (!shouldUseDirectKv()) return vercelKv.del(key)
     return command(["DEL", key])
+  },
+
+  async exists(key: string): Promise<number> {
+    if (!shouldUseDirectKv()) return (vercelKv as unknown as { exists: (key: string) => Promise<number> }).exists(key)
+    const result = await command(["EXISTS", key])
+    return typeof result === "number" ? result : 0
   },
 }
