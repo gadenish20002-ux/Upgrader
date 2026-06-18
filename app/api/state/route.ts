@@ -23,7 +23,7 @@ export async function GET() {
     }
     // Никогда не отдаём сохранённое (устаревшее) значение upgrades — оно
     // вычисляется по времени, чтобы соответствовать референсу и расти.
-    return NextResponse.json({ ...(data as Record<string, unknown>), upgrades: currentGlobalUpgrades() })
+    return NextResponse.json({ ...stripSkins(data), upgrades: currentGlobalUpgrades() })
   } catch (error: any) {
     console.error("KV GET Error:", error)
     return NextResponse.json({ error: "Failed to fetch state from KV" }, { status: 500 })

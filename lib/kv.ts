@@ -18,11 +18,11 @@ function encodeCommand(parts: Array<string | number>): string {
     .join("")}`
 }
 
-function parseReply(input: string, offset = 0): ParsedReply | null {
+function parseReply(input: Buffer, offset = 0): ParsedReply | null {
   const lineEnd = input.indexOf("\r\n", offset)
   if (lineEnd === -1) return null
-  const type = input[offset]
-  const line = input.slice(offset + 1, lineEnd)
+  const type = String.fromCharCode(input[offset])
+  const line = input.toString("utf8", offset + 1, lineEnd)
 
   if (type === "$") {
     const length = Number(line)
@@ -31,7 +31,7 @@ function parseReply(input: string, offset = 0): ParsedReply | null {
     const start = lineEnd + 2
     const end = start + length
     if (input.length < end + 2) return null
-    return { value: input.slice(start, end), offset: end + 2 }
+    return { value: input.toString("utf8", start, end), offset: end + 2 }
   }
 
   if (type === "+") return { value: line, offset: lineEnd + 2 }
@@ -81,26 +81,33 @@ async function redisCommand(parts: Array<string | number>): Promise<RedisValue> 
       servername: secure ? url.hostname : undefined,
       timeout: 15_000,
     })
-    let data = ""
+    let data = Buffer.alloc(0)
+    let settled = false
+
+    function settle(callback: () => void) {
+      if (settled) return
+      settled = true
+      callback()
+    }
 
     socket.on(secure ? "secureConnect" : "connect", () => {
       socket.write(`${encodeCommand(["AUTH", username, password])}${encodeCommand(parts)}`)
     })
     socket.on("data", (chunk) => {
-      data += chunk.toString("utf8")
+      data = Buffer.concat([data, chunk])
       const auth = parseReply(data)
       if (auth) {
         const reply = parseReply(data, auth.offset)
         if (!reply) return
         socket.end()
-        resolve(reply.value)
+        settle(() => resolve(reply.value))
       }
     })
     socket.on("timeout", () => {
       socket.destroy()
-      reject(new Error("Redis command timed out"))
+      settle(() => reject(new Error("Redis command timed out")))
     })
-    socket.on("error", reject)
+    socket.on("error", (error) => settle(() => reject(error)))
   })
 }
 
