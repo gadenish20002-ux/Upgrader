@@ -1,49 +1,87 @@
 "use client"
 
 import { useState, useEffect, type ReactNode } from "react"
-import { useStore } from "@/lib/store"
 import { Logo } from "@/components/logo"
 import { Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+const ADMIN_ACCOUNT = "__default__"
+const SERVICE_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Пароль не изменён — попробуйте ещё раз позже."
 
-// Password gate for every /admin route. The site itself is gated by access keys
-// (AccountGate), which intentionally bypasses /admin — so admin pages must guard
-// themselves here.
+type AuthCheck = "valid" | "invalid" | "unavailable"
+
+async function checkAdmin(password: string): Promise<AuthCheck> {
+  try {
+    const response = await fetch(`/api/account?key=${ADMIN_ACCOUNT}&t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "x-admin-password": password },
+    })
+    if (response.ok) return "valid"
+    if (response.status === 401 || response.status === 403) return "invalid"
+    return "unavailable"
+  } catch {
+    return "unavailable"
+  }
+}
+
+// Password gate for every /admin route. Authentication is checked against the
+// server/KV source of truth instead of a client-side fallback copy of the state.
 export function AdminGate({ children }: { children: ReactNode }) {
-  const { state, ready } = useStore()
   const [authed, setAuthed] = useState(false)
+  const [checked, setChecked] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [value, setValue] = useState("")
-  const [error, setError] = useState(false)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    if (!ready) return
-    if (!state.adminPassword) {
-      try {
-        window.localStorage.setItem(ADMIN_PWD_STORAGE, "")
-      } catch {}
-      setAuthed(true)
+    let cancelled = false
+    const saved = window.localStorage.getItem(ADMIN_PWD_STORAGE)
+    if (!saved) {
+      setChecked(true)
       return
     }
-    const saved = window.localStorage.getItem(ADMIN_PWD_STORAGE)
-    if (saved && saved === state.adminPassword) setAuthed(true)
-  }, [ready, state.adminPassword])
 
-  if (!ready) return <div className="min-h-screen bg-background" />
+    checkAdmin(saved).then((result) => {
+      if (cancelled) return
+      if (result === "valid") {
+        setAuthed(true)
+      } else if (result === "invalid") {
+        window.localStorage.removeItem(ADMIN_PWD_STORAGE)
+      } else {
+        setError(SERVICE_UNAVAILABLE_MESSAGE)
+      }
+      setChecked(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (!checked) return <div className="min-h-screen bg-background" />
   if (authed) return <>{children}</>
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (value === state.adminPassword) {
+    if (!value) return
+
+    setSubmitting(true)
+    setError("")
+    const result = await checkAdmin(value)
+    setSubmitting(false)
+
+    if (result === "valid") {
       try {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, value)
       } catch {}
+      window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
-      setError(false)
+    } else if (result === "invalid") {
+      setError("Неверный пароль")
     } else {
-      setError(true)
+      setError(SERVICE_UNAVAILABLE_MESSAGE)
     }
   }
 
@@ -65,15 +103,15 @@ export function AdminGate({ children }: { children: ReactNode }) {
           value={value}
           onChange={(e) => {
             setValue(e.target.value)
-            setError(false)
+            setError("")
           }}
           placeholder="Пароль администратора"
           autoFocus
           className={error ? "border-destructive" : ""}
         />
-        {error && <p className="mt-2 text-sm text-destructive">Неверный пароль</p>}
-        <Button type="submit" className="mt-4 w-full font-bold">
-          Войти
+        {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+        <Button type="submit" disabled={submitting} className="mt-4 w-full font-bold">
+          {submitting ? "Проверка..." : "Войти"}
         </Button>
       </form>
     </div>
