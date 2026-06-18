@@ -18,9 +18,10 @@ export async function GET(request: Request) {
   // CRON_SECRET is preferred. Until it is configured, accept only a request
   // carrying Vercel's exact configured schedule header. Preview force runs are
   // available solely for deployment validation.
-  const authorized = forcePreview || (secret
-    ? authorization === `Bearer ${secret}`
-    : cronSchedule === EXPECTED_SCHEDULE)
+  const authorized =
+    forcePreview ||
+    (secret && authorization === `Bearer ${secret}`) ||
+    cronSchedule === EXPECTED_SCHEDULE
   if (!authorized) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
