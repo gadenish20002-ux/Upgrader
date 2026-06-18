@@ -19,10 +19,6 @@ export function HomeClient() {
     preloadWinAnimationFrames()
   }, [])
 
-  if (!ready) {
-    return <div className="min-h-screen bg-transparent" />
-  }
-
   const hideMultiplierXs = state.predict.showMultipliers === false
 
   return (
