@@ -28,3 +28,29 @@
 		}
 	}
 }
+
+http://185.250.47.16 {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	request_body {
+		max_size 10MB
+	}
+
+	reverse_proxy app:3000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		transport http {
+			dial_timeout 10s
+			response_header_timeout 60s
+		}
+	}
+}
