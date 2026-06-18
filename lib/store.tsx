@@ -140,6 +140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setInternal] = useState<AppState>(DEFAULT_STATE)
   const [ready, setReady] = useState(false)
   const lastSyncTime = useRef<number>(0)
+  const fetchInFlight = useRef(false)
   const accountKeyRef = useRef<string | null>(null)
   const catalogSkinsRef = useRef<Skin[]>(DEFAULT_STATE.skins)
   accountKeyRef.current = accountKey
@@ -195,6 +196,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     async function fetchState() {
       if (Date.now() < syncManager.suppressUntil) return
       if (Date.now() - lastSyncTime.current < 1500) return
+      if (fetchInFlight.current) return
+      fetchInFlight.current = true
 
       try {
         const wantAccount = adminScope || !!accountKey
@@ -247,6 +250,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
       } catch (err) {
         console.error("Failed to fetch state", err)
+      } finally {
+        fetchInFlight.current = false
       }
     }
 
@@ -255,7 +260,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await fetchState()
       if (cancelled) return
       setReady(true)
-      interval = setInterval(fetchState, 2000)
+      interval = setInterval(fetchState, 10_000)
     }
 
     init()

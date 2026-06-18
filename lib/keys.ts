@@ -148,10 +148,8 @@ export function daysLeft(key: AccessKey): number {
 }
 
 export async function getAdminPassword(): Promise<string> {
-  try {
-    const g = await kv.get<any>(GLOBAL_KV)
-    if (g && typeof g.adminPassword === "string") return g.adminPassword
-  } catch {}
+  const g = await kv.get<any>(GLOBAL_KV)
+  if (g && typeof g.adminPassword === "string") return g.adminPassword
   return DEFAULT_STATE.adminPassword
 }
 

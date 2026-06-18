@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+const ADMIN_PWD_TS_STORAGE = "upgrader_admin_pwd_ts"
 const ADMIN_ACCOUNT = "__default__"
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000
 const SERVICE_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Пароль не изменён — попробуйте ещё раз позже."
 
 type AuthCheck = "valid" | "invalid" | "unavailable"
@@ -43,16 +45,27 @@ export function AdminGate({ children }: { children: ReactNode }) {
       return
     }
 
+    const rawTs = window.localStorage.getItem(ADMIN_PWD_TS_STORAGE)
+    const ts = rawTs ? parseInt(rawTs, 10) : 0
+    if (!ts) {
+      window.localStorage.setItem(ADMIN_PWD_TS_STORAGE, String(Date.now()))
+    } else if (Date.now() - ts >= SESSION_TTL_MS) {
+      window.localStorage.removeItem(ADMIN_PWD_STORAGE)
+      window.localStorage.removeItem(ADMIN_PWD_TS_STORAGE)
+      setChecked(true)
+      return
+    }
+
+    setAuthed(true)
+    setChecked(true)
+
     checkAdmin(saved).then((result) => {
       if (cancelled) return
-      if (result === "valid") {
-        setAuthed(true)
-      } else if (result === "invalid") {
+      if (result === "invalid") {
         window.localStorage.removeItem(ADMIN_PWD_STORAGE)
-      } else {
-        setError(SERVICE_UNAVAILABLE_MESSAGE)
+        window.localStorage.removeItem(ADMIN_PWD_TS_STORAGE)
+        setAuthed(false)
       }
-      setChecked(true)
     })
 
     return () => {
@@ -75,6 +88,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
     if (result === "valid") {
       try {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, value)
+        window.localStorage.setItem(ADMIN_PWD_TS_STORAGE, String(Date.now()))
       } catch {}
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)

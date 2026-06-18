@@ -10,6 +10,7 @@ import { Logo } from "@/components/logo"
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
 const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts" // when the key/password was last entered
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+const ADMIN_PWD_TS_STORAGE = "upgrader_admin_pwd_ts"
 const ADMIN_ACCOUNT = "__default__"
 
 // Both player-key and administrator logins last 24h in this browser.
@@ -34,6 +35,12 @@ function writeKeyTs(ts: number): void {
   } catch {}
 }
 
+function writeAdminTs(ts: number): void {
+  try {
+    window.localStorage.setItem(ADMIN_PWD_TS_STORAGE, String(ts))
+  } catch {}
+}
+
 function clearKeySession(): void {
   try {
     const stored = window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
@@ -41,6 +48,7 @@ function clearKeySession(): void {
     window.localStorage.removeItem(ACCOUNT_KEY_TS_STORAGE)
     if (stored === ADMIN_ACCOUNT) {
       window.localStorage.removeItem(ADMIN_PWD_STORAGE)
+      window.localStorage.removeItem(ADMIN_PWD_TS_STORAGE)
     }
   } catch {}
 }
@@ -112,6 +120,7 @@ export function AccountGate({ children }: { children: ReactNode }) {
     }
 
     // The same 24h window applies to both key and administrator logins.
+    if (!readKeyTs()) writeKeyTs(Date.now())
     if (keySessionExpired()) {
       clearKeySession()
       setAuthed(false)
@@ -119,16 +128,19 @@ export function AccountGate({ children }: { children: ReactNode }) {
       return
     }
 
+    setAuthed(true)
+    setChecked(true)
+
     // Admin "logged in as administrator" on the public site — verify the stored
     // password instead of the access-key endpoint.
     if (stored === ADMIN_ACCOUNT) {
       const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE) || ""
       checkAdmin(pwd).then((result) => {
         if (cancelled) return
-        if (result === "invalid") clearKeySession()
-        if (result === "unavailable") setError(SERVICE_UNAVAILABLE_MESSAGE)
-        setAuthed(result === "valid")
-        setChecked(true)
+        if (result === "invalid") {
+          clearKeySession()
+          setAuthed(false)
+        }
       })
       return () => {
         cancelled = true
@@ -137,10 +149,11 @@ export function AccountGate({ children }: { children: ReactNode }) {
 
     validate(stored).then((result) => {
       if (cancelled) return
-      if (result === "invalid") clearKeySession()
-      if (result === "unavailable") setError(SERVICE_UNAVAILABLE_MESSAGE)
-      setAuthed(result === "valid")
-      setChecked(true)
+      if (result === "invalid") {
+        clearKeySession()
+        setAuthed(false)
+        setError("Срок действия ключа истёк. Введите новый ключ.")
+      }
     })
     return () => {
       cancelled = true
@@ -209,7 +222,9 @@ export function AccountGate({ children }: { children: ReactNode }) {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, pwd)
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
       } catch {}
-      writeKeyTs(Date.now())
+      const now = Date.now()
+      writeKeyTs(now)
+      writeAdminTs(now)
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
     } else if (result === "invalid") {
