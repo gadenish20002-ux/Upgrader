@@ -5,8 +5,10 @@ import { kv as vercelKv } from "@vercel/kv"
 type RedisValue = string | number | null | RedisValue[]
 type ParsedReply = { value: RedisValue; offset: number }
 
-function shouldUseRedisUrl(): boolean {
-  return Boolean(process.env.REDIS_URL)
+const REST_CHUNK_BYTES = 8 * 1024
+
+function shouldUseDirectKv(): boolean {
+  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
 }
 
 function encodeCommand(parts: Array<string | number>): string {
@@ -111,23 +113,62 @@ async function redisCommand(parts: Array<string | number>): Promise<RedisValue> 
   })
 }
 
+async function restCommand(parts: Array<string | number>): Promise<RedisValue> {
+  const endpoint = process.env.KV_REST_API_URL
+  const token = process.env.KV_REST_API_TOKEN
+  if (!endpoint || !token) throw new Error("KV_REST_API_URL or KV_REST_API_TOKEN is not configured")
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(parts),
+  })
+  const payload = (await response.json()) as { result?: RedisValue; error?: string }
+  if (!response.ok || payload.error) throw new Error(payload.error || `Redis REST returned HTTP ${response.status}`)
+  return payload.result ?? null
+}
+
+async function command(parts: Array<string | number>): Promise<RedisValue> {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) return restCommand(parts)
+  return redisCommand(parts)
+}
+
+async function getString(key: string): Promise<RedisValue> {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const size = await restCommand(["STRLEN", key])
+    if (typeof size === "number" && size > REST_CHUNK_BYTES) {
+      let value = ""
+      for (let start = 0; start < size; start += REST_CHUNK_BYTES) {
+        const chunk = await restCommand(["GETRANGE", key, start, Math.min(size - 1, start + REST_CHUNK_BYTES - 1)])
+        if (typeof chunk !== "string") throw new Error(`Unexpected Redis chunk type for ${key}`)
+        value += chunk
+      }
+      return value
+    }
+  }
+  return command(["GET", key])
+}
+
 function serialize(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value)
 }
 
 export const kv = {
   async get<T = unknown>(key: string): Promise<T | null> {
-    if (!shouldUseRedisUrl()) return vercelKv.get<T>(key)
-    return deserialize<T>(await redisCommand(["GET", key]))
+    if (!shouldUseDirectKv()) return vercelKv.get<T>(key)
+    return deserialize<T>(await getString(key))
   },
 
   async set(key: string, value: unknown): Promise<unknown> {
-    if (!shouldUseRedisUrl()) return vercelKv.set(key, value)
-    return redisCommand(["SET", key, serialize(value)])
+    if (!shouldUseDirectKv()) return vercelKv.set(key, value)
+    return command(["SET", key, serialize(value)])
   },
 
   async del(key: string): Promise<unknown> {
-    if (!shouldUseRedisUrl()) return vercelKv.del(key)
-    return redisCommand(["DEL", key])
+    if (!shouldUseDirectKv()) return vercelKv.del(key)
+    return command(["DEL", key])
   },
 }
