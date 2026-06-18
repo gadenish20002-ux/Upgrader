@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: upgrader-app:${UPGRADER_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - /etc/upgrader/upgrader.env
+    expose:
+      - "3000"
+    networks:
+      - upgrader
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    env_file:
+      - /etc/upgrader/upgrader.env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - upgrader
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  upgrader:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

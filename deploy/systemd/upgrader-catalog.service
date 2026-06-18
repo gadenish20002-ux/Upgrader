@@ -1,0 +1,9 @@
+[Unit]
+Description=Upgrader daily catalog sync
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/upgrader/upgrader.env
+ExecStart=/bin/sh -lc 'curl --fail --silent --show-error -H "Authorization: Bearer ${CRON_SECRET}" "https://${UPGRADER_DOMAIN}/api/cron/catalog" >/var/log/upgrader/catalog-sync.log'

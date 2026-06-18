@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Upgrader catalog sync daily at 03:00 Europe/Moscow
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=upgrader-catalog.service
+
+[Install]
+WantedBy=timers.target
