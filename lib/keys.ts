@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv"
+import { kv } from "./kv"
 import { DEFAULT_STATE } from "./default-data"
 import type { AppState } from "./types"
 

@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv"
+import { kv } from "./kv"
 import skinsData from "./skins-data.json"
 import type { Skin } from "./types"
 

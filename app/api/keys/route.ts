@@ -10,7 +10,7 @@ import {
   resetAccountHistory,
   type AccessKey,
 } from "@/lib/keys"
-import { kv } from "@vercel/kv"
+import { kv } from "@/lib/kv"
 import { accountKvKey } from "@/lib/keys"
 
 export const dynamic = "force-dynamic"
