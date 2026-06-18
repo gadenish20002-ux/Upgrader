@@ -83,7 +83,7 @@ async function redisCommand(parts: Array<string | number>): Promise<RedisValue> 
     })
     let data = ""
 
-    socket.on("connect", () => {
+    socket.on(secure ? "secureConnect" : "connect", () => {
       socket.write(`${encodeCommand(["AUTH", username, password])}${encodeCommand(parts)}`)
     })
     socket.on("data", (chunk) => {
