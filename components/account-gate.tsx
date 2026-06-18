@@ -14,6 +14,9 @@ const ADMIN_ACCOUNT = "__default__"
 
 // Both player-key and administrator logins last 24h in this browser.
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000
+const SERVICE_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Пароль и ключ не изменены — попробуйте ещё раз позже."
+
+type AuthCheck = "valid" | "invalid" | "unavailable"
 
 function readKeyTs(): number {
   try {
@@ -48,16 +51,20 @@ function keySessionExpired(): boolean {
   return Date.now() - readKeyTs() >= SESSION_TTL_MS
 }
 
-// Verify the admin password against the admin account endpoint.
-async function checkAdmin(pwd: string): Promise<boolean> {
+// Verify the admin password against the admin account endpoint. A platform/KV
+// outage is deliberately different from an invalid password: it must not erase
+// a valid stored session or claim that the password changed.
+async function checkAdmin(pwd: string): Promise<AuthCheck> {
   try {
     const res = await fetch(`/api/account?key=${ADMIN_ACCOUNT}&t=${Date.now()}`, {
       cache: "no-store",
       headers: { "x-admin-password": pwd },
     })
-    return res.ok
+    if (res.ok) return "valid"
+    if (res.status === 401 || res.status === 403) return "invalid"
+    return "unavailable"
   } catch {
-    return false
+    return "unavailable"
   }
 }
 
@@ -72,17 +79,19 @@ export function AccountGate({ children }: { children: ReactNode }) {
   const [submitting, setSubmitting] = useState(false)
   const [daysLeft, setDaysLeft] = useState<number | null>(null)
 
-  const validate = useCallback(async (code: string): Promise<boolean> => {
+  const validate = useCallback(async (code: string): Promise<AuthCheck> => {
     try {
       const res = await fetch(`/api/auth?key=${encodeURIComponent(code)}&t=${Date.now()}`, { cache: "no-store" })
+      if (!res.ok) return "unavailable"
+
       const j = await res.json()
       if (j.valid) {
         setDaysLeft(typeof j.daysLeft === "number" ? j.daysLeft : null)
-        return true
+        return "valid"
       }
-      return false
+      return "invalid"
     } catch {
-      return false
+      return "unavailable"
     }
   }, [])
 
@@ -114,10 +123,11 @@ export function AccountGate({ children }: { children: ReactNode }) {
     // password instead of the access-key endpoint.
     if (stored === ADMIN_ACCOUNT) {
       const pwd = window.localStorage.getItem(ADMIN_PWD_STORAGE) || ""
-      checkAdmin(pwd).then((ok) => {
+      checkAdmin(pwd).then((result) => {
         if (cancelled) return
-        if (!ok) clearKeySession()
-        setAuthed(ok)
+        if (result === "invalid") clearKeySession()
+        if (result === "unavailable") setError(SERVICE_UNAVAILABLE_MESSAGE)
+        setAuthed(result === "valid")
         setChecked(true)
       })
       return () => {
@@ -125,10 +135,11 @@ export function AccountGate({ children }: { children: ReactNode }) {
       }
     }
 
-    validate(stored).then((ok) => {
+    validate(stored).then((result) => {
       if (cancelled) return
-      if (!ok) clearKeySession()
-      setAuthed(ok)
+      if (result === "invalid") clearKeySession()
+      if (result === "unavailable") setError(SERVICE_UNAVAILABLE_MESSAGE)
+      setAuthed(result === "valid")
       setChecked(true)
     })
     return () => {
@@ -170,17 +181,19 @@ export function AccountGate({ children }: { children: ReactNode }) {
     if (!code) return
     setSubmitting(true)
     setError("")
-    const ok = await validate(code)
+    const result = await validate(code)
     setSubmitting(false)
-    if (ok) {
+    if (result === "valid") {
       try {
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, code)
       } catch {}
       writeKeyTs(Date.now())
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
-    } else {
+    } else if (result === "invalid") {
       setError("Неверный, отозванный или просроченный ключ")
+    } else {
+      setError(SERVICE_UNAVAILABLE_MESSAGE)
     }
   }
 
@@ -189,9 +202,9 @@ export function AccountGate({ children }: { children: ReactNode }) {
     if (pwd === null) return
     setSubmitting(true)
     setError("")
-    const ok = await checkAdmin(pwd)
+    const result = await checkAdmin(pwd)
     setSubmitting(false)
-    if (ok) {
+    if (result === "valid") {
       try {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, pwd)
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
@@ -199,8 +212,10 @@ export function AccountGate({ children }: { children: ReactNode }) {
       writeKeyTs(Date.now())
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)
-    } else {
+    } else if (result === "invalid") {
       setError("Неверный пароль администратора")
+    } else {
+      setError(SERVICE_UNAVAILABLE_MESSAGE)
     }
   }
 
