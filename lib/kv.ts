@@ -10,7 +10,7 @@ type ParsedRawReply = { value: RawRedisValue; offset: number }
 const REST_CHUNK_BYTES = 8 * 1024
 
 function shouldUseDirectKv(): boolean {
-  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+  return false
 }
 
 function encodeCommand(parts: Array<string | number>): string {
