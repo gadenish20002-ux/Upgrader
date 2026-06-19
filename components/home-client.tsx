@@ -68,31 +68,6 @@ export function HomeClient() {
     return () => document.removeEventListener("click", onClick, true)
   }, [login])
 
-  // Safety persistence for VPS: critical per-account fields are written directly
-  // after purchases/spins/history changes, so a delayed poll cannot make bought
-  // skins or game history disappear from the account snapshot.
-  useEffect(() => {
-    if (!ready || !state.loggedIn) return
-    const key = currentAccountKey()
-    if (!key || key === "__default__") return
-    const timeout = window.setTimeout(() => {
-      fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          balance: state.balance,
-          inventory: state.inventory,
-          itemHistory: state.itemHistory,
-          gameHistory: state.gameHistory,
-          userUpgrades: state.userUpgrades,
-          loggedIn: state.loggedIn,
-        }),
-        cache: "no-store",
-      }).catch((error) => console.error("Failed to persist account safety snapshot", error))
-    }, 350)
-    return () => window.clearTimeout(timeout)
-  }, [ready, state.loggedIn, state.balance, state.inventory, state.itemHistory, state.gameHistory, state.userUpgrades])
-
   const hideMultiplierXs = state.predict.showMultipliers === false
 
   if (!ready) {
