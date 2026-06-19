@@ -1,30 +1,47 @@
 import { NextResponse } from "next/server"
 import { kv } from "@/lib/kv"
 import { DEFAULT_STATE, currentGlobalUpgrades } from "@/lib/default-data"
-import { saveAdminPassword } from "@/lib/keys"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 const KV_KEY = "upgrader_global_state"
 
-// Helper to remove skins arrays to save bandwidth/storage
-function stripSkins(state: any) {
-  const { skins, upgradeSkins, ...rest } = state
-  return rest
+const ACCOUNT_FIELD_NAMES = new Set([
+  "balance",
+  "inventory",
+  "loggedIn",
+  "username",
+  "userId",
+  "avatar",
+  "userUpgrades",
+  "itemHistory",
+  "withdrawnItems",
+  "predict",
+  "gameHistory",
+  "fastMultipliers",
+  "fastPercentages",
+  "soundMode",
+  "fastMode",
+])
+
+function stripGlobalState(state: any) {
+  const { skins, upgradeSkins, ...rest } = state || {}
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(rest)) {
+    if (!ACCOUNT_FIELD_NAMES.has(key)) out[key] = value
+  }
+  return out
 }
 
 export async function GET() {
   try {
     const data = await kv.get(KV_KEY)
     if (!data) {
-      const defaultStripped = stripSkins(DEFAULT_STATE)
-      // Глобальный счётчик «Апгрейдов» всегда привязан к реальному времени
-      return NextResponse.json({ ...defaultStripped, upgrades: currentGlobalUpgrades() })
+      const defaultGlobal = stripGlobalState(DEFAULT_STATE)
+      return NextResponse.json({ ...defaultGlobal, upgrades: currentGlobalUpgrades() })
     }
-    // Никогда не отдаём сохранённое (устаревшее) значение upgrades — оно
-    // вычисляется по времени, чтобы соответствовать референсу и расти.
-    return NextResponse.json({ ...stripSkins(data), upgrades: currentGlobalUpgrades() })
+    return NextResponse.json({ ...stripGlobalState(data), upgrades: currentGlobalUpgrades() })
   } catch (error: any) {
     console.error("KV GET Error:", error)
     return NextResponse.json({ error: "Failed to fetch state from KV" }, { status: 500 })
@@ -34,11 +51,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const strippedState = stripSkins(body)
-    await kv.set(KV_KEY, strippedState)
-    if (typeof strippedState.adminPassword === "string") {
-      await saveAdminPassword(strippedState.adminPassword)
-    }
+    const globalState = stripGlobalState(body)
+    await kv.set(KV_KEY, globalState)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("KV POST Error:", error)
@@ -49,19 +63,11 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const strippedState = stripSkins(body)
-    
+    const globalPatch = stripGlobalState(body)
     let currentData = await kv.get<any>(KV_KEY)
-    if (!currentData) {
-      currentData = stripSkins(DEFAULT_STATE)
-    }
-    
-    const nextData = { ...currentData, ...strippedState }
-    
+    if (!currentData) currentData = stripGlobalState(DEFAULT_STATE)
+    const nextData = { ...stripGlobalState(currentData), ...globalPatch }
     await kv.set(KV_KEY, nextData)
-    if (typeof strippedState.adminPassword === "string") {
-      await saveAdminPassword(strippedState.adminPassword)
-    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("KV PATCH Error:", error)
