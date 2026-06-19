@@ -125,6 +125,22 @@ Recommended retention:
 APP_DIR=/opt/upgrader HEALTH_URL=https://upgrader.pro.upgrader.ru ./scripts/deploy-vps.sh <commit-sha>
 ```
 
+## GitHub Actions Autodeploy
+
+`.github/workflows/deploy-vps.yml` deploys every push to `main` and can also be run manually.
+
+Add these repository secrets in GitHub Actions:
+
+```text
+VPS_HOST=185.250.47.16
+VPS_PORT=22
+VPS_USER=<ssh-user>
+VPS_SSH_KEY=<private-key-for-that-user>
+VPS_DEPLOY_PATH=/opt/upgrader
+```
+
+Do not store application env variables in GitHub. They stay on the VPS in `/etc/upgrader/upgrader.env`.
+
 ## Rollback
 
 ```bash
