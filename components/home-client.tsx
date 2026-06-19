@@ -30,6 +30,7 @@ function publicLoginEnabled() {
 function markPublicLogin() {
   try {
     window.localStorage.setItem(publicLoginKey(), "1")
+    window.dispatchEvent(new CustomEvent("upgrader-public-login-changed"))
   } catch {}
 }
 
@@ -42,21 +43,20 @@ export function HomeClient() {
     preloadWinAnimationFrames()
   }, [])
 
-  // Steam-login на сайте является визуальным входом в уже выбранный key-account.
-  // Храним его отдельно в браузере, чтобы перезагрузка или старый /api/account
-  // snapshot не возвращали пользователя к кнопке входа.
-  useEffect(() => {
-    if (publicLoginEnabled() && !state.loggedIn) login()
-  }, [state.loggedIn, login])
+  const restoreLogin = publicLoginEnabled() && !state.loggedIn
 
-  // Подключает любые дубли кнопки "Войти через Steam" ниже по странице, даже если
-  // конкретный блок забыл передать onClick в LoginButton.
+  useEffect(() => {
+    if (restoreLogin) login()
+  }, [restoreLogin, login])
+
   useEffect(() => {
     function onClick(event: MouseEvent) {
       const target = event.target as HTMLElement | null
       const action = target?.closest("button,a") as HTMLElement | null
       if (!action) return
       if (!action.textContent?.includes("Войти через Steam")) return
+      event.preventDefault()
+      event.stopPropagation()
       markPublicLogin()
       login()
     }
@@ -65,6 +65,10 @@ export function HomeClient() {
   }, [login])
 
   const hideMultiplierXs = state.predict.showMultipliers === false
+
+  if (!ready || restoreLogin) {
+    return <div className="min-h-screen bg-transparent" />
+  }
 
   return (
     <div className={`min-h-screen bg-transparent text-foreground flex flex-col${hideMultiplierXs ? " hide-multiplier-xs" : ""}`}>
