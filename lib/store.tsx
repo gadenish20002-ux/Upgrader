@@ -250,6 +250,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (accountRes && accountRes.ok) {
           const j = await accountRes.json()
           accountState = j.account || {}
+          if (!adminScope && publicLoginEnabled()) {
+            accountState.loggedIn = true
+          }
         }
 
         setInternal((prev) => {
