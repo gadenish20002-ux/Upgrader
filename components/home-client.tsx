@@ -66,7 +66,7 @@ export function HomeClient() {
 
   const hideMultiplierXs = state.predict.showMultipliers === false
 
-  if (!ready || restoreLogin) {
+  if (!ready) {
     return <div className="min-h-screen bg-transparent" />
   }
 
