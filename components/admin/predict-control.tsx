@@ -1,7 +1,7 @@
 "use client"
 
 import { useStore } from "@/lib/store"
-import type { PredictOutcome, PredictHint } from "@/lib/types"
+import type { Predict, PredictOutcome, PredictHint } from "@/lib/types"
 import { Target, Check, X, Shuffle, ExternalLink, ListOrdered, Eye, EyeOff } from "lucide-react"
 
 const HINT_OPTIONS: { value: PredictHint; label: string }[] = [
@@ -13,15 +13,30 @@ const HINT_OPTIONS: { value: PredictHint; label: string }[] = [
   { value: "75%", label: "75%" },
 ]
 
+function saveGlobalPredict(predict: Predict) {
+  fetch(`/api/state?t=${Date.now()}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ predict }),
+    cache: "no-store",
+  }).catch((error) => console.error("Failed to save global predict", error))
+}
+
 export function PredictControl({ predictWindowHref = "/admin/predict" }: { predictWindowHref?: string } = {}) {
   const { state, setState } = useStore()
 
+  function patchPredict(patch: Partial<Predict>) {
+    const nextPredict = { ...state.predict, ...patch }
+    setState((p) => ({ ...p, predict: { ...p.predict, ...patch } }))
+    saveGlobalPredict(nextPredict)
+  }
+
   function setOutcome(outcome: PredictOutcome) {
-    setState((p) => ({ ...p, predict: { ...p.predict, outcome } }))
+    patchPredict({ outcome })
   }
 
   function setHint(hint: PredictHint) {
-    setState((p) => ({ ...p, predict: { ...p.predict, hint } }))
+    patchPredict({ hint })
   }
 
   const options: { value: PredictOutcome; label: string; desc: string; icon: typeof Check; tone: string }[] = [
@@ -89,7 +104,7 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
               min={1} 
               className="h-9 w-24 rounded-md border border-border bg-background px-3 text-sm"
               value={targetLosses}
-              onChange={(e) => setState((p) => ({ ...p, predict: { ...p.predict, targetLosses: parseInt(e.target.value) || 1 } }))}
+              onChange={(e) => patchPredict({ targetLosses: parseInt(e.target.value) || 1 })}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -99,7 +114,7 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
                 {currentLosses} / {targetLosses}
               </span>
               <button 
-                onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: 0 } }))}
+                onClick={() => patchPredict({ currentLosses: 0 })}
                 className="text-xs text-muted-foreground underline hover:text-foreground"
               >
                 Сброс
@@ -111,14 +126,14 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
 
       <div className="mt-4 flex gap-4">
         <button
-          onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, showPercentages: !showPercentages } }))}
+          onClick={() => patchPredict({ showPercentages: !showPercentages })}
           className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showPercentages ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
         >
           {showPercentages ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           Отображение %
         </button>
         <button
-          onClick={() => setState((p) => ({ ...p, predict: { ...p.predict, showMultipliers: !showMultipliers } }))}
+          onClick={() => patchPredict({ showMultipliers: !showMultipliers })}
           className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showMultipliers ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
         >
           {showMultipliers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -126,7 +141,6 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
         </button>
       </div>
 
-      {/* Hint selector — shown only when win/lose */}
       {outcome !== "off" && (
         <div className="mt-4">
           <p className="mb-2 text-xs text-muted-foreground font-medium">
