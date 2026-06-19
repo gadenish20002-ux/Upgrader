@@ -39,26 +39,30 @@ async function authorize(
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const code = normalizeCode(searchParams.get("key"))
-  const auth = await authorize(code, request)
-  if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
+  try {
+    const { searchParams } = new URL(request.url)
+    const code = normalizeCode(searchParams.get("key"))
+    const auth = await authorize(code, request)
+    if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 
-  const account = await getAccount(code)
-  return NextResponse.json({ account, key: auth.meta })
+    const account = await getAccount(code)
+    return NextResponse.json({ account, key: auth.meta })
+  } catch {
+    return NextResponse.json({ error: "storage unavailable" }, { status: 503 })
+  }
 }
 
 export async function PATCH(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const code = normalizeCode(searchParams.get("key"))
-  const auth = await authorize(code, request)
-  if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
-
   try {
+    const { searchParams } = new URL(request.url)
+    const code = normalizeCode(searchParams.get("key"))
+    const auth = await authorize(code, request)
+    if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
+
     const body = await request.json()
     const account = await patchAccount(code, body)
     return NextResponse.json({ success: true, account })
   } catch {
-    return NextResponse.json({ error: "bad request" }, { status: 400 })
+    return NextResponse.json({ error: "storage unavailable" }, { status: 503 })
   }
 }

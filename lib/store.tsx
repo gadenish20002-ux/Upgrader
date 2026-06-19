@@ -38,6 +38,8 @@ const ADMIN_ACCOUNT = "__default__"
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key" // player's key
 const ADMIN_ACTIVE_KEY_STORAGE = "upgrader_admin_active_key" // account the admin is managing
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
+const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts"
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000
 
 function isAdminPath(pathname: string | null): boolean {
   return !!pathname && pathname.startsWith("/admin")
@@ -49,6 +51,19 @@ function resolveAccountKey(adminScope: boolean): string | null {
     return window.localStorage.getItem(ADMIN_ACTIVE_KEY_STORAGE) || ADMIN_ACCOUNT
   }
   return window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
+}
+
+function accountSessionExpired(): boolean {
+  if (typeof window === "undefined") return false
+  const raw = window.localStorage.getItem(ACCOUNT_KEY_TS_STORAGE)
+  const ts = raw ? parseInt(raw, 10) : 0
+  return !Number.isFinite(ts) || !ts || Date.now() - ts >= SESSION_TTL_MS
+}
+
+function activeAccountKey(fallback: string | null): string | null {
+  if (typeof window === "undefined") return fallback
+  const fromStorage = window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
+  return fromStorage || fallback
 }
 
 // Attach the admin password when we are on an admin page OR when the active
@@ -140,6 +155,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setInternal] = useState<AppState>(DEFAULT_STATE)
   const [ready, setReady] = useState(false)
   const lastSyncTime = useRef<number>(0)
+  const fetchInFlight = useRef(false)
   const accountKeyRef = useRef<string | null>(null)
   const catalogSkinsRef = useRef<Skin[]>(DEFAULT_STATE.skins)
   accountKeyRef.current = accountKey
@@ -195,6 +211,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     async function fetchState() {
       if (Date.now() < syncManager.suppressUntil) return
       if (Date.now() - lastSyncTime.current < 1500) return
+      if (fetchInFlight.current) return
+      fetchInFlight.current = true
 
       try {
         const wantAccount = adminScope || !!accountKey
@@ -210,10 +228,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (cancelled) return
 
-        // Player key no longer valid → kick back to the gate.
-        if (!adminScope && accountKey && accountRes && (accountRes.status === 403 || accountRes.status === 401)) {
+        // Player key no longer valid → kick back to the gate. A stale response
+        // for an old key must not clear a newer session selected in this tab.
+        if (
+          !adminScope &&
+          accountKey &&
+          accountRes &&
+          (accountRes.status === 403 || accountRes.status === 401) &&
+          activeAccountKey(null) === accountKey
+        ) {
           try {
             window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
+            window.localStorage.removeItem(ACCOUNT_KEY_TS_STORAGE)
           } catch {}
           window.dispatchEvent(new CustomEvent("upgrader-account-invalid"))
           return
@@ -247,6 +273,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
       } catch (err) {
         console.error("Failed to fetch state", err)
+      } finally {
+        fetchInFlight.current = false
       }
     }
 
@@ -255,7 +283,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await fetchState()
       if (cancelled) return
       setReady(true)
-      interval = setInterval(fetchState, 2000)
+      interval = setInterval(fetchState, 10_000)
     }
 
     init()
@@ -308,15 +336,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (syncTimeout) clearTimeout(syncTimeout)
         syncTimeout = setTimeout(() => {
-          const key = accountKeyRef.current
           const admin = isAdminPath(window.location.pathname)
+          const key = admin ? accountKeyRef.current : activeAccountKey(accountKeyRef.current)
 
           const accountToSend = { ...pendingAccountChanges }
           const globalToSend = { ...pendingGlobalChanges }
-          for (const k in pendingAccountChanges) delete pendingAccountChanges[k]
           for (const k in pendingGlobalChanges) delete pendingGlobalChanges[k]
 
-          if (key && Object.keys(accountToSend).length > 0) {
+          if (key && Object.keys(accountToSend).length > 0 && (admin || !accountSessionExpired())) {
+            for (const k in pendingAccountChanges) delete pendingAccountChanges[k]
             fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
               method: "PATCH",
               headers: authHeaders(key),
@@ -353,6 +381,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const persistAccountPatch = useCallback((patch: Partial<AppState>) => {
+    const key = activeAccountKey(accountKeyRef.current)
+    if (!key || accountSessionExpired()) return
+
+    fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
+      method: "PATCH",
+      headers: authHeaders(key),
+      body: JSON.stringify(patch),
+      cache: "no-store",
+    })
+      .then((res) => {
+        if (!res || !res.ok) return
+        for (const k in patch) {
+          if (dirtyAccountFields[k] === JSON.stringify((patch as any)[k])) {
+            delete dirtyAccountFields[k]
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to sync account", err))
+  }, [])
+
   // cross-tab sync
   useEffect(() => {
     const storageKey = storageKeyFor(accountKey)
@@ -376,11 +425,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(() => {
     setState((p) => ({ ...p, loggedIn: true }))
-  }, [setState])
+    persistAccountPatch({ loggedIn: true })
+  }, [setState, persistAccountPatch])
 
   const logout = useCallback(() => {
     setState((p) => ({ ...p, loggedIn: false }))
-  }, [setState])
+    persistAccountPatch({ loggedIn: false })
+  }, [setState, persistAccountPatch])
 
   const addToInventory = useCallback(
     (skinId: string) => {

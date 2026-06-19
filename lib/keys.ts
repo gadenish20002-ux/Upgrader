@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv"
+import { kv } from "./kv"
 import { DEFAULT_STATE } from "./default-data"
 import type { AppState } from "./types"
 
@@ -15,6 +15,7 @@ import type { AppState } from "./types"
 
 export const KEYS_KV = "upgrader_access_keys"
 export const GLOBAL_KV = "upgrader_global_state"
+export const ADMIN_PASSWORD_KV = "upgrader_admin_password"
 export const ADMIN_ACCOUNT = "__default__" // template account the admin edits with no key selected
 const KEY_LAST_SEEN_PREFIX = "upgrader_access_key_last_seen:"
 
@@ -148,11 +149,16 @@ export function daysLeft(key: AccessKey): number {
 }
 
 export async function getAdminPassword(): Promise<string> {
-  try {
-    const g = await kv.get<any>(GLOBAL_KV)
-    if (g && typeof g.adminPassword === "string") return g.adminPassword
-  } catch {}
+  const direct = await kv.get<string>(ADMIN_PASSWORD_KV).catch(() => null)
+  if (typeof direct === "string") return direct
+
+  const g = await kv.get<any>(GLOBAL_KV)
+  if (g && typeof g.adminPassword === "string") return g.adminPassword
   return DEFAULT_STATE.adminPassword
+}
+
+export async function saveAdminPassword(password: string): Promise<void> {
+  await kv.set(ADMIN_PASSWORD_KV, password)
 }
 
 // Admin auth: empty stored password means admin is open (matches site behaviour

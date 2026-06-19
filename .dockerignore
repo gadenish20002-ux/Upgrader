@@ -1,0 +1,17 @@
+.git
+.github
+.next
+.vercel
+node_modules
+npm-debug.log*
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+*.log
+.DS_Store
+.playwright-cli
+.playwright-mcp
+docs/superpowers/specs
+upgrader.pro
+Апгрейд предметов КС2_ лучший Upgrader CS_files

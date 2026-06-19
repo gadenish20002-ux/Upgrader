@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { kv } from "@vercel/kv"
+import { kv } from "@/lib/kv"
 import { currentGlobalUpgrades } from "@/lib/default-data"
 
 // Внутренний эндпоинт статистики: онлайн + количество апгрейдов.
