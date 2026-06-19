@@ -5,12 +5,41 @@ services:
       dockerfile: Dockerfile
     image: upgrader-app:${UPGRADER_IMAGE_TAG:-latest}
     restart: unless-stopped
-    env_file:
-      - /etc/upgrader/upgrader.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      CRON_SECRET: ${CRON_SECRET:-change-me-before-public-cron}
+      CATALOG_STEAM_USD_MULTIPLIER: ${CATALOG_STEAM_USD_MULTIPLIER:-78}
+    depends_on:
+      redis:
+        condition: service_healthy
     expose:
       - "3000"
     networks:
       - upgrader
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - upgrader
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     logging:
       driver: json-file
       options:
@@ -23,8 +52,9 @@ services:
     depends_on:
       app:
         condition: service_healthy
-    env_file:
-      - /etc/upgrader/upgrader.env
+    environment:
+      UPGRADER_DOMAIN: ${UPGRADER_DOMAIN:-upgrader.pro.upgrader.ru}
+      CADDY_EMAIL: ${CADDY_EMAIL:-admin@upgrader.pro}
     ports:
       - "80:80"
       - "443:443"
@@ -46,5 +76,6 @@ networks:
     driver: bridge
 
 volumes:
+  redis_data:
   caddy_data:
   caddy_config:
