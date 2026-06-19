@@ -64,7 +64,7 @@ function keySessionExpired(): boolean {
 // a valid stored session or claim that the password changed.
 async function checkAdmin(pwd: string): Promise<AuthCheck> {
   try {
-    const res = await fetch(`/api/account?key=${ADMIN_ACCOUNT}&t=${Date.now()}`, {
+    const res = await fetch(`/api/admin-auth?t=${Date.now()}`, {
       cache: "no-store",
       headers: { "x-admin-password": pwd },
     })

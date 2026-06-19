@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ADMIN_PWD_TS_STORAGE = "upgrader_admin_pwd_ts"
-const ADMIN_ACCOUNT = "__default__"
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000
 const SERVICE_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Пароль не изменён — попробуйте ещё раз позже."
 
@@ -16,7 +15,7 @@ type AuthCheck = "valid" | "invalid" | "unavailable"
 
 async function checkAdmin(password: string): Promise<AuthCheck> {
   try {
-    const response = await fetch(`/api/account?key=${ADMIN_ACCOUNT}&t=${Date.now()}`, {
+    const response = await fetch(`/api/admin-auth?t=${Date.now()}`, {
       cache: "no-store",
       headers: { "x-admin-password": password },
     })
