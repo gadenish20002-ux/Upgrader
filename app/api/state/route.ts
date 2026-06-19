@@ -17,7 +17,6 @@ const ACCOUNT_FIELD_NAMES = new Set([
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
-  "predict",
   "gameHistory",
   "fastMultipliers",
   "fastPercentages",
