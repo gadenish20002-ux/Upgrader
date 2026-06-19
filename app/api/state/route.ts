@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { kv } from "@/lib/kv"
 import { DEFAULT_STATE, currentGlobalUpgrades } from "@/lib/default-data"
+import { saveAdminPassword } from "@/lib/keys"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -35,6 +36,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const strippedState = stripSkins(body)
     await kv.set(KV_KEY, strippedState)
+    if (typeof strippedState.adminPassword === "string") {
+      await saveAdminPassword(strippedState.adminPassword)
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("KV POST Error:", error)
@@ -55,6 +59,9 @@ export async function PATCH(request: Request) {
     const nextData = { ...currentData, ...strippedState }
     
     await kv.set(KV_KEY, nextData)
+    if (typeof strippedState.adminPassword === "string") {
+      await saveAdminPassword(strippedState.adminPassword)
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("KV PATCH Error:", error)
