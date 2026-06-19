@@ -7,7 +7,7 @@ type ParsedReply = { value: RedisValue; offset: number }
 type RawRedisValue = Buffer | string | number | null | RawRedisValue[]
 type ParsedRawReply = { value: RawRedisValue; offset: number }
 
-const REST_CHUNK_BYTES = 64 * 1024
+const REST_CHUNK_BYTES = 8 * 1024
 
 function shouldUseDirectKv(): boolean {
   return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
