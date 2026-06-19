@@ -215,7 +215,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       fetchInFlight.current = true
 
       try {
-        const wantAccount = adminScope || !!accountKey
+        const wantAccount = adminScope || (!!accountKey && accountKey !== ADMIN_ACCOUNT)
         const [globalRes, accountRes] = await Promise.all([
           fetch(`/api/state?t=${Date.now()}`, { cache: "no-store" }),
           wantAccount && accountKey
