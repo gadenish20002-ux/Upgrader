@@ -254,7 +254,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         setInternal((prev) => {
           const next: AppState = {
-            ...DEFAULT_STATE,
+            ...prev,
             ...globalState,
             ...accountState,
             skins: catalogSkinsRef.current,
