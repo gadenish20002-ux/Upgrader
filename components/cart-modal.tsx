@@ -3,6 +3,60 @@
 import { useStore, getSkin, formatPrice } from "@/lib/store"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
 
+function currentAccountKey() {
+  try {
+    return window.localStorage.getItem("upgrader_account_key") || ""
+  } catch {
+    return ""
+  }
+}
+
+function storageKeyFor(accountKey: string) {
+  return `upgrader_state_v4:${accountKey || "none"}`
+}
+
+function accountHeaders(accountKey: string): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  try {
+    if (accountKey === "__default__") {
+      const pwd = window.localStorage.getItem("upgrader_admin_pwd")
+      if (pwd) headers["x-admin-password"] = pwd
+    }
+  } catch {}
+  return headers
+}
+
+function persistPurchasedAccountSnapshot() {
+  window.setTimeout(() => {
+    const key = currentAccountKey()
+    if (!key) return
+
+    let saved: any = null
+    try {
+      const raw = window.localStorage.getItem(storageKeyFor(key))
+      saved = raw ? JSON.parse(raw) : null
+    } catch {
+      saved = null
+    }
+
+    if (!saved || !Array.isArray(saved.inventory)) return
+
+    fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
+      method: "PATCH",
+      headers: accountHeaders(key),
+      body: JSON.stringify({
+        balance: saved.balance,
+        inventory: saved.inventory,
+        itemHistory: saved.itemHistory,
+        gameHistory: saved.gameHistory,
+        userUpgrades: saved.userUpgrades,
+        loggedIn: saved.loggedIn,
+      }),
+      cache: "no-store",
+    }).catch((error) => console.error("Failed to persist cart purchase", error))
+  }, 650)
+}
+
 export function CartModal({
   isOpen,
   onClose,
@@ -26,6 +80,15 @@ export function CartModal({
     const skin = getSkin(state.skins, id)
     return sum + (skin?.price || 0)
   }, 0)
+
+  function handleBuyClick() {
+    if (selectedShopIds.length > 0 && totalPrice <= state.balance) {
+      onBuy()
+      persistPurchasedAccountSnapshot()
+      return
+    }
+    onBuy()
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000CC] backdrop-blur-sm p-4 animate-in fade-in duration-200" style={{ fontFamily: 'SimpleFont, sans-serif' }}>
@@ -120,7 +183,7 @@ export function CartModal({
                 </button>
                 <button 
                   type="button" 
-                  onClick={onBuy}
+                  onClick={handleBuyClick}
                   disabled={selectedShopIds.length === 0}
                   style={{ fontFamily: 'SimpleFont, sans-serif' }}
                   className="flex h-full min-w-[15.125rem] text-xl font-semibold leading-[24px] text-[#020202] cursor-pointer items-center justify-center rounded-[10px] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)] shadow-[0_0_16px_0_rgba(255,193,7,0.60)] hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] transition-shadow duration-200 !h-12 !w-[13.75rem] disabled:opacity-50 disabled:cursor-not-allowed"
