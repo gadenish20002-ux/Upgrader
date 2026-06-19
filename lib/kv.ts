@@ -7,7 +7,7 @@ type ParsedReply = { value: RedisValue; offset: number }
 type RawRedisValue = Buffer | string | number | null | RawRedisValue[]
 type ParsedRawReply = { value: RawRedisValue; offset: number }
 
-const REST_CHUNK_BYTES = 8 * 1024
+const REST_CHUNK_BYTES = 64 * 1024
 
 function shouldUseDirectKv(): boolean {
   return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
@@ -228,10 +228,13 @@ async function getString(key: string): Promise<RedisValue> {
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
     const size = await restCommand(["STRLEN", key])
     if (typeof size === "number" && size > REST_CHUNK_BYTES && process.env.REDIS_URL) {
-      const value = await redisRawCommand(["GET", key])
-      if (value === null) return null
-      if (!Buffer.isBuffer(value)) throw new Error(`Unexpected Redis value type for ${key}`)
-      return value.toString("utf8")
+      const chunks: Buffer[] = []
+      for (let start = 0; start < size; start += REST_CHUNK_BYTES) {
+        const chunk = await redisRawCommand(["GETRANGE", key, start, Math.min(size - 1, start + REST_CHUNK_BYTES - 1)])
+        if (!Buffer.isBuffer(chunk)) throw new Error(`Unexpected Redis chunk type for ${key}`)
+        chunks.push(chunk)
+      }
+      return Buffer.concat(chunks).toString("utf8")
     }
   }
   return command(["GET", key])
