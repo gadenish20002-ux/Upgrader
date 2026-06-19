@@ -39,6 +39,7 @@ const ACCOUNT_KEY_STORAGE = "upgrader_account_key" // player's key
 const ADMIN_ACTIVE_KEY_STORAGE = "upgrader_admin_active_key" // account the admin is managing
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts"
+const PUBLIC_LOGIN_PREFIX = "upgrader_public_logged_in:"
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000
 
 function isAdminPath(pathname: string | null): boolean {
@@ -64,6 +65,31 @@ function activeAccountKey(fallback: string | null): string | null {
   if (typeof window === "undefined") return fallback
   const fromStorage = window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
   return fromStorage || fallback
+}
+
+function publicLoginStorageKey(accountKey: string | null): string {
+  return `${PUBLIC_LOGIN_PREFIX}${accountKey || "none"}`
+}
+
+function readPublicLogin(accountKey: string | null = activeAccountKey(null)): boolean | null {
+  if (typeof window === "undefined" || accountSessionExpired()) return null
+  const raw = window.localStorage.getItem(publicLoginStorageKey(accountKey))
+  if (raw === "1") return true
+  if (raw === "0") return false
+  return null
+}
+
+function writePublicLogin(accountKey: string | null, value: boolean): void {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(publicLoginStorageKey(accountKey), value ? "1" : "0")
+    window.dispatchEvent(new CustomEvent("upgrader-public-login-changed"))
+  } catch {}
+}
+
+function applyPublicLogin(state: AppState, accountKey: string | null = activeAccountKey(null)): AppState {
+  const local = readPublicLogin(accountKey)
+  return local === null ? state : { ...state, loggedIn: local }
 }
 
 // Attach the admin password when we are on an admin page OR when the active
@@ -103,21 +129,21 @@ function storageKeyFor(accountKey: string | null): string {
   return `upgrader_state_v4:${accountKey || "none"}`
 }
 
-function loadState(storageKey: string, catalogSkins: Skin[] = DEFAULT_STATE.skins): AppState {
+function loadState(storageKey: string, catalogSkins: Skin[] = DEFAULT_STATE.skins, accountKey: string | null = activeAccountKey(null)): AppState {
   if (typeof window === "undefined") return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
   try {
     const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
+    if (!raw) return applyPublicLogin({ ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }, accountKey)
     const parsed = JSON.parse(raw)
-    return {
+    return applyPublicLogin({
       ...DEFAULT_STATE,
       ...parsed,
       skins: catalogSkins,
       upgradeSkins: catalogSkins,
       upgrades: currentGlobalUpgrades(),
-    }
+    }, accountKey)
   } catch {
-    return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
+    return applyPublicLogin({ ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }, accountKey)
   }
 }
 
@@ -199,7 +225,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storageKey = storageKeyFor(accountKey)
     setReady(false)
-    setInternal(loadState(storageKey, catalogSkinsRef.current))
+    setInternal(loadState(storageKey, catalogSkinsRef.current, accountKey))
 
     // Switching accounts → drop any un-acked optimistic state from the previous one
     // so it can't leak into / block the freshly loaded account.
@@ -240,6 +266,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           try {
             window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
             window.localStorage.removeItem(ACCOUNT_KEY_TS_STORAGE)
+            window.localStorage.removeItem(publicLoginStorageKey(accountKey))
           } catch {}
           window.dispatchEvent(new CustomEvent("upgrader-account-invalid"))
           return
@@ -250,13 +277,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (accountRes && accountRes.ok) {
           const j = await accountRes.json()
           accountState = j.account || {}
-          if (!adminScope && publicLoginEnabled()) {
-            accountState.loggedIn = true
-          }
         }
 
         setInternal((prev) => {
-          const next: AppState = {
+          let next: AppState = {
             ...prev,
             ...globalState,
             ...accountState,
@@ -264,6 +288,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             upgradeSkins: catalogSkinsRef.current,
             upgrades: currentGlobalUpgrades(),
           }
+          next = applyPublicLogin(next, accountKey)
           // Keep optimistic, not-yet-confirmed local account changes (e.g. the
           // inventory after a spin) instead of clobbering them with stale server data.
           for (const k in dirtyAccountFields) {
@@ -318,8 +343,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (!hasChanges) return prev
 
-        const finalState = { ...prev, ...changes }
-        const storageKey = storageKeyFor(accountKeyRef.current)
+        const finalState = applyPublicLogin({ ...prev, ...changes }, activeAccountKey(accountKeyRef.current))
+        const storageKey = storageKeyFor(activeAccountKey(accountKeyRef.current))
         try {
           window.localStorage.setItem(storageKey, JSON.stringify(finalState))
         } catch {}
@@ -412,26 +437,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (e.key === storageKey && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue)
-          setInternal({
+          setInternal(applyPublicLogin({
             ...DEFAULT_STATE,
             ...parsed,
             skins: catalogSkinsRef.current,
             upgradeSkins: catalogSkinsRef.current,
             upgrades: currentGlobalUpgrades(),
-          })
+          }, accountKey))
         } catch {}
       }
     }
+    function onPublicLoginChanged() {
+      setInternal((prev) => applyPublicLogin(prev, accountKey))
+    }
     window.addEventListener("storage", onStorage)
-    return () => window.removeEventListener("storage", onStorage)
+    window.addEventListener("upgrader-public-login-changed", onPublicLoginChanged as EventListener)
+    return () => {
+      window.removeEventListener("storage", onStorage)
+      window.removeEventListener("upgrader-public-login-changed", onPublicLoginChanged as EventListener)
+    }
   }, [accountKey])
 
   const login = useCallback(() => {
+    const key = activeAccountKey(accountKeyRef.current)
+    writePublicLogin(key, true)
     setState((p) => ({ ...p, loggedIn: true }))
     persistAccountPatch({ loggedIn: true })
   }, [setState, persistAccountPatch])
 
   const logout = useCallback(() => {
+    const key = activeAccountKey(accountKeyRef.current)
+    writePublicLogin(key, false)
     setState((p) => ({ ...p, loggedIn: false }))
     persistAccountPatch({ loggedIn: false })
   }, [setState, persistAccountPatch])
