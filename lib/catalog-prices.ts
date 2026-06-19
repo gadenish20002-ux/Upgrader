@@ -49,6 +49,15 @@ const DEFAULT_MULTIPLIER = 78
 const MIN_REASONABLE_RATIO = 0.1
 const MAX_REASONABLE_RATIO = 10
 const ADDITION_CHUNK_SIZE = 400
+const READ_CACHE_TTL_MS = 10 * 60 * 1000
+
+let pricesCache: { value: CatalogPriceMap; expiresAt: number } | null = null
+let metaCache: { value: CatalogPriceMeta | null; expiresAt: number } | null = null
+let additionsCache: { value: Skin[]; chunks: number; updatedAt: number | null; expiresAt: number } | null = null
+
+function cacheValid(expiresAt: number): boolean {
+  return Date.now() < expiresAt
+}
 
 function cleanPrefix(value: string, prefix: string): string {
   return value.replace(new RegExp(prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "").trim()
@@ -150,22 +159,39 @@ export function catalogMultiplier(): number {
 }
 
 export async function getCatalogPrices(): Promise<CatalogPriceMap> {
-  return (await kv.get<CatalogPriceMap>(CATALOG_PRICES_KV)) || {}
+  if (pricesCache && cacheValid(pricesCache.expiresAt)) return pricesCache.value
+  const value = (await kv.get<CatalogPriceMap>(CATALOG_PRICES_KV)) || {}
+  pricesCache = { value, expiresAt: Date.now() + READ_CACHE_TTL_MS }
+  return value
 }
 
 export async function getCatalogPriceMeta(): Promise<CatalogPriceMeta | null> {
-  return (await kv.get<CatalogPriceMeta>(CATALOG_META_KV)) || null
+  if (metaCache && cacheValid(metaCache.expiresAt)) return metaCache.value
+  const value = (await kv.get<CatalogPriceMeta>(CATALOG_META_KV)) || null
+  metaCache = { value, expiresAt: Date.now() + READ_CACHE_TTL_MS }
+  return value
 }
 
 export async function getCatalogAdditionalSkins(meta?: CatalogPriceMeta | null): Promise<Skin[]> {
   const currentMeta = meta === undefined ? await getCatalogPriceMeta() : meta
   const chunks = Math.max(0, currentMeta?.chunks || 0)
   if (chunks === 0) return []
+  const updatedAt = currentMeta?.updatedAt || null
+  if (
+    additionsCache &&
+    additionsCache.chunks === chunks &&
+    additionsCache.updatedAt === updatedAt &&
+    cacheValid(additionsCache.expiresAt)
+  ) {
+    return additionsCache.value
+  }
 
   const values = await Promise.all(
     Array.from({ length: chunks }, (_, index) => kv.get<Skin[]>(`${CATALOG_ADDITIONS_PREFIX}${index}`)),
   )
-  return values.flatMap((chunk) => chunk || [])
+  const value = values.flatMap((chunk) => chunk || [])
+  additionsCache = { value, chunks, updatedAt, expiresAt: Date.now() + READ_CACHE_TTL_MS }
+  return value
 }
 
 export function applyCatalogPrices(skins: Skin[], prices: CatalogPriceMap): Skin[] {
@@ -302,6 +328,9 @@ export async function syncCatalogPrices(): Promise<CatalogPriceMeta> {
   // complete snapshot or the new complete snapshot; an empty result is never saved.
   await kv.set(CATALOG_PRICES_KV, prices)
   await kv.set(CATALOG_META_KV, meta)
+  pricesCache = { value: prices, expiresAt: Date.now() + READ_CACHE_TTL_MS }
+  metaCache = { value: meta, expiresAt: Date.now() + READ_CACHE_TTL_MS }
+  additionsCache = { value: additions, chunks: meta.chunks, updatedAt: meta.updatedAt, expiresAt: Date.now() + READ_CACHE_TTL_MS }
 
   return meta
 }

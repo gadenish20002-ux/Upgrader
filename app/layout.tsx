@@ -37,6 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru">
       <head>
+        <link rel="preconnect" href="https://s3.upgrader.pro" crossOrigin="" />
+        <link rel="preconnect" href="https://community.akamai.steamstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://community.steamstatic.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://s3.upgrader.pro" />
+        <link rel="dns-prefetch" href="https://community.akamai.steamstatic.com" />
+        <link rel="dns-prefetch" href="https://community.steamstatic.com" />
         <link rel="preload" href="/sounds/openCompensationCase.mp3" as="audio" type="audio/mpeg" />
       </head>
       <body className={`font-tektur antialiased ${tektur.variable} ${exo2.variable} bg-[#17181C] bg-[url('/assets/bg-PEFHGDDX.webp')] bg-cover bg-no-repeat bg-center overflow-x-hidden`}>
