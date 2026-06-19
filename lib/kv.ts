@@ -23,7 +23,7 @@ function parseReply(input: Buffer, offset = 0): ParsedReply | null {
   const type = String.fromCharCode(input[offset])
   const line = input.toString("utf8", offset + 1, lineEnd)
 
-  if (type === "$”) {
+  if (type === "$") {
     const length = Number(line)
     if (length === -1) return { value: null, offset: lineEnd + 2 }
     if (!Number.isFinite(length) || length < 0) throw new Error("Invalid Redis bulk length")
@@ -60,7 +60,7 @@ function parseRawReply(input: Buffer, offset = 0): ParsedRawReply | null {
   const type = String.fromCharCode(input[offset])
   const line = input.toString("utf8", offset + 1, lineEnd)
 
-  if (type === "$”) {
+  if (type === "$") {
     const length = Number(line)
     if (length === -1) return { value: null, offset: lineEnd + 2 }
     if (!Number.isFinite(length) || length < 0) throw new Error("Invalid Redis bulk length")
