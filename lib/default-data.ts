@@ -3,12 +3,7 @@ import type { Skin, AppState, InventoryItem } from "./types"
 import skinsData from "./skins-data.json"
 export const DEFAULT_SKINS: Skin[] = skinsData as Skin[];
 
-const DEFAULT_INVENTORY: InventoryItem[] = [
-  { uid: "inv-1", skinId: "skin-1" },
-  { uid: "inv-2", skinId: "skin-2" },
-  { uid: "inv-3", skinId: "skin-3" },
-  { uid: "inv-4", skinId: "skin-4" },
-]
+const DEFAULT_INVENTORY: InventoryItem[] = []
 
 // Глобальный счётчик «Апгрейдов» привязан к реальному времени: он всегда
 // показывает значение референса на текущий момент и продолжает расти со

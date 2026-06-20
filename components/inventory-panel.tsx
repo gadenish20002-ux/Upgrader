@@ -8,6 +8,7 @@ import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
 import { Backpack, Store, ChevronLeft, ChevronRight } from "lucide-react"
+import { isSticker } from "@/lib/utils"
 
 export function InventoryPanel({
   selectedUids,
@@ -37,9 +38,21 @@ export function InventoryPanel({
   const { state } = useStore()
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
   const [currentPage, setCurrentPage] = useState(1)
-  const [minPrice, setMinPrice] = useState("")
-  const [maxPrice, setMaxPrice] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [minPriceShop, setMinPriceShop] = useState("")
+  const [maxPriceShop, setMaxPriceShop] = useState("")
+  const [searchQueryShop, setSearchQueryShop] = useState("")
+
+  const [minPriceInv, setMinPriceInv] = useState("")
+  const [maxPriceInv, setMaxPriceInv] = useState("")
+  const [searchQueryInv, setSearchQueryInv] = useState("")
+
+  const minPrice = mode === "shop" ? minPriceShop : minPriceInv
+  const setMinPrice = mode === "shop" ? setMinPriceShop : setMinPriceInv
+  const maxPrice = mode === "shop" ? maxPriceShop : maxPriceInv
+  const setMaxPrice = mode === "shop" ? setMaxPriceShop : setMaxPriceInv
+  const searchQuery = mode === "shop" ? searchQueryShop : searchQueryInv
+  const setSearchQuery = mode === "shop" ? setSearchQueryShop : setSearchQueryInv
+
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   // Reset page when the active list changes so newly added inventory is visible.
@@ -59,10 +72,12 @@ export function InventoryPanel({
       const skin = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
       if (!skin) return false
       
-      if (mode === "shop" && minPrice && skin.price < parseFloat(minPrice)) return false
-      if (mode === "shop" && maxPrice && skin.price > parseFloat(maxPrice)) return false
+      if (isSticker(skin.weapon)) return false
+      
+      if (minPrice && skin.price < parseFloat(minPrice)) return false
+      if (maxPrice && skin.price > parseFloat(maxPrice)) return false
 
-      if (mode === "shop" && searchQuery) {
+      if (searchQuery) {
         const nameMatch = skin.name?.toLowerCase().includes(searchQuery.toLowerCase())
         const weaponMatch = skin.weapon?.toLowerCase().includes(searchQuery.toLowerCase())
         if (!nameMatch && !weaponMatch) return false

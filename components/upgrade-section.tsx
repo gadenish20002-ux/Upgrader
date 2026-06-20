@@ -23,11 +23,12 @@ import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
 import { LoseAnimationOverlay, LOSE_CASE_SOUND, preloadLoseAnimationFrames } from "./lose-animation-overlay"
 import { useIsMobile } from "@/components/ui/use-mobile"
-import type { InventoryItem, Skin } from "@/lib/types"
+import type { Skin } from "@/lib/types"
 
 const DEFAULT_INVENTORY_RECOMMENDATION_PERCENT = 80
 const MULTIPLIER_FILTER_SPREAD = 0.1
 const FAST_COMPENSATION_DURATION_MS = 2450
+const PUBLIC_ACCOUNT_KEY = "__default__"
 
 // Type removed since it's no longer stored in state
 
@@ -128,7 +129,7 @@ function getMultiplierFilterPriceRange(value: number, inputValue: number) {
 }
 
 export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | null }) {
-  const { state, setState, addToInventory, addGameHistory, addItemHistory } = useStore()
+  const { state, setState, accountKey, addToInventory, addGameHistory, addItemHistory } = useStore()
   const isMobile = useIsMobile()
   const wheelRef = useRef<UpgradeWheelHandle>(null)
 
@@ -137,6 +138,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [targetId, setTargetId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
   const pendingWonItemUidRef = useRef<string | null>(null)
+  const pendingWonItemRef = useRef<import("@/lib/types").InventoryItem | null>(null)
+  const pendingWonItemHistoryRef = useRef<import("@/lib/types").ItemHistoryEntry | null>(null)
   const pendingHistoryEntryRef = useRef<import("@/lib/types").GameHistoryEntry | null>(null)
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
@@ -147,6 +150,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isCartBuying, setIsCartBuying] = useState(false)
   const [balanceInput, setBalanceInput] = useState(0)
   const [catalogPriceMin, setCatalogPriceMin] = useState<number | null>(null)
   const [catalogPriceMax, setCatalogPriceMax] = useState<number | null>(null)
@@ -447,22 +451,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     })
   }
 
-  function handleBuyCartItems() {
+  async function handleBuyCartItems() {
     if (!state.loggedIn) {
       toast.error("Войдите через Steam, чтобы совершать покупки")
       return
     }
+    if (isCartBuying) return
     if (selectedShopIds.length === 0) return
-
-    const itemsToBuy = selectedShopItems
-      .map((skin) => {
-        if (!skin) return null
-        return {
-          uid: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          skinId: skin.id,
-        } satisfies InventoryItem
-      })
-      .filter((item): item is InventoryItem => Boolean(item))
 
     const totalCartPrice = selectedShopItems.reduce((sum, skin) => sum + (skin!.price ?? 0), 0)
     
@@ -470,33 +465,55 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Недостаточно баланса")
       return
     }
-    if (itemsToBuy.length === 0) return
+    const skinIds = selectedShopItems.map((skin) => skin!.id)
+    if (skinIds.length === 0) return
 
-    setState((p) => ({
-      ...p,
-      balance: Math.max(0, p.balance - totalCartPrice),
-      inventory: [...itemsToBuy, ...p.inventory],
-      upgrades: p.upgrades + itemsToBuy.length,
-      userUpgrades: p.userUpgrades + itemsToBuy.length,
-    }))
-    
-    addItemHistory(
-      itemsToBuy.map((item) => ({
-        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        skinId: item.skinId,
-        action: "bought",
-        date: Date.now()
-      }))
-    )
-    
-    toast.success("Предметы успешно куплены!")
-    if (state.soundMode === "on") {
-      const audio = new Audio("/sounds/choiceSkin.mp3")
-      audio.play().catch(() => {})
+    const effectiveAccountKey =
+      accountKey ||
+      (typeof window !== "undefined" ? window.localStorage.getItem("upgrader_account_key") : null) ||
+      PUBLIC_ACCOUNT_KEY
+    if (!effectiveAccountKey) {
+      toast.error("Сессия не найдена. Войдите снова")
+      return
     }
-    
-    setSelectedShopIds([])
-    setIsCartOpen(false)
+
+    setIsCartBuying(true)
+    syncManager.suppress(5000)
+    try {
+      const response = await fetch(`/api/account/buy?key=${encodeURIComponent(effectiveAccountKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ skinIds }),
+      })
+
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload?.account) {
+        throw new Error(payload?.error || `buy_failed_${response.status}`)
+      }
+
+      setState((prev) => ({
+        ...prev,
+        ...payload.account,
+        skins: prev.skins,
+        upgradeSkins: prev.upgradeSkins,
+        upgrades: prev.upgrades + skinIds.length,
+      }))
+
+      toast.success("Предметы успешно куплены!")
+      if (state.soundMode === "on") {
+        const audio = new Audio("/sounds/choiceSkin.mp3")
+        audio.play().catch(() => {})
+      }
+      
+      setSelectedShopIds([])
+      setIsCartOpen(false)
+    } catch (error) {
+      console.error("[cart-buy]", error)
+      toast.error("Не удалось сохранить покупку")
+    } finally {
+      setIsCartBuying(false)
+    }
   }
 
   // Keep the left card locked during animations so it doesn't disappear when state updates
@@ -505,19 +522,22 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   // inputValue, which can make the upgrade chance ineligible and clear targetSkin mid-spin.
   const lockedTarget = useRef<typeof targetSkin>(undefined)
 
-  function startFastLossCompensation() {
+  async function startFastLossCompensation() {
     const bonusSkin = pickFastCompensationSkin()
-    addToInventory(bonusSkin.id)
-    addItemHistory([
-      {
-        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        skinId: bonusSkin.id,
-        action: "compensation",
-        date: Date.now(),
-      },
-    ])
     setFastCompensationSkin(bonusSkin)
     setFastLoseAnimating(true)
+    
+    const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
+    try {
+      const res = await fetch(`/api/account/compensation?key=${encodeURIComponent(effectiveAccountKey)}`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, cache: 'no-store',
+        body: JSON.stringify({ skinId: bonusSkin.id }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (payload?.account) {
+        setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+      }
+    } catch {}
   }
 
   function handleFastLossComplete(awardedSkinId?: string) {
@@ -576,31 +596,59 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     const consumedUids = new Set(selectedItems.map((item) => item!.uid))
     const shouldUseFastLoseAnimation = state.fastMode || isMobile
 
-    syncManager.suppress(8000) // Prevent fetching state from server during animation
-    setState((p) => ({
-      ...p,
-      inventory: p.inventory.filter((item) => !consumedUids.has(item.uid)),
-    }))
+    syncManager.suppress(20000)
     setSpinning(true)
-
-    // determine outcome — admin predict overrides chance
+    
+    const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     let win: boolean
-    if (state.predict.outcome === "win") {
-      win = true
-    } else if (state.predict.outcome === "lose") {
-      win = false
-    } else if (state.predict.outcome === "win_after_losses") {
-      const current = state.predict.currentLosses || 0
-      const target = state.predict.targetLosses || 3
-      if (current >= target) {
-        win = true
-        setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: 0 } }))
-      } else {
-        win = false
-        setState((p) => ({ ...p, predict: { ...p.predict, currentLosses: current + 1 } }))
+    let serverAccount: any = null
+    let wonItem: any = null
+    let wonItemHistory: any = null
+    
+    try {
+      const res = await fetch(`/api/account/upgrade?key=${encodeURIComponent(effectiveAccountKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          stakeUids: Array.from(consumedUids),
+          stakeBalance: balanceInput,
+          targetSkinId: targetSkin.id,
+          chance,
+        }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (!res.ok || !payload) throw new Error(payload?.error || 'upgrade_failed')
+      win = payload.result === 'win'
+      serverAccount = payload.account
+      wonItem = payload.wonItem
+      wonItemHistory = payload.wonItemHistory
+    } catch (err) {
+      console.error('[upgrade]', err)
+      toast.error('Ошибка апгрейда. Попробуйте снова.')
+      setSpinning(false)
+      lockedLeftCard.current = null
+      lockedTarget.current = undefined
+      return
+    }
+    
+    if (serverAccount) {
+      if (serverAccount.gameHistory && serverAccount.gameHistory.length > 0) {
+        pendingHistoryEntryRef.current = serverAccount.gameHistory[0]
+        serverAccount.gameHistory = serverAccount.gameHistory.slice(1)
       }
-    } else {
-      win = Math.random() < chance
+      
+      if (win && wonItem) {
+        pendingWonItemRef.current = wonItem
+        pendingWonItemHistoryRef.current = wonItemHistory
+        
+        serverAccount.inventory = serverAccount.inventory.filter((i: any) => i.uid !== wonItem.uid)
+        if (wonItemHistory) {
+          serverAccount.itemHistory = serverAccount.itemHistory.filter((i: any) => i.id !== wonItemHistory.id)
+        }
+      }
+      
+      setState(p => ({ ...p, ...serverAccount, skins: p.skins, upgradeSkins: p.upgradeSkins, upgrades: p.upgrades + 1 }))
     }
 
     const result = await wheelRef.current!.spin(win)
@@ -608,21 +656,10 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     let newUid: string | null = null
 
     if (result) {
-      newUid = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-      setState((p) => ({
-        ...p,
-        balance: Math.max(0, p.balance - balanceInput),
-        // Defensively re-strip the consumed source items before adding the won skin.
-        // A stale in-flight server poll can re-insert a just-consumed source item into
-        // local inventory between the spin-start consume and this win resolve, which
-        // made the source skin come back into the inventory together with the won skin.
-        inventory: [
-          { uid: newUid!, skinId: targetSkin.id },
-          ...p.inventory.filter((item) => !consumedUids.has(item.uid)),
-        ],
-        upgrades: p.upgrades + 1,
-        userUpgrades: p.userUpgrades + 1,
-      }))
+      // Use the newly populated ref instead of assuming index 0
+      if (pendingWonItemRef.current) {
+        newUid = pendingWonItemRef.current.uid
+      }
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
       if (state.soundMode === "on") {
         const winAudio = new Audio("/sounds/fireworkWin.mp3")
@@ -633,7 +670,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setLeftPanelMode("inventory")
       setMobileTab("inventory")
     } else {
-      setState((p) => ({ ...p, upgrades: p.upgrades + 1, userUpgrades: p.userUpgrades + 1, balance: Math.max(0, p.balance - balanceInput) }))
       const shouldShowLoseAnim = selectedInventoryValue > 50
       if (shouldShowLoseAnim && shouldUseFastLoseAnimation) {
         startFastLossCompensation()
@@ -657,16 +693,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       pendingWonItemUidRef.current = newUid
     }
     
-    const displaySkinId = lockedLeftCard.current?.items[0]?.skinId ?? ""
-    pendingHistoryEntryRef.current = {
-      id: Math.floor(Math.random() * 1000000000).toString(),
-      betPrice: inputValue,
-      betSkinId: displaySkinId || "balance",
-      targetPrice: targetSkin.price,
-      targetSkinId: targetSkin.id,
-      chance: Math.round(chance * 100 * 100) / 100,
-      status: result ? "win" : "loss",
-    }
+    // The local GameHistoryEntry creation is removed because we now extract it from serverAccount!
     
     setSpinning(false)
   }
@@ -1024,6 +1051,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             playing={winAnimating}
             onComplete={() => {
               setWinAnimating(false)
+              setState(p => {
+                const nextP = { ...p }
+                if (pendingWonItemRef.current) {
+                  nextP.inventory = [pendingWonItemRef.current, ...p.inventory]
+                  pendingWonItemRef.current = null
+                }
+                if (pendingWonItemHistoryRef.current) {
+                  nextP.itemHistory = [pendingWonItemHistoryRef.current, ...(p.itemHistory || [])]
+                  pendingWonItemHistoryRef.current = null
+                }
+                return nextP
+              })
               if (pendingHistoryEntryRef.current) {
                 addGameHistory(pendingHistoryEntryRef.current)
                 pendingHistoryEntryRef.current = null
@@ -1137,7 +1176,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onRemoveShopItem={removeShopItem}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickBuy={handleBuyCartItems}
-              isSpinning={isUpgradeAnimating}
+              isSpinning={isUpgradeAnimating || isCartBuying}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>
@@ -1177,6 +1216,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         onRemoveItem={removeShopItem}
         onClearCart={() => setSelectedShopIds([])}
         onBuy={handleBuyCartItems}
+        isBuying={isCartBuying}
       />
     </div>
   )

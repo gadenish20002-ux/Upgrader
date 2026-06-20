@@ -4,7 +4,7 @@ import { useRef, useState, useMemo } from "react"
 import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
 import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import { formatWeaponName, formatSkinName, isSticker } from "@/lib/utils"
 import { LogOut, Settings, Camera, KeyRound } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
@@ -77,16 +77,30 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
     e.target.value = ""
   }
 
-  function handleWithdrawConfirm() {
+  async function handleWithdrawConfirm() {
     if (!withdrawItem || !withdrawSkin) return
 
-    removeFromInventory([withdrawItem.uid])
-    addItemHistory([{
-      id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      skinId: withdrawItem.skinId,
-      action: "withdrawn",
-      date: Date.now()
-    }])
+    const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
+    try {
+      const res = await fetch(`/api/account/withdraw?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ uids: [withdrawItem.uid] }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (payload?.account) {
+        setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+      }
+    } catch {
+      removeFromInventory([withdrawItem.uid])
+      addItemHistory([{
+        id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        skinId: withdrawItem.skinId,
+        action: "withdrawn",
+        date: Date.now()
+      }])
+    }
     setWithdrawItem(null)
     notifyItemWithdrawn()
   }
@@ -324,33 +338,45 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
               </div>
               <button 
                 type="button" 
-                onClick={() => {
+                onClick={async () => {
                   if (state.inventory.length === 0) return
-                  let total = 0
-                  const idsToSell: string[] = []
-                  const historyEntries: import("@/lib/types").ItemHistoryEntry[] = []
-                  state.inventory.forEach(item => {
-                    const skin = getSkin(state.skins, item.skinId)
-                    if (skin) {
-                      total += skin.price
-                      idsToSell.push(item.uid)
-                      historyEntries.push({
-                        id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                        skinId: item.skinId,
-                        action: "sold",
-                        date: Date.now()
-                      })
-                    }
+                  const sellableItems = state.inventory.filter(i => {
+                    const s = getSkin(state.skins, i.skinId)
+                    return s && !isSticker(s.weapon)
                   })
-                  if (idsToSell.length > 0) {
+                  if (sellableItems.length === 0) return
+                  const idsToSell = sellableItems.map(i => i.uid)
+                  const total = sellableItems.reduce((acc, item) => acc + (getSkin(state.skins, item.skinId)?.price || 0), 0)
+                  
+                  const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
+                  try {
+                    const res = await fetch(`/api/account/sell?key=${encodeURIComponent(key)}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      cache: 'no-store',
+                      body: JSON.stringify({ uids: idsToSell }),
+                    })
+                    const payload = await res.json().catch(() => null)
+                    if (payload?.account) {
+                      setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+                    }
+                  } catch {
+                    // Fallback
+                    const historyEntries = idsToSell.map(uid => ({
+                      id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                      skinId: state.inventory.find(i => i.uid === uid)!.skinId,
+                      action: "sold" as const,
+                      date: Date.now()
+                    }))
                     removeFromInventory(idsToSell)
                     setBalance(state.balance + total)
                     addItemHistory(historyEntries)
-                    if (idsToSell.length === 1) {
-                      notifyItemSold()
-                    } else {
-                      notifyItemsSold()
-                    }
+                  }
+                  
+                  if (idsToSell.length === 1) {
+                    notifyItemSold()
+                  } else {
+                    notifyItemsSold()
                   }
                 }}
                 disabled={state.inventory.length === 0}
@@ -398,23 +424,43 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                     </div>
                     
                     <div className="-mt-1 flex w-full items-center justify-between relative z-[4]">
-                      <button 
-                        onClick={() => {
-                          removeFromInventory([item.uid])
-                          setBalance(state.balance + skin.price)
-                          addItemHistory([{
-                            id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                            skinId: item.skinId,
-                            action: "sold",
-                            date: Date.now()
-                          }])
-                          notifyItemSold()
-                        }}
-                        className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
-                        title="Продать"
-                      >
-                        <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Sell" src="/assets/sale.svg" />
-                      </button>
+                      {isSticker(skin.weapon) ? (
+                        <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent lg:h-10 cursor-not-allowed" title="Наклейки не продаются">
+                          <img className="h-4 lg:h-5 lg:w-5 w-4 opacity-30 grayscale" alt="Sell" src="/assets/sale.svg" />
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={async () => {
+                            const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
+                            try {
+                              const res = await fetch(`/api/account/sell?key=${encodeURIComponent(key)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                cache: 'no-store',
+                                body: JSON.stringify({ uids: [item.uid] }),
+                              })
+                              const payload = await res.json().catch(() => null)
+                              if (payload?.account) {
+                                setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+                              }
+                            } catch {
+                              removeFromInventory([item.uid])
+                              setBalance(state.balance + skin.price)
+                              addItemHistory([{
+                                id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                                skinId: item.skinId,
+                                action: "sold",
+                                date: Date.now()
+                              }])
+                            }
+                            notifyItemSold()
+                          }}
+                          className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
+                          title="Продать"
+                        >
+                          <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Sell" src="/assets/sale.svg" />
+                        </button>
+                      )}
                       <button 
                         onClick={() => setWithdrawItem(item)}
                         className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"

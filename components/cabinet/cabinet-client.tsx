@@ -68,10 +68,23 @@ export function CabinetClient() {
             ЛИЧНАЯ АДМИНКА
           </span>
         </div>
-        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-          <ArrowLeft className="h-4 w-4" />
-          На сайт
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+            <ArrowLeft className="h-4 w-4" />
+            На сайт
+          </Link>
+          <button 
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.localStorage.removeItem(ACCOUNT_KEY_STORAGE)
+                window.location.reload()
+              }
+            }}
+            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-400 font-semibold"
+          >
+            Выйти
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-5xl space-y-5 px-4 py-6 md:px-6">

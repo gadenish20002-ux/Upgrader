@@ -587,12 +587,17 @@ function ResultScreen({
 }
 
 export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseAnimationOverlayProps) {
-  const { state, addToInventory, addItemHistory, setState } = useStore()
+  const { state, setState } = useStore()
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<Phase>("skipping")
   const [tapeItems, setTapeItems] = useState<TapeEntry[]>([])
   const [winningSkin, setWinningSkin] = useState<Skin | null>(null)
   const [sold, setSold] = useState(false)
+
+  const accountKeyRef = useRef<string | null>(null)
+  useEffect(() => {
+    accountKeyRef.current = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
+  }, [])
 
   // Capture skins at animation start to avoid re-triggering when inventory changes
   const capturedSkinsRef = useRef<Skin[]>([])
@@ -664,35 +669,24 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
     }, 360)
   }, [schedule, stopRunning, winningSkin])
 
-  const awardDrop = useCallback(() => {
+  const awardDrop = useCallback(async () => {
     if (!winningSkin || awardedRef.current) return
-    let uid: string
-    const isCatalogSkin = state.skins.some((skin) => skin.id === winningSkin.id)
-
-    if (isCatalogSkin) {
-      uid = addToInventory(winningSkin.id)
-      addItemHistory([{
-        id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        skinId: winningSkin.id,
-        action: "compensation",
-        date: Date.now()
-      }])
-    } else {
-      uid = `bonus-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-      setState((prev) => ({
-        ...prev,
-        skins: prev.skins.some((skin) => skin.id === winningSkin.id) ? prev.skins : [winningSkin, ...prev.skins],
-        upgradeSkins: prev.upgradeSkins.some((skin) => skin.id === winningSkin.id)
-          ? prev.upgradeSkins
-          : [winningSkin, ...prev.upgradeSkins],
-        inventory: [{ uid, skinId: winningSkin.id }, ...prev.inventory],
-        upgrades: prev.upgrades + 1,
-      }))
-    }
-
     awardedRef.current = true
-    awardedUidRef.current = uid
-  }, [addToInventory, addItemHistory, setState, state.skins, winningSkin])
+    const key = accountKeyRef.current || '__default__'
+    try {
+      const res = await fetch(`/api/account/compensation?key=${encodeURIComponent(key)}`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, cache: 'no-store',
+        body: JSON.stringify({ skinId: winningSkin.id }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (payload?.account) {
+        setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+      }
+      awardedUidRef.current = payload?.uid || `bonus-${Date.now()}`
+    } catch {
+      // Fallback
+    }
+  }, [winningSkin, setState])
 
   const handleRouletteFinished = useCallback(() => {
     if (closingRef.current) return
@@ -700,24 +694,31 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
     setPhase("result")
   }, [awardDrop])
 
-  const handleSell = useCallback(() => {
+  const handleSell = useCallback(async () => {
     if (!winningSkin || sold || closingRef.current) return
-    awardDrop()
+    await awardDrop()
     const uid = awardedUidRef.current
-
-    setState((prev) => ({
-      ...prev,
-      balance: prev.balance + winningSkin.price,
-      inventory: uid ? prev.inventory.filter((item) => item.uid !== uid) : prev.inventory,
-    }))
+    if (!uid) { finish(); return }
     
-    addItemHistory([{
-      id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      skinId: winningSkin.id,
-      action: "sold",
-      date: Date.now()
-    }])
-
+    const key = accountKeyRef.current || '__default__'
+    try {
+      const res = await fetch(`/api/account/sell?key=${encodeURIComponent(key)}`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, cache: 'no-store',
+        body: JSON.stringify({ uids: [uid] }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (payload?.account) {
+        setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
+      }
+    } catch {
+      // Fallback
+      setState(prev => ({
+        ...prev,
+        balance: prev.balance + winningSkin.price,
+        inventory: uid ? prev.inventory.filter(i => i.uid !== uid) : prev.inventory,
+      }))
+    }
+    
     setSold(true)
     toast.success(`Продано за ${formatPrice(winningSkin.price)}`)
     finish()

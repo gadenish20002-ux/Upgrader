@@ -34,3 +34,9 @@ export function formatSkinName(name: string) {
   if (!name) return name;
   return name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
+
+export function isSticker(weapon: string) {
+  if (!weapon) return false;
+  const w = weapon.toLowerCase();
+  return w === "sticker" || w === "наклейка" || w === "patch" || w === "нашивка" || w === "pin" || w === "значок";
+}

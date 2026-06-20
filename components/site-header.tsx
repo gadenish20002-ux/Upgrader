@@ -118,6 +118,12 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
 
             <div className="hidden tablet:flex h-[2.375rem] w-[13.4375rem] shrink-0 items-center justify-center rounded-[0.375rem] bg-[linear-gradient(90deg,#ECD591_0%,#897237_50%,#ECD591_100%)] p-[0.0625rem] transition-all duration-300">
               <div className="tablet:rounded-[0.375rem] tablet:bg-cover tablet:px-[0.5625rem] tablet:py-[0.5625rem] relative flex h-full w-full items-center justify-between overflow-hidden rounded-t-none rounded-b-[0.375rem] bg-[linear-gradient(90deg,rgba(23,24,28,0.70)_0%,rgba(23,24,28,0.40)_100%),linear-gradient(183deg,#595977_-97.81%,#28282D_141%)] px-[0.625rem] py-[0.6875rem]">
+                <img alt="event" className="tablet:-right-6 absolute right-5 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-dots.svg" />
+                <img alt="event" className="tablet:right-2 tablet:left-auto absolute right-auto left-22 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-center.svg" />
+                <img alt="event" className="tablet:block absolute left-0.5 hidden h-[1rem] flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-left.svg" />
+                <img alt="event" className="tablet:block absolute right-0.5 hidden h-[1rem] flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-right.svg" />
+                <img alt="event" className="tablet:block absolute right-2 hidden h-full flex-shrink-0" src="/assets/images/league/streamer-battle-swords.webp" />
+                <img alt="event" className="tablet:right-0 tablet:hidden absolute right-[3rem] block h-full flex-shrink-0" src="/assets/images/league/streamer-battle-swords-mobile.webp" />
                 <span className="font-exo text-gradient-streamer-battle z-[1] flex flex-shrink-1 flex-wrap items-center justify-center text-[1rem] leading-[1rem] font-semibold"> Битва Стримеров </span>
                 <span className="font-exo tablet:hidden absolute right-0 flex max-h-[1.25rem] w-[2.5rem] items-center justify-center gap-[0.5rem] rounded-l-[0.25rem] bg-[#17181C] bg-[linear-gradient(270deg,#ECD591_0%,#A68B47_72.21%,#ECD591_100%)] px-[0.9375rem] py-[0.375rem] text-[0.75rem] leading-[0.875rem] font-bold text-[#1C1C20] uppercase"> new </span>
               </div>

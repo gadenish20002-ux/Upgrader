@@ -9,16 +9,43 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL:-postgresql://upgrader:upgrader@postgres:5432/upgrader}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       CRON_SECRET: ${CRON_SECRET:-change-me-before-public-cron}
       CATALOG_STEAM_USD_MULTIPLIER: ${CATALOG_STEAM_USD_MULTIPLIER:-78}
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     expose:
       - "3000"
     networks:
       - upgrader
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-upgrader}
+      POSTGRES_USER: ${POSTGRES_USER:-upgrader}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-upgrader}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - upgrader
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-upgrader} -d $${POSTGRES_DB:-upgrader}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     logging:
       driver: json-file
       options:
@@ -76,6 +103,7 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
   redis_data:
   caddy_data:
   caddy_config:
