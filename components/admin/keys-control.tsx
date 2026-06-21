@@ -7,7 +7,7 @@ import { KeyRound, Plus, Copy, Check, Trash2, RotateCcw, Eraser, Ban, Play, Cale
 import { toast } from "sonner"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
-const ADMIN_ACTIVE_KEY_STORAGE = "upgrader_admin_active_key"
+const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
 const ADMIN_ACCOUNT = "__default__"
 
 interface KeyRow {
@@ -63,7 +63,7 @@ export function KeysControl() {
   }, [pwd])
 
   useEffect(() => {
-    setActiveKey(window.localStorage.getItem(ADMIN_ACTIVE_KEY_STORAGE) || ADMIN_ACCOUNT)
+    setActiveKey(window.localStorage.getItem(ACCOUNT_KEY_STORAGE) || ADMIN_ACCOUNT)
     load()
   }, [load])
 
@@ -109,7 +109,8 @@ export function KeysControl() {
   }
 
   function selectActive(code: string) {
-    window.localStorage.setItem(ADMIN_ACTIVE_KEY_STORAGE, code)
+    window.localStorage.setItem(ACCOUNT_KEY_STORAGE, code)
+    window.localStorage.removeItem("upgrader_admin_active_key")
     setActiveKey(code)
     window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
     const label = code === ADMIN_ACCOUNT ? "Шаблон по умолчанию" : code

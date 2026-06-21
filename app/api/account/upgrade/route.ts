@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import type { Skin, InventoryItem, ItemHistoryEntry, GameHistoryEntry } from "@/lib/types"
+import type { Skin, InventoryItem, ItemHistoryEntry, GameHistoryEntry, PendingUpgrade } from "@/lib/types"
 import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT } from "@/lib/keys"
 import { STATIC_SKINS, applyCatalogPrices, getCatalogAdditionalSkins, getCatalogPriceMeta, getCatalogPrices } from "@/lib/catalog-prices"
+import { COMPENSATION_BONUS_ITEMS } from "@/lib/default-data"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -30,9 +31,9 @@ async function getCatalog(): Promise<Skin[]> {
   try {
     const [prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
     const additions = await getCatalogAdditionalSkins(meta)
-    return [...applyCatalogPrices(STATIC_SKINS, prices), ...additions]
+    return [...applyCatalogPrices(STATIC_SKINS, prices), ...additions, ...COMPENSATION_BONUS_ITEMS]
   } catch {
-    return STATIC_SKINS
+    return [...STATIC_SKINS, ...COMPENSATION_BONUS_ITEMS]
   }
 }
 
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
     if (stakeUids.length === 0 && stakeBalance <= 0) return NextResponse.json({ error: "empty_stake" }, { status: 400 })
 
     const [account, catalog] = await Promise.all([getAccount(code), getCatalog()])
+    if (account.pendingUpgrade) {
+      return NextResponse.json({ error: "pending_upgrade", pendingUpgrade: account.pendingUpgrade }, { status: 409 })
+    }
     const byId = new Map(catalog.map((skin) => [skin.id, skin]))
     const targetSkin = byId.get(targetSkinId)
     if (!targetSkin) return NextResponse.json({ error: "unknown_target_skin" }, { status: 400 })
@@ -111,7 +115,11 @@ export async function POST(request: Request) {
     }
 
     const now = Date.now()
-    const nextInventory = inventory.filter(i => !stakeUids.includes(i.uid))
+    const uniqueStakeUids = [...new Set(stakeUids)]
+    if (uniqueStakeUids.length !== stakeUids.length) {
+      return NextResponse.json({ error: "duplicate_stake" }, { status: 400 })
+    }
+    const nextInventory = inventory.filter(i => !uniqueStakeUids.includes(i.uid))
     const itemHistory = account.itemHistory || []
     
     // Add staked items to history as consumed
@@ -122,13 +130,10 @@ export async function POST(request: Request) {
       date: now
     }))
 
-    let wonUid: string | undefined
     let wonItem: InventoryItem | undefined
     let wonItemHistory: ItemHistoryEntry | undefined
     if (isWin) {
-      wonUid = makeUid()
-      wonItem = { uid: wonUid, skinId: targetSkin.id }
-      nextInventory.unshift(wonItem)
+      wonItem = { uid: makeUid(), skinId: targetSkin.id }
       wonItemHistory = {
         id: makeHistoryId(),
         skinId: targetSkin.id,
@@ -148,12 +153,24 @@ export async function POST(request: Request) {
       status: isWin ? "win" : "loss"
     }
 
+    const pendingUpgrade: PendingUpgrade | null = isWin && wonItem
+      ? {
+          id: `upgrade-${now}-${Math.random().toString(36).slice(2, 9)}`,
+          createdAt: now,
+          targetSkinId: targetSkin.id,
+          wonItem,
+          itemHistoryEntries: newHistoryEntries,
+          gameHistoryEntry,
+        }
+      : null
+
     const nextAccount = await patchAccount(code, {
       balance: Math.max(0, account.balance - stakeBalance),
       inventory: nextInventory,
-      itemHistory: [...newHistoryEntries, ...itemHistory].slice(0, 500),
-      gameHistory: [gameHistoryEntry, ...(account.gameHistory || [])].slice(0, 500),
-      userUpgrades: (account.userUpgrades || 0) + 1,
+      itemHistory: isWin ? itemHistory : [...newHistoryEntries, ...itemHistory].slice(0, 500),
+      gameHistory: isWin ? (account.gameHistory || []) : [gameHistoryEntry, ...(account.gameHistory || [])].slice(0, 500),
+      userUpgrades: isWin ? (account.userUpgrades || 0) : (account.userUpgrades || 0) + 1,
+      pendingUpgrade,
       predict: {
         ...predict,
         currentLosses // Ensure the incremented/reset value is saved
@@ -173,8 +190,8 @@ export async function POST(request: Request) {
       success: true, 
       account: nextAccount, 
       result: isWin ? 'win' : 'loss',
-      wonItem,
-      wonItemHistory 
+      pendingUpgrade,
+      gameHistoryEntry,
     })
   } catch (error) {
     console.error("[account-upgrade]", error)

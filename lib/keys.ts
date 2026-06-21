@@ -54,6 +54,7 @@ export const ACCOUNT_FIELDS = [
   "withdrawnItems",
   "predict",
   "gameHistory",
+  "pendingUpgrade",
   "fastMultipliers",
   "fastPercentages",
   "soundMode",
@@ -70,9 +71,11 @@ function keyLastSeenKvKey(code: string): string {
   return `${KEY_LAST_SEEN_PREFIX}${code}`
 }
 
-export function defaultAccount(): AccountState {
+export function defaultAccount(code: string = ADMIN_ACCOUNT): AccountState {
   const out: any = {}
   for (const f of ACCOUNT_FIELDS) out[f] = (DEFAULT_STATE as any)[f]
+  out.userId = code === ADMIN_ACCOUNT ? "admin" : `user-${normalizeCode(code).replace(/[^A-Z0-9]/g, "").toLowerCase()}`
+  out.username = code === ADMIN_ACCOUNT ? "Administrator" : "Player"
   return out as AccountState
 }
 
@@ -171,19 +174,19 @@ export async function isAdmin(provided: string | null): Promise<boolean> {
 
 export async function getAccount(code: string): Promise<AccountState> {
   const stored = await kv.get<Partial<AccountState>>(accountKvKey(code))
-  return { ...defaultAccount(), ...(stored || {}) }
+  return { ...defaultAccount(code), ...(stored || {}) }
 }
 
 export async function patchAccount(code: string, patch: Partial<AccountState>): Promise<AccountState> {
   const current = await kv.get<Partial<AccountState>>(accountKvKey(code))
-  const base = current || defaultAccount()
+  const base = current || defaultAccount(code)
   const next = { ...base, ...pickAccountFields(patch) }
   await kv.set(accountKvKey(code), next)
   return next as AccountState
 }
 
 export async function resetAccount(code: string): Promise<void> {
-  await kv.set(accountKvKey(code), defaultAccount())
+  await kv.set(accountKvKey(code), defaultAccount(code))
 }
 
 // Fields cleared by a "reset history" — same set the old single account wiped:
@@ -195,10 +198,11 @@ export const HISTORY_FIELDS = [
   "itemHistory",
   "withdrawnItems",
   "gameHistory",
+  "pendingUpgrade",
 ] as const
 
 export async function resetAccountHistory(code: string): Promise<void> {
-  const def = defaultAccount() as any
+  const def = defaultAccount(code) as any
   const patch: any = {}
   for (const f of HISTORY_FIELDS) patch[f] = def[f]
   await patchAccount(code, patch)

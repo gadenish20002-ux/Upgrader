@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ADMIN_PWD_TS_STORAGE = "upgrader_admin_pwd_ts"
+const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
+const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts"
+const ADMIN_ACCOUNT = "__default__"
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000
 const SERVICE_UNAVAILABLE_MESSAGE = "Сервис временно недоступен. Пароль не изменён — попробуйте ещё раз позже."
 
@@ -43,6 +46,11 @@ export function AdminGate({ children }: { children: ReactNode }) {
       setChecked(true)
       return
     }
+
+    if (!window.localStorage.getItem(ACCOUNT_KEY_STORAGE)) {
+      window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
+    }
+    window.localStorage.removeItem("upgrader_admin_active_key")
 
     const rawTs = window.localStorage.getItem(ADMIN_PWD_TS_STORAGE)
     const ts = rawTs ? parseInt(rawTs, 10) : 0
@@ -86,8 +94,14 @@ export function AdminGate({ children }: { children: ReactNode }) {
 
     if (result === "valid") {
       try {
+        if (!window.localStorage.getItem(ACCOUNT_KEY_STORAGE)) {
+          window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
+        }
+        window.localStorage.removeItem("upgrader_admin_active_key")
         window.localStorage.setItem(ADMIN_PWD_STORAGE, value)
-        window.localStorage.setItem(ADMIN_PWD_TS_STORAGE, String(Date.now()))
+        const now = String(Date.now())
+        window.localStorage.setItem(ADMIN_PWD_TS_STORAGE, now)
+        window.localStorage.setItem(ACCOUNT_KEY_TS_STORAGE, now)
       } catch {}
       window.dispatchEvent(new CustomEvent("upgrader-account-key-changed"))
       setAuthed(true)

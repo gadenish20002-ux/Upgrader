@@ -221,6 +221,7 @@ export function AccountGate({ children }: { children: ReactNode }) {
       try {
         window.localStorage.setItem(ADMIN_PWD_STORAGE, pwd)
         window.localStorage.setItem(ACCOUNT_KEY_STORAGE, ADMIN_ACCOUNT)
+        window.localStorage.removeItem("upgrader_admin_active_key")
       } catch {}
       const now = Date.now()
       writeKeyTs(now)

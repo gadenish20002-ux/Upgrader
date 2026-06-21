@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { Skin, ItemHistoryEntry } from "@/lib/types"
 import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT } from "@/lib/keys"
 import { STATIC_SKINS, applyCatalogPrices, getCatalogAdditionalSkins, getCatalogPriceMeta, getCatalogPrices } from "@/lib/catalog-prices"
+import { COMPENSATION_BONUS_ITEMS } from "@/lib/default-data"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -27,9 +28,9 @@ async function getCatalog(): Promise<Skin[]> {
   try {
     const [prices, meta] = await Promise.all([getCatalogPrices(), getCatalogPriceMeta()])
     const additions = await getCatalogAdditionalSkins(meta)
-    return [...applyCatalogPrices(STATIC_SKINS, prices), ...additions]
+    return [...applyCatalogPrices(STATIC_SKINS, prices), ...additions, ...COMPENSATION_BONUS_ITEMS]
   } catch {
-    return STATIC_SKINS
+    return [...STATIC_SKINS, ...COMPENSATION_BONUS_ITEMS]
   }
 }
 

@@ -23,7 +23,7 @@ import { Logo as SiteLogo } from "./logo"
 import { WinAnimationOverlay, preloadWinAnimationFrames } from "./win-animation-overlay"
 import { LoseAnimationOverlay, LOSE_CASE_SOUND, preloadLoseAnimationFrames } from "./lose-animation-overlay"
 import { useIsMobile } from "@/components/ui/use-mobile"
-import type { Skin } from "@/lib/types"
+import type { PendingUpgrade, Skin } from "@/lib/types"
 
 const DEFAULT_INVENTORY_RECOMMENDATION_PERCENT = 80
 const MULTIPLIER_FILTER_SPREAD = 0.1
@@ -138,8 +138,9 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [targetId, setTargetId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
   const pendingWonItemUidRef = useRef<string | null>(null)
-  const pendingWonItemRef = useRef<import("@/lib/types").InventoryItem | null>(null)
-  const pendingWonItemHistoryRef = useRef<import("@/lib/types").ItemHistoryEntry | null>(null)
+  const pendingUpgradeIdRef = useRef<string | null>(null)
+  const resumedPendingIdRef = useRef<string | null>(null)
+  const finalizingPendingRef = useRef(false)
   const pendingHistoryEntryRef = useRef<import("@/lib/types").GameHistoryEntry | null>(null)
   const [winAnimating, setWinAnimating] = useState(false)
   const [winAnimKey, setWinAnimKey] = useState(0)
@@ -522,6 +523,92 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   // inputValue, which can make the upgrade chance ineligible and clear targetSkin mid-spin.
   const lockedTarget = useRef<typeof targetSkin>(undefined)
 
+  function finishWinUi(wonUid: string | null) {
+    setWinAnimating(false)
+    pendingUpgradeIdRef.current = null
+    pendingHistoryEntryRef.current = null
+    resumedPendingIdRef.current = null
+    lockedLeftCard.current = null
+    lockedTarget.current = undefined
+    clearSourceKeepTarget()
+    if (wonUid) setWonItemUid(wonUid)
+    pendingWonItemUidRef.current = null
+  }
+
+  async function finalizePendingWin() {
+    if (finalizingPendingRef.current) return
+    const pendingId = pendingUpgradeIdRef.current || state.pendingUpgrade?.id || null
+    if (!pendingId) {
+      finishWinUi(null)
+      return
+    }
+
+    finalizingPendingRef.current = true
+    const effectiveAccountKey = typeof window !== "undefined"
+      ? (window.localStorage.getItem("upgrader_account_key") || PUBLIC_ACCOUNT_KEY)
+      : PUBLIC_ACCOUNT_KEY
+
+    try {
+      let lastError: unknown = null
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch(`/api/account/upgrade/complete?key=${encodeURIComponent(effectiveAccountKey)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({ pendingId }),
+          })
+          const payload = await response.json().catch(() => null)
+          const alreadyCompleted = response.status === 409 && payload?.account && !payload.account.pendingUpgrade
+          if ((!response.ok && !alreadyCompleted) || !payload?.account) {
+            throw new Error(payload?.error || `upgrade_complete_failed_${response.status}`)
+          }
+
+          setState((previous) => ({
+            ...previous,
+            ...payload.account,
+            skins: previous.skins,
+            upgradeSkins: previous.upgradeSkins,
+          }))
+          finishWinUi(payload.wonItem?.uid || pendingWonItemUidRef.current)
+          return
+        } catch (error) {
+          lastError = error
+          if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 750))
+        }
+      }
+      throw lastError
+    } catch (error) {
+      console.error("[upgrade-complete]", error)
+      setWinAnimating(false)
+      toast.error("Выигрыш сохранён и будет завершён после обновления страницы")
+    } finally {
+      finalizingPendingRef.current = false
+    }
+  }
+
+  // A page reload during a winning animation leaves a server-side pending result.
+  // Resume that animation and finalize the exact same item instead of losing or duplicating it.
+  useEffect(() => {
+    const pending = state.pendingUpgrade
+    if (!pending || spinning || winAnimating || resumedPendingIdRef.current === pending.id) return
+    const target = getSkin(state.skins, pending.targetSkinId)
+    if (!target) return
+
+    resumedPendingIdRef.current = pending.id
+    pendingUpgradeIdRef.current = pending.id
+    pendingWonItemUidRef.current = pending.wonItem.uid
+    pendingHistoryEntryRef.current = pending.gameHistoryEntry
+    lockedLeftCard.current = { items: [], balance: 0, total: pending.gameHistoryEntry.betPrice }
+    lockedTarget.current = target
+    setTargetId(target.id)
+    setAutoMatchEnabled(false)
+    setWinAnimating(true)
+    setWinAnimKey((key) => key + 1)
+    setLeftPanelMode("inventory")
+    setMobileTab("inventory")
+  }, [state.pendingUpgrade, state.skins, spinning, winAnimating])
+
   async function startFastLossCompensation() {
     const bonusSkin = pickFastCompensationSkin()
     setFastCompensationSkin(bonusSkin)
@@ -602,8 +689,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     let win: boolean
     let serverAccount: any = null
-    let wonItem: any = null
-    let wonItemHistory: any = null
+    let pendingUpgrade: PendingUpgrade | null = null
+    let gameHistoryEntry: import("@/lib/types").GameHistoryEntry | null = null
     
     try {
       const res = await fetch(`/api/account/upgrade?key=${encodeURIComponent(effectiveAccountKey)}`, {
@@ -621,8 +708,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       if (!res.ok || !payload) throw new Error(payload?.error || 'upgrade_failed')
       win = payload.result === 'win'
       serverAccount = payload.account
-      wonItem = payload.wonItem
-      wonItemHistory = payload.wonItemHistory
+      pendingUpgrade = payload.pendingUpgrade || null
+      gameHistoryEntry = payload.gameHistoryEntry || null
     } catch (err) {
       console.error('[upgrade]', err)
       toast.error('Ошибка апгрейда. Попробуйте снова.')
@@ -633,19 +720,14 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     }
     
     if (serverAccount) {
-      if (serverAccount.gameHistory && serverAccount.gameHistory.length > 0) {
-        pendingHistoryEntryRef.current = serverAccount.gameHistory[0]
+      pendingHistoryEntryRef.current = gameHistoryEntry
+      if (!win && gameHistoryEntry && serverAccount.gameHistory?.[0]?.id === gameHistoryEntry.id) {
         serverAccount.gameHistory = serverAccount.gameHistory.slice(1)
       }
-      
-      if (win && wonItem) {
-        pendingWonItemRef.current = wonItem
-        pendingWonItemHistoryRef.current = wonItemHistory
-        
-        serverAccount.inventory = serverAccount.inventory.filter((i: any) => i.uid !== wonItem.uid)
-        if (wonItemHistory) {
-          serverAccount.itemHistory = serverAccount.itemHistory.filter((i: any) => i.id !== wonItemHistory.id)
-        }
+
+      if (win && pendingUpgrade) {
+        pendingUpgradeIdRef.current = pendingUpgrade.id
+        pendingWonItemUidRef.current = pendingUpgrade.wonItem.uid
       }
       
       setState(p => ({ ...p, ...serverAccount, skins: p.skins, upgradeSkins: p.upgradeSkins, upgrades: p.upgrades + 1 }))
@@ -653,13 +735,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
     const result = await wheelRef.current!.spin(win)
 
-    let newUid: string | null = null
-
     if (result) {
-      // Use the newly populated ref instead of assuming index 0
-      if (pendingWonItemRef.current) {
-        newUid = pendingWonItemRef.current.uid
-      }
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
       if (state.soundMode === "on") {
         const winAudio = new Audio("/sounds/fireworkWin.mp3")
@@ -687,13 +763,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         clearSourceKeepTarget()
       }
     }
-    
-    // Если есть анимация, сброс перенесён в onComplete
-    if (result && newUid) {
-      pendingWonItemUidRef.current = newUid
-    }
-    
-    // The local GameHistoryEntry creation is removed because we now extract it from serverAccount!
     
     setSpinning(false)
   }
@@ -1049,32 +1118,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           {/* Win Animation Overlay */}
           <WinAnimationOverlay
             playing={winAnimating}
-            onComplete={() => {
-              setWinAnimating(false)
-              setState(p => {
-                const nextP = { ...p }
-                if (pendingWonItemRef.current) {
-                  nextP.inventory = [pendingWonItemRef.current, ...p.inventory]
-                  pendingWonItemRef.current = null
-                }
-                if (pendingWonItemHistoryRef.current) {
-                  nextP.itemHistory = [pendingWonItemHistoryRef.current, ...(p.itemHistory || [])]
-                  pendingWonItemHistoryRef.current = null
-                }
-                return nextP
-              })
-              if (pendingHistoryEntryRef.current) {
-                addGameHistory(pendingHistoryEntryRef.current)
-                pendingHistoryEntryRef.current = null
-              }
-              lockedLeftCard.current = null
-              lockedTarget.current = undefined
-              clearSourceKeepTarget()
-              if (pendingWonItemUidRef.current) {
-                setWonItemUid(pendingWonItemUidRef.current)
-                pendingWonItemUidRef.current = null
-              }
-            }}
+            onComplete={() => { void finalizePendingWin() }}
           />
         </div>
 

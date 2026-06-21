@@ -28,6 +28,7 @@ const ACCOUNT_FIELDS = new Set<string>([
   "withdrawnItems",
   "predict",
   "gameHistory",
+  "pendingUpgrade",
   "fastMultipliers",
   "fastPercentages",
   "soundMode",
@@ -36,7 +37,6 @@ const ACCOUNT_FIELDS = new Set<string>([
 
 const ADMIN_ACCOUNT = "__default__"
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key" // player's key
-const ADMIN_ACTIVE_KEY_STORAGE = "upgrader_admin_active_key" // account the admin is managing
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ACCOUNT_KEY_TS_STORAGE = "upgrader_account_key_ts"
 const PUBLIC_LOGIN_PREFIX = "upgrader_public_logged_in:"
@@ -48,10 +48,7 @@ function isAdminPath(pathname: string | null): boolean {
 
 function resolveAccountKey(adminScope: boolean): string | null {
   if (typeof window === "undefined") return null
-  if (adminScope) {
-    return window.localStorage.getItem(ADMIN_ACTIVE_KEY_STORAGE) || ADMIN_ACCOUNT
-  }
-  return window.localStorage.getItem(ACCOUNT_KEY_STORAGE)
+  return window.localStorage.getItem(ACCOUNT_KEY_STORAGE) || (adminScope ? ADMIN_ACCOUNT : null)
 }
 
 function accountSessionExpired(): boolean {

@@ -8,7 +8,6 @@ import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
 import { Backpack, Store, ChevronLeft, ChevronRight } from "lucide-react"
-import { isSticker } from "@/lib/utils"
 
 export function InventoryPanel({
   selectedUids,
@@ -36,7 +35,8 @@ export function InventoryPanel({
   isSpinning?: boolean
 }) {
   const { state } = useStore()
-  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
+  const [sortOrderShop, setSortOrderShop] = useState<"desc" | "asc">("desc")
+  const [sortOrderInv, setSortOrderInv] = useState<"desc" | "asc">("desc")
   const [currentPage, setCurrentPage] = useState(1)
   const [minPriceShop, setMinPriceShop] = useState("")
   const [maxPriceShop, setMaxPriceShop] = useState("")
@@ -52,6 +52,8 @@ export function InventoryPanel({
   const setMaxPrice = mode === "shop" ? setMaxPriceShop : setMaxPriceInv
   const searchQuery = mode === "shop" ? searchQueryShop : searchQueryInv
   const setSearchQuery = mode === "shop" ? setSearchQueryShop : setSearchQueryInv
+  const sortOrder = mode === "shop" ? sortOrderShop : sortOrderInv
+  const setSortOrder = mode === "shop" ? setSortOrderShop : setSortOrderInv
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
@@ -71,8 +73,6 @@ export function InventoryPanel({
     return [...skins].filter((a) => {
       const skin = mode === "shop" ? (a as any) : getSkin(state.skins, (a as any).skinId)
       if (!skin) return false
-      
-      if (isSticker(skin.weapon)) return false
       
       if (minPrice && skin.price < parseFloat(minPrice)) return false
       if (maxPrice && skin.price > parseFloat(maxPrice)) return false

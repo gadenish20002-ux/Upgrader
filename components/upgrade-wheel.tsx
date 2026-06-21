@@ -172,12 +172,12 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     return "высокий шанс"
   }
 
-  // Pointer transition:
-  //   • spinning=true  → use the duration locked at spin start (stored in ref, read synchronously)
-  //   • spinning=false → short bouncy settle animation
+  // Fast and normal spins use the same target angle. Only the locked duration differs.
+  // Once the transition resolves, keep the exact transform without a second transition;
+  // a post-spin transition was able to visually pull the fast pointer back toward neutral.
   const pointerTransition = spinning
     ? `transform ${spinDurationMsRef.current}ms cubic-bezier(0.4, 0, 0.2, 1)`
-    : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)"
+    : "none"
 
   return (
     <div className="relative order-first col-span-2 h-[13.75rem] lg:order-none lg:col-span-1 lg:flex lg:h-[22.25rem] lg:items-center lg:justify-center w-full">

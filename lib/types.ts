@@ -51,6 +51,15 @@ export interface ItemHistoryEntry {
   date: number
 }
 
+export interface PendingUpgrade {
+  id: string
+  createdAt: number
+  targetSkinId: string
+  wonItem: InventoryItem
+  itemHistoryEntries: ItemHistoryEntry[]
+  gameHistoryEntry: GameHistoryEntry
+}
+
 export interface AppState {
   balance: number
   inventory: InventoryItem[]
@@ -72,4 +81,5 @@ export interface AppState {
   fastPercentages: [number, number, number]
   soundMode: "on" | "off"
   gameHistory: GameHistoryEntry[]
+  pendingUpgrade?: PendingUpgrade | null
 }
