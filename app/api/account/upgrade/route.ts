@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import type { Skin, InventoryItem, ItemHistoryEntry, GameHistoryEntry, PendingUpgrade } from "@/lib/types"
-import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT } from "@/lib/keys"
+import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT, GLOBAL_KV } from "@/lib/keys"
 import { STATIC_SKINS, applyCatalogPrices, getCatalogAdditionalSkins, getCatalogPriceMeta, getCatalogPrices } from "@/lib/catalog-prices"
-import { COMPENSATION_BONUS_ITEMS } from "@/lib/default-data"
+import { COMPENSATION_BONUS_ITEMS, DEFAULT_STATE } from "@/lib/default-data"
+import { kv } from "@/lib/kv"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -57,7 +58,11 @@ export async function POST(request: Request) {
     if (!targetSkinId) return NextResponse.json({ error: "missing_target" }, { status: 400 })
     if (stakeUids.length === 0 && stakeBalance <= 0) return NextResponse.json({ error: "empty_stake" }, { status: 400 })
 
-    const [account, catalog] = await Promise.all([getAccount(code), getCatalog()])
+    const [account, catalog, globalState] = await Promise.all([
+      getAccount(code),
+      getCatalog(),
+      kv.get<any>(GLOBAL_KV),
+    ])
     if (account.pendingUpgrade) {
       return NextResponse.json({ error: "pending_upgrade", pendingUpgrade: account.pendingUpgrade }, { status: 409 })
     }
@@ -89,8 +94,9 @@ export async function POST(request: Request) {
     let calculatedChance = totalStake / targetSkin.price
     calculatedChance = Math.max(0.01, Math.min(0.92, calculatedChance))
     
-    // Determine outcome from predict
-    const predict = account.predict || {}
+    // Forced outcomes are site-wide admin settings. PostgreSQL global state is
+    // the only source of truth; legacy per-account values must never override it.
+    const predict = { ...DEFAULT_STATE.predict, ...(globalState?.predict || {}) }
     const outcome = predict.outcome || "off"
     let isWin = false
     
@@ -164,6 +170,17 @@ export async function POST(request: Request) {
         }
       : null
 
+    if (currentLosses !== (predict.currentLosses || 0)) {
+      const latestGlobalState = (await kv.get<any>(GLOBAL_KV)) || {}
+      await kv.set(GLOBAL_KV, {
+        ...latestGlobalState,
+        predict: {
+          ...(latestGlobalState.predict || predict),
+          currentLosses,
+        },
+      })
+    }
+
     const nextAccount = await patchAccount(code, {
       balance: Math.max(0, account.balance - stakeBalance),
       inventory: nextInventory,
@@ -171,10 +188,6 @@ export async function POST(request: Request) {
       gameHistory: isWin ? (account.gameHistory || []) : [gameHistoryEntry, ...(account.gameHistory || [])].slice(0, 500),
       userUpgrades: isWin ? (account.userUpgrades || 0) : (account.userUpgrades || 0) + 1,
       pendingUpgrade,
-      predict: {
-        ...predict,
-        currentLosses // Ensure the incremented/reset value is saved
-      },
       loggedIn: true,
     })
 

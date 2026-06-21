@@ -46,16 +46,14 @@ function PredictContent() {
 
   // Fast-poll predict state from server every 2 seconds so the counter updates promptly
   useEffect(() => {
-    const key = typeof window !== 'undefined' ? window.localStorage.getItem('upgrader_account_key') : null
-    if (!key) return
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`/api/state?t=${Date.now()}`, { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
-        if (data.account?.predict) {
+        if (data.predict) {
           setState(p => {
-            const serverPredict = data.account.predict
+            const serverPredict = data.predict
             // Only update if server has different values
             if (JSON.stringify(p.predict) !== JSON.stringify({ ...p.predict, ...serverPredict })) {
               return { ...p, predict: { ...p.predict, ...serverPredict } }

@@ -27,7 +27,27 @@ export function SettingsControl() {
     }
   }, [ready])
 
-  function handleSave() {
+  async function handleSave() {
+    if (password !== state.adminPassword) {
+      const currentPassword = window.localStorage.getItem("upgrader_admin_pwd") || ""
+      const response = await fetch(`/api/state?t=${Date.now()}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": currentPassword,
+        },
+        body: JSON.stringify({ adminPassword: password }),
+        cache: "no-store",
+      }).catch(() => null)
+
+      if (!response?.ok) {
+        toast.error("Не удалось сохранить пароль администратора")
+        return
+      }
+      window.localStorage.setItem("upgrader_admin_pwd", password)
+      window.localStorage.setItem("upgrader_admin_pwd_ts", String(Date.now()))
+    }
+
     setState((p) => ({ 
       ...p, 
       adminPassword: password,

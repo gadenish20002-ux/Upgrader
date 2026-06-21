@@ -26,7 +26,6 @@ const ACCOUNT_FIELDS = new Set<string>([
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
-  "predict",
   "gameHistory",
   "pendingUpgrade",
   "fastMultipliers",

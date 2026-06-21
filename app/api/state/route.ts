@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { kv } from "@/lib/kv"
 import { DEFAULT_STATE, currentGlobalUpgrades } from "@/lib/default-data"
+import { isAdmin, saveAdminPassword } from "@/lib/keys"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -51,6 +52,12 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const globalState = stripGlobalState(body)
+    if (typeof globalState.adminPassword === "string") {
+      if (!(await isAdmin(request.headers.get("x-admin-password")))) {
+        return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+      }
+      await saveAdminPassword(globalState.adminPassword)
+    }
     await kv.set(KV_KEY, globalState)
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -63,6 +70,12 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json()
     const globalPatch = stripGlobalState(body)
+    if (typeof globalPatch.adminPassword === "string") {
+      if (!(await isAdmin(request.headers.get("x-admin-password")))) {
+        return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+      }
+      await saveAdminPassword(globalPatch.adminPassword)
+    }
     let currentData = await kv.get<any>(KV_KEY)
     if (!currentData) currentData = stripGlobalState(DEFAULT_STATE)
     const nextData = { ...stripGlobalState(currentData), ...globalPatch }

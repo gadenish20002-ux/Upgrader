@@ -52,7 +52,6 @@ export const ACCOUNT_FIELDS = [
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
-  "predict",
   "gameHistory",
   "pendingUpgrade",
   "fastMultipliers",
@@ -174,12 +173,12 @@ export async function isAdmin(provided: string | null): Promise<boolean> {
 
 export async function getAccount(code: string): Promise<AccountState> {
   const stored = await kv.get<Partial<AccountState>>(accountKvKey(code))
-  return { ...defaultAccount(code), ...(stored || {}) }
+  return { ...defaultAccount(code), ...pickAccountFields(stored) }
 }
 
 export async function patchAccount(code: string, patch: Partial<AccountState>): Promise<AccountState> {
   const current = await kv.get<Partial<AccountState>>(accountKvKey(code))
-  const base = current || defaultAccount(code)
+  const base = { ...defaultAccount(code), ...pickAccountFields(current) }
   const next = { ...base, ...pickAccountFields(patch) }
   await kv.set(accountKvKey(code), next)
   return next as AccountState
@@ -191,7 +190,7 @@ export async function resetAccount(code: string): Promise<void> {
 
 // Fields cleared by a "reset history" — same set the old single account wiped:
 // inventory, game/item history, withdrawn items and the user's upgrade counter.
-// Balance, username and predict settings are kept.
+// Balance and username are kept. Predict is a global site setting.
 export const HISTORY_FIELDS = [
   "inventory",
   "userUpgrades",

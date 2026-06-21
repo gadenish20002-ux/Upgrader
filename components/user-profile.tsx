@@ -4,7 +4,7 @@ import { useRef, useState, useMemo } from "react"
 import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
 import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { formatWeaponName, formatSkinName, isSticker } from "@/lib/utils"
+import { formatWeaponName, formatSkinName } from "@/lib/utils"
 import { LogOut, Settings, Camera, KeyRound } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
@@ -340,10 +340,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 type="button" 
                 onClick={async () => {
                   if (state.inventory.length === 0) return
-                  const sellableItems = state.inventory.filter(i => {
-                    const s = getSkin(state.skins, i.skinId)
-                    return s && !isSticker(s.weapon)
-                  })
+                  const sellableItems = state.inventory.filter(i => getSkin(state.skins, i.skinId))
                   if (sellableItems.length === 0) return
                   const idsToSell = sellableItems.map(i => i.uid)
                   const total = sellableItems.reduce((acc, item) => acc + (getSkin(state.skins, item.skinId)?.price || 0), 0)
@@ -424,12 +421,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                     </div>
                     
                     <div className="-mt-1 flex w-full items-center justify-between relative z-[4]">
-                      {isSticker(skin.weapon) ? (
-                        <div className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-bl-md border border-t-transparent lg:h-10 cursor-not-allowed" title="Наклейки не продаются">
-                          <img className="h-4 lg:h-5 lg:w-5 w-4 opacity-30 grayscale" alt="Sell" src="/assets/sale.svg" />
-                        </div>
-                      ) : (
-                        <button 
+                      <button
                           onClick={async () => {
                             const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
                             try {
@@ -459,8 +451,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                           title="Продать"
                         >
                           <img className="h-4 lg:h-5 lg:w-5 w-4" alt="Sell" src="/assets/sale.svg" />
-                        </button>
-                      )}
+                      </button>
                       <button 
                         onClick={() => setWithdrawItem(item)}
                         className="bg-[#1C1D1F] border-[#FFFFFF1A] flex h-8 flex-1 items-center justify-center rounded-br-md border border-t-transparent transition-colors duration-200 lg:h-10 hover:bg-transparent cursor-pointer"
