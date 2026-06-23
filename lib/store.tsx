@@ -13,6 +13,11 @@ const pendingGlobalChanges: Record<string, any> = {}
 // with stale server data — otherwise a just-consumed skin reappears after a loss
 // (the "через раз" bug). field -> JSON of the value we last wrote locally.
 const dirtyAccountFields: Record<string, string> = {}
+// Same idea, but for GLOBAL/site fields (e.g. predict — the admin "modes"). Only the
+// admin scope mutates global state; while an admin-made change is in flight the 10s
+// /api/state poll must NOT overwrite it with stale server data (otherwise the
+// just-selected outcome flips back by itself). field -> JSON of last local value.
+const dirtyGlobalFields: Record<string, string> = {}
 
 // Per-account fields (synced to /api/account?key=). Everything else is global
 // site state (synced to /api/state). KEEP IN SYNC with ACCOUNT_FIELDS in lib/keys.ts.
@@ -125,6 +130,26 @@ function storageKeyFor(accountKey: string | null): string {
   return `upgrader_state_v4:${accountKey || "none"}`
 }
 
+// Persist state to localStorage WITHOUT the skins catalog. `skins`/`upgradeSkins`
+// are the full ~5MB Steam catalog; serializing them blows past the localStorage
+// quota → setItem throws QuotaExceededError → NOTHING gets cached, so every refresh
+// fell back to DEFAULT_STATE (balance/inventory/login reset) until the network
+// re-fetched. The catalog is bundled + re-injected by loadState, so it never needs
+// to live in the cache.
+function persistLocal(storageKey: string, state: AppState): void {
+  if (typeof window === "undefined") return
+  try {
+    const { skins, upgradeSkins, ...rest } = state
+    window.localStorage.setItem(storageKey, JSON.stringify(rest))
+  } catch {
+    // Still over quota for some reason → drop the stale entry rather than keep a
+    // partial/old one that would mislead the next load.
+    try {
+      window.localStorage.removeItem(storageKey)
+    } catch {}
+  }
+}
+
 function loadState(storageKey: string, catalogSkins: Skin[] = DEFAULT_STATE.skins, accountKey: string | null = activeAccountKey(null)): AppState {
   if (typeof window === "undefined") return { ...DEFAULT_STATE, skins: catalogSkins, upgradeSkins: catalogSkins }
   try {
@@ -220,13 +245,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const storageKey = storageKeyFor(accountKey)
-    setReady(false)
+    // Show the cached (or bundled-default) state immediately — no blank/flash while
+    // the network catches up. The poll below refreshes it in the background.
     setInternal(loadState(storageKey, catalogSkinsRef.current, accountKey))
+    setReady(true)
 
     // Switching accounts → drop any un-acked optimistic state from the previous one
     // so it can't leak into / block the freshly loaded account.
     for (const k in dirtyAccountFields) delete dirtyAccountFields[k]
     for (const k in pendingAccountChanges) delete pendingAccountChanges[k]
+    for (const k in dirtyGlobalFields) delete dirtyGlobalFields[k]
 
     let cancelled = false
 
@@ -290,9 +318,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           for (const k in dirtyAccountFields) {
             ;(next as any)[k] = (prev as any)[k]
           }
-          try {
-            window.localStorage.setItem(storageKey, JSON.stringify(next))
-          } catch {}
+          // Same protection for admin-made global changes (predict/"режимы") that
+          // haven't been confirmed by the server yet.
+          for (const k in dirtyGlobalFields) {
+            ;(next as any)[k] = (prev as any)[k]
+          }
+          persistLocal(storageKey, next)
           return next
         })
       } catch (err) {
@@ -341,11 +372,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         const finalState = applyPublicLogin({ ...prev, ...changes }, activeAccountKey(accountKeyRef.current))
         const storageKey = storageKeyFor(activeAccountKey(accountKeyRef.current))
-        try {
-          window.localStorage.setItem(storageKey, JSON.stringify(finalState))
-        } catch {}
+        persistLocal(storageKey, finalState)
 
         lastSyncTime.current = Date.now()
+
+        const onAdminPath = typeof window !== "undefined" && isAdminPath(window.location.pathname)
 
         // split changes into account vs global buckets
         for (const key in changes) {
@@ -355,6 +386,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             dirtyAccountFields[key] = JSON.stringify((changes as any)[key])
           } else {
             pendingGlobalChanges[key] = (changes as any)[key]
+            // Only the admin scope persists global state, so only mark it dirty there
+            // (otherwise a non-admin would protect a field that never gets PATCHed).
+            if (onAdminPath) dirtyGlobalFields[key] = JSON.stringify((changes as any)[key])
           }
         }
 
@@ -395,7 +429,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               headers: authHeaders(ADMIN_ACCOUNT),
               body: JSON.stringify(globalToSend),
               cache: "no-store",
-            }).catch((err) => console.error("Failed to sync global state", err))
+            })
+              .then((res) => {
+                if (!res || !res.ok) return
+                // Server confirmed the global change → stop shielding it from the poll
+                // (unless it was re-edited locally since).
+                for (const k in globalToSend) {
+                  if (dirtyGlobalFields[k] === JSON.stringify((globalToSend as any)[k])) {
+                    delete dirtyGlobalFields[k]
+                  }
+                }
+              })
+              .catch((err) => console.error("Failed to sync global state", err))
           }
         }, 200)
 
