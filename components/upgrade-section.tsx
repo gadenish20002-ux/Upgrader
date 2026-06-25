@@ -921,7 +921,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 )}
               </div>
               <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center space-x-0.5 z-[3] lg:bottom-4">
-                <span className="font-tektur text-gradient-yellow font-bold" style={{ fontSize: 'clamp(6px, 2vw, 18px)' }}>{formatPrice(inputValue)}</span>
+                {/* Use displayTotal (the frozen snapshot), NOT the live inputValue. Once
+                    "Прокачать" consumes the staked items, selectedItems empties and
+                    inputValue drops to 0 — but this card still shows the locked items,
+                    so the total must come from the same locked snapshot or it reads 0,00. */}
+                <span className="font-tektur text-gradient-yellow font-bold" style={{ fontSize: 'clamp(6px, 2vw, 18px)' }}>{formatPrice(displayTotal)}</span>
                 <img alt="" className="h-[7px] w-[7px] lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
               </div>
               <img alt="" className="absolute top-1/2 left-1/2 z-[0] w-full max-w-[14rem] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40" src="/assets/images/game/unknown-item-shadow.webp" />
