@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { KeyRound, Plus, Copy, Check, Trash2, RotateCcw, Eraser, Ban, Play, CalendarPlus } from "lucide-react"
 import { toast } from "sonner"
+import { copyToClipboard } from "@/lib/utils"
 
 const ADMIN_PWD_STORAGE = "upgrader_admin_pwd"
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
@@ -77,8 +78,8 @@ export function KeysControl() {
     if (res.ok) {
       const j = await res.json()
       setLabel("")
-      toast.success(`Ключ создан: ${j.key.code}`)
-      await navigator.clipboard.writeText(j.key.code).catch(() => {})
+      const copiedOk = await copyToClipboard(j.key.code)
+      toast.success(copiedOk ? `Ключ создан и скопирован: ${j.key.code}` : `Ключ создан: ${j.key.code}`)
       load()
     } else {
       toast.error("Не удалось создать ключ")
@@ -117,11 +118,15 @@ export function KeysControl() {
     toast.success(`Управление переключено на: ${label}`)
   }
 
-  function copy(code: string) {
-    navigator.clipboard.writeText(code).then(() => {
+  async function copy(code: string) {
+    const ok = await copyToClipboard(code)
+    if (ok) {
       setCopied(code)
       setTimeout(() => setCopied(null), 1500)
-    })
+      toast.success(`Ключ скопирован: ${code}`)
+    } else {
+      toast.error("Не удалось скопировать ключ")
+    }
   }
 
   const activeLabel =

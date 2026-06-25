@@ -5,7 +5,9 @@ import Link from "next/link"
 import { PredictControl } from "@/components/admin/predict-control"
 import { CabinetSettingsControl } from "./cabinet-settings-control"
 import { Logo } from "@/components/logo"
-import { ArrowLeft, KeyRound } from "lucide-react"
+import { ArrowLeft, KeyRound, Copy, Check } from "lucide-react"
+import { copyToClipboard } from "@/lib/utils"
+import { toast } from "sonner"
 
 const ACCOUNT_KEY_STORAGE = "upgrader_account_key"
 const ADMIN_ACCOUNT = "__default__"
@@ -20,6 +22,19 @@ export function CabinetClient() {
   const [label, setLabel] = useState<string>("")
   const [daysLeft, setDaysLeft] = useState<number | null>(null)
   const [ready, setReady] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  async function copyKey() {
+    if (!code) return
+    const ok = await copyToClipboard(code)
+    if (ok) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+      toast.success("Ключ скопирован")
+    } else {
+      toast.error("Не удалось скопировать ключ")
+    }
+  }
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem(ACCOUNT_KEY_STORAGE) : null
@@ -97,9 +112,18 @@ export function CabinetClient() {
               <p className="text-sm font-semibold">
                 {isAdminAccount ? "Аккаунт администратора" : (label || "Ваш аккаунт")}
               </p>
-              <p className="font-mono text-xs text-muted-foreground">
-                {isAdminAccount ? "—" : code}
-              </p>
+              {isAdminAccount ? (
+                <p className="font-mono text-xs text-muted-foreground">—</p>
+              ) : (
+                <button
+                  onClick={copyKey}
+                  title="Скопировать ключ"
+                  className="inline-flex items-center gap-1 rounded font-mono text-xs text-muted-foreground hover:text-primary"
+                >
+                  {code}
+                  {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
+                </button>
+              )}
             </div>
           </div>
           {!isAdminAccount && daysLeft !== null && (
