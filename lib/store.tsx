@@ -37,6 +37,10 @@ const ACCOUNT_FIELDS = new Set<string>([
   "fastPercentages",
   "soundMode",
   "fastMode",
+  // predict (the forced-outcome "режим") is per-key now, so its writes must go to
+  // /api/account?key= — routing it here is what keeps key 1's "win" from turning
+  // into key 2's "win". See ACCOUNT_FIELDS in lib/keys.ts.
+  "predict",
 ])
 
 const ADMIN_ACCOUNT = "__default__"

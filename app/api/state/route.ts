@@ -8,6 +8,10 @@ export const revalidate = 0
 
 const KV_KEY = "upgrader_global_state"
 
+// Fields that are NOT global site state — they belong to an individual account
+// and must never be read from / written to the shared global blob. `predict` is
+// here because the forced-outcome mode is now per-key (see lib/keys.ts); keeping
+// it out of global state is what stops one key's mode leaking onto every key.
 const ACCOUNT_FIELD_NAMES = new Set([
   "balance",
   "inventory",
@@ -23,6 +27,7 @@ const ACCOUNT_FIELD_NAMES = new Set([
   "fastPercentages",
   "soundMode",
   "fastMode",
+  "predict",
 ])
 
 function stripGlobalState(state: any) {

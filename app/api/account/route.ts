@@ -38,11 +38,11 @@ async function authorize(
   return { ok: true, meta: { label: key!.label, expiresAt: key!.expiresAt, daysLeft: daysLeft(key!), status } }
 }
 
-function stripPerAccountPredict(value: any) {
-  if (!value || typeof value !== "object") return value
-  const { predict, ...rest } = value
-  return rest
-}
+// predict (the forced-outcome "режим") is now a per-account field: each key owns
+// its own mode, set from /cabinet (the key holder) or the /admin panel. It flows
+// through GET/PATCH like every other account field — it is NOT stripped anymore.
+// (Previously it was removed here to keep predict a single global site setting,
+//  which is exactly what caused the "все ключи побеждают одновременно" bug.)
 
 export async function GET(request: Request) {
   try {
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     const auth = await authorize(code, request)
     if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 
-    const account = stripPerAccountPredict(await getAccount(code))
+    const account = await getAccount(code)
     return NextResponse.json({ account, key: auth.meta })
   } catch {
     return NextResponse.json({ error: "storage unavailable" }, { status: 503 })
@@ -65,8 +65,8 @@ export async function PATCH(request: Request) {
     const auth = await authorize(code, request)
     if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 
-    const body = stripPerAccountPredict(await request.json())
-    const account = stripPerAccountPredict(await patchAccount(code, pickAccountFields(body)))
+    const body = await request.json()
+    const account = await patchAccount(code, pickAccountFields(body))
     return NextResponse.json({ success: true, account })
   } catch {
     return NextResponse.json({ error: "storage unavailable" }, { status: 503 })

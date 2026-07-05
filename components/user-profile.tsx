@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useMemo } from "react"
-import { useStore, formatNumber, getSkin, formatPrice } from "@/lib/store"
+import { useStore, formatNumber, getSkin, formatPrice, syncManager } from "@/lib/store"
 import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { formatWeaponName, formatSkinName } from "@/lib/utils"
@@ -79,6 +79,12 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
 
   async function handleWithdrawConfirm() {
     if (!withdrawItem || !withdrawSkin) return
+
+    // Pause the 10s background poll while the withdraw round-trips. Otherwise an
+    // in-flight poll can return the pre-withdraw account and revert the inventory
+    // + item history in the UI — the reported "предмет вывело, а история не
+    // обновляется" bug.
+    syncManager.suppress(5000)
 
     const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     try {
@@ -344,7 +350,11 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                   if (sellableItems.length === 0) return
                   const idsToSell = sellableItems.map(i => i.uid)
                   const total = sellableItems.reduce((acc, item) => acc + (getSkin(state.skins, item.skinId)?.price || 0), 0)
-                  
+
+                  // Pause the background poll so an in-flight fetch can't revert the
+                  // just-sold inventory / balance / history before the server confirms.
+                  syncManager.suppress(5000)
+
                   const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
                   try {
                     const res = await fetch(`/api/account/sell?key=${encodeURIComponent(key)}`, {
@@ -423,6 +433,9 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                     <div className="-mt-1 flex w-full items-center justify-between relative z-[4]">
                       <button
                           onClick={async () => {
+                            // Pause the background poll so an in-flight fetch can't
+                            // revert the just-sold item / balance / history.
+                            syncManager.suppress(5000)
                             const key = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
                             try {
                               const res = await fetch(`/api/account/sell?key=${encodeURIComponent(key)}`, {

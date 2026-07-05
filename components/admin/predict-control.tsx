@@ -13,22 +13,15 @@ const HINT_OPTIONS: { value: PredictHint; label: string }[] = [
   { value: "75%", label: "75%" },
 ]
 
-function saveGlobalPredict(predict: Predict) {
-  fetch(`/api/state?t=${Date.now()}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ predict }),
-    cache: "no-store",
-  }).catch((error) => console.error("Failed to save global predict", error))
-}
-
 export function PredictControl({ predictWindowHref = "/admin/predict" }: { predictWindowHref?: string } = {}) {
   const { state, setState } = useStore()
 
+  // predict is a per-key account field now: setState routes it to
+  // /api/account?key= (the selected key on /admin, or the holder's own key on
+  // /cabinet). We must NOT also PATCH /api/state — that global write is exactly
+  // what leaked one key's mode onto every other key.
   function patchPredict(patch: Partial<Predict>) {
-    const nextPredict = { ...state.predict, ...patch }
     setState((p) => ({ ...p, predict: { ...p.predict, ...patch } }))
-    saveGlobalPredict(nextPredict)
   }
 
   function setOutcome(outcome: PredictOutcome) {

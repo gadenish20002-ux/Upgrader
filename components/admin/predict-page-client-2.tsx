@@ -44,16 +44,29 @@ function PredictContent() {
     prevLosses.current = state.predict.currentLosses
   }, [state.predict.currentLosses, phase])
 
-  // Fast-poll predict state from server every 2 seconds so the counter updates promptly
+  // Fast-poll predict state every 2 seconds so the counter updates promptly.
+  // predict is per-key now, so we must read THIS key's account (the key selected
+  // in the admin panel, or the __default__ template) — not the shared global
+  // state, which no longer carries predict. Reading /api/state here would show a
+  // stale/empty mode and break the per-key isolation we just fixed.
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/state?t=${Date.now()}`, { cache: 'no-store' })
+        const key = (typeof window !== "undefined" && window.localStorage.getItem("upgrader_account_key")) || "__default__"
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        if (typeof window !== "undefined") {
+          const pwd = window.localStorage.getItem("upgrader_admin_pwd")
+          if (pwd) headers["x-admin-password"] = pwd
+        }
+        const res = await fetch(`/api/account?key=${encodeURIComponent(key)}&t=${Date.now()}`, {
+          headers,
+          cache: "no-store",
+        })
         if (!res.ok) return
         const data = await res.json()
-        if (data.predict) {
+        const serverPredict = data.account?.predict
+        if (serverPredict) {
           setState(p => {
-            const serverPredict = data.predict
             // Only update if server has different values
             if (JSON.stringify(p.predict) !== JSON.stringify({ ...p.predict, ...serverPredict })) {
               return { ...p, predict: { ...p.predict, ...serverPredict } }

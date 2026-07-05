@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import type { Skin, InventoryItem, ItemHistoryEntry, GameHistoryEntry, PendingUpgrade } from "@/lib/types"
-import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT, GLOBAL_KV } from "@/lib/keys"
+import { getKey, keyStatus, normalizeCode, getAccount, patchAccount, ADMIN_ACCOUNT } from "@/lib/keys"
 import { STATIC_SKINS, applyCatalogPrices, getCatalogAdditionalSkins, getCatalogPriceMeta, getCatalogPrices } from "@/lib/catalog-prices"
 import { COMPENSATION_BONUS_ITEMS, DEFAULT_STATE } from "@/lib/default-data"
-import { kv } from "@/lib/kv"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -58,10 +57,9 @@ export async function POST(request: Request) {
     if (!targetSkinId) return NextResponse.json({ error: "missing_target" }, { status: 400 })
     if (stakeUids.length === 0 && stakeBalance <= 0) return NextResponse.json({ error: "empty_stake" }, { status: 400 })
 
-    const [account, catalog, globalState] = await Promise.all([
+    const [account, catalog] = await Promise.all([
       getAccount(code),
       getCatalog(),
-      kv.get<any>(GLOBAL_KV),
     ])
     if (account.pendingUpgrade) {
       return NextResponse.json({ error: "pending_upgrade", pendingUpgrade: account.pendingUpgrade }, { status: 409 })
@@ -94,9 +92,9 @@ export async function POST(request: Request) {
     let calculatedChance = totalStake / targetSkin.price
     calculatedChance = Math.max(0.01, Math.min(0.92, calculatedChance))
     
-    // Forced outcomes are site-wide admin settings. PostgreSQL global state is
-    // the only source of truth; legacy per-account values must never override it.
-    const predict = { ...DEFAULT_STATE.predict, ...(globalState?.predict || {}) }
+    // Forced outcome is a PER-KEY setting: read it from THIS account only, so one
+    // key's "win"/"lose" mode never applies to another key (the reported bug).
+    const predict = { ...DEFAULT_STATE.predict, ...(account.predict || {}) }
     const outcome = predict.outcome || "off"
     let isWin = false
     
@@ -170,16 +168,9 @@ export async function POST(request: Request) {
         }
       : null
 
-    if (currentLosses !== (predict.currentLosses || 0)) {
-      const latestGlobalState = (await kv.get<any>(GLOBAL_KV)) || {}
-      await kv.set(GLOBAL_KV, {
-        ...latestGlobalState,
-        predict: {
-          ...(latestGlobalState.predict || predict),
-          currentLosses,
-        },
-      })
-    }
+    // The win_after_losses counter is part of THIS key's predict, so persist it
+    // back onto the account (never onto the shared global state).
+    const predictChanged = currentLosses !== (predict.currentLosses || 0)
 
     const nextAccount = await patchAccount(code, {
       balance: Math.max(0, account.balance - stakeBalance),
@@ -189,6 +180,7 @@ export async function POST(request: Request) {
       userUpgrades: isWin ? (account.userUpgrades || 0) : (account.userUpgrades || 0) + 1,
       pendingUpgrade,
       loggedIn: true,
+      ...(predictChanged ? { predict: { ...predict, currentLosses } } : {}),
     })
 
     console.info("[account-upgrade]", {

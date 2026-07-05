@@ -42,6 +42,11 @@ export interface AccessKey {
 // preferences (set via the upgrade settings modal / header toggles). They must
 // be account-scoped — otherwise a non-admin player can't persist them and the
 // 2s /api/state poll resets them back to the global defaults after ~2s.
+// NOTE: predict (the forced-outcome "режим") is ALSO account-scoped. It used to
+// be a single global site setting, so setting one key to "win" forced EVERY key
+// to win at the same time (the reported "у ключа 1 победа → у ключа 2 тоже
+// победа" bug). Each key now owns its own predict, managed from /cabinet (the
+// key holder) or the /admin panel (super-admin selecting a key).
 export const ACCOUNT_FIELDS = [
   "balance",
   "inventory",
@@ -58,6 +63,7 @@ export const ACCOUNT_FIELDS = [
   "fastPercentages",
   "soundMode",
   "fastMode",
+  "predict",
 ] as const
 
 export type AccountState = Pick<AppState, (typeof ACCOUNT_FIELDS)[number]>
@@ -190,7 +196,8 @@ export async function resetAccount(code: string): Promise<void> {
 
 // Fields cleared by a "reset history" — same set the old single account wiped:
 // inventory, game/item history, withdrawn items and the user's upgrade counter.
-// Balance and username are kept. Predict is a global site setting.
+// Balance and username are kept. Predict (the key's forced-outcome mode) is a
+// deliberate admin setting, so a history reset must NOT wipe it.
 export const HISTORY_FIELDS = [
   "inventory",
   "userUpgrades",
