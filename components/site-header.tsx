@@ -148,7 +148,7 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
               <div className="tablet:h-12 tablet:space-x-[-0.875rem] flex h-[2.5rem] shrink-1 items-center justify-center space-x-[-0.5rem] lg:space-x-[-0.625rem]">
                 <button className="tablet:h-full tablet:pr-6 tablet:pl-3 z-[1] flex h-[2rem] lg:h-[2.25rem] shrink-0 items-center justify-center space-x-1 rounded-l-[0.625rem] border-[1px] border-r-0 border-[#FEDB1A33] bg-[#FEDB1A0D] pr-3 lg:pr-4 pl-2 transition-all duration-200 hover:brightness-110">
                   <div className="tablet:text-lg flex h-full items-center text-[0.875rem] lg:text-[1.05rem] font-semibold text-white font-exo2">{formatNumber(Math.round(state.balance))}</div>
-                  <img alt="" className="tablet:h-5 tablet:w-5 h-[1rem] w-[1rem] lg:h-[1.125rem] lg:w-[1.125rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                  <img alt="" className="tablet:h-5 tablet:w-5 h-[1rem] w-[1rem] lg:h-[1.125rem] lg:w-[1.125rem]" src="/cdn/fa/icons/coin.svg" />
                 </button>
                 <button className="bg-[#FBD506] z-[2] flex h-[2.25rem] w-[2.75rem] lg:min-h-11 lg:w-auto shrink-1 items-center justify-center space-x-2 rounded-[0.625rem] lg:px-4 px-0 py-0 lg:py-2.5 text-[1.125rem] leading-[1rem] !font-light font-medium font-exo2 text-[#202022] transition-all duration-200 select-none hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] focus:outline-none">
                   <img className="h-[1.1rem] w-[1.1rem] lg:h-[1.25rem] lg:w-[1.25rem]" alt="top-up" src="/assets/top-up-mobile.svg" />
@@ -157,12 +157,12 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
               </div>
               <div className="tablet:mr-[0.375rem] tablet:h-11 relative mr-[0.3125rem] flex shrink-1 items-center justify-center ml-1">
                 <button className="bg-[#202022] duration-200 flex h-[2rem] w-[2rem] lg:h-[2.25rem] lg:w-[2.25rem] hover:brightness-150 items-center justify-center relative rounded-[0.625rem] tablet:h-11 tablet:w-11 transition-all">
-                  <img alt="" className="tablet:h-6 tablet:w-6 h-[1.1rem] w-[1.1rem] lg:h-[1.45rem] lg:w-[1.45rem]" src="https://s3.upgrader.pro/cdn/fa/icons/bell.svg" />
+                  <img alt="" className="tablet:h-6 tablet:w-6 h-[1.1rem] w-[1.1rem] lg:h-[1.45rem] lg:w-[1.45rem]" src="/cdn/fa/icons/bell.svg" />
                 </button>
               </div>
               <div className="relative flex shrink-0">
                 <button onClick={onProfileClick} className="shrink-0 cursor-pointer" aria-label="Открыть профиль">
-                  <img className="tablet:h-11 tablet:w-11 h-[2rem] w-[2rem] lg:h-[2.25rem] lg:w-[2.25rem] cursor-pointer rounded-full object-cover" src={state.avatar || "https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp"} alt="Аватар пользователя" />
+                  <img className="tablet:h-11 tablet:w-11 h-[2rem] w-[2rem] lg:h-[2.25rem] lg:w-[2.25rem] cursor-pointer rounded-full object-cover" src={state.avatar || "/cdn/fa/images/default-avatar-small.webp"} alt="Аватар пользователя" />
                 </button>
               </div>
             </div>

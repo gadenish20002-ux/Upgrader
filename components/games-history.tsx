@@ -60,7 +60,7 @@ export function GamesHistory() {
                 <div className="z-[2] h-[8.125rem] w-full hover:z-[5]">
                   <div className="w-full h-full">
                     <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, ${betRarity} 10%, rgb(28, 28, 32) 75%)` }}>
-                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={betImage || undefined} alt="" />
                         <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.4)').replace('#', 'rgba(')} 0%, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.2)').replace('#', 'rgba(')} 30%, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.1)').replace('#', 'rgba(')} 45%, transparent 70%)` }}></div>
                       </div>
@@ -72,7 +72,7 @@ export function GamesHistory() {
                   <span className="font-exo2 text-[0.5rem] text-white opacity-50">Ваша ставка</span>
                   <div className="flex items-center justify-center">
                     <span className="font-tektur mr-1 text-[0.75rem] text-white"> {formatPrice(g.betPrice)} </span>
-                    <img alt="" className="h-3 w-3" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                    <img alt="" className="h-3 w-3" src="/cdn/fa/icons/coin-2.svg" />
                   </div>
                 </div>
               </div>
@@ -86,11 +86,11 @@ export function GamesHistory() {
                 <div className="relative z-[2] h-[8.125rem] w-full hover:z-[5] lg:max-w-[10.125rem]">
                   <div className="w-full h-full">
                     <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, ${targetRarity} 10%, rgb(28, 28, 32) 75%)` }}>
-                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                         <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
                           <div className="flex items-center justify-center space-x-0.5">
                             <span className="font-tektur text-gradient-yellow text-[0.625rem] font-bold text-white lg:text-[0.6875rem]">{formatPrice(g.targetPrice)}</span>
-                            <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                            <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={targetImage || undefined} alt="" />
@@ -113,7 +113,7 @@ export function GamesHistory() {
                     <div className="absolute -right-0.5 -bottom-4 z-[1] flex h-[3.75rem] max-w-[3.75rem] rotate-15 items-center justify-center shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] hover:z-[5]">
                       <div className="w-full h-full">
                         <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, ${resultRarity} 10%, rgb(28, 28, 32) 75%)` }}>
-                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                             <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={resultImage || undefined} alt="" />
                             <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.4)').replace('#', 'rgba(')} 0%, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.2)').replace('#', 'rgba(')} 30%, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.1)').replace('#', 'rgba(')} 45%, transparent 70%)` }}></div>
                           </div>

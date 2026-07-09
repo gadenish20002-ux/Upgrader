@@ -398,7 +398,7 @@ function HorizontalDropRoulette({
       <img
         alt=""
         className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
-        src="https://s3.upgrader.pro/cdn/fa/images/game/carousel-line.png"
+        src="/cdn/fa/images/game/carousel-line.png"
         draggable={false}
       />
       <div
@@ -539,7 +539,7 @@ function ResultScreen({
         <img
           alt=""
           className="pointer-events-none absolute -top-1 left-1/2 z-30 h-full !max-w-none -translate-x-1/2 opacity-100"
-          src="https://s3.upgrader.pro/cdn/fa/images/game/carousel-line.png"
+          src="/cdn/fa/images/game/carousel-line.png"
           draggable={false}
         />
         <div className="relative h-full w-full overflow-visible">

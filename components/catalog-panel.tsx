@@ -218,7 +218,7 @@ export function CatalogPanel({
                     <span className="opacity-50 font-exo2"> Цена </span>
                   </div>
                   <div className="relative h-full flex-1">
-                    <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                    <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="/cdn/fa/icons/coin.svg" />
                     <input 
                       value={min} 
                       onChange={(e) => {
@@ -233,7 +233,7 @@ export function CatalogPanel({
                     />
                   </div>
                   <div className="relative h-full flex-1">
-                    <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                    <img alt="coin" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="/cdn/fa/icons/coin.svg" />
                     <input 
                       value={max} 
                       onChange={(e) => {
@@ -261,7 +261,7 @@ export function CatalogPanel({
                   onClick={() => setSearchOpen(!searchOpen)} 
                   className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] bg-transparent"
                 >
-                  <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
+                  <img className="h-3.5 lg:h-4" src="/cdn/fa/icons/search.svg" alt="Поиск" />
                 </button>
               </div>
             </div>
@@ -285,14 +285,14 @@ export function CatalogPanel({
                   }}
                   className="relative flex h-[5rem] lg:h-[6.75rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-md border-[1px] border-solid border-[#26262A] bg-[#1E1F23] shadow-[0_0_4px_0_rgba(255,255,255,0.10)] transition-colors duration-200 hover:border-[#FBD50680]"
                 >
-                  <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/next-arrow-yellow.svg" />
+                  <img alt="" className="absolute top-2 right-2 z-[3] h-2.5 w-2.5" src="/cdn/fa/icons/next-arrow-yellow.svg" />
                   <img 
                     alt="" 
                     className="absolute top-0 left-0 z-[1] w-full opacity-30" 
                     style={{ filter: "brightness(0) saturate(100%) invert(91%) sepia(94%) saturate(5364%) hue-rotate(359deg) brightness(108%) contrast(106%)" }} 
                     src="/assets/smoke.webp" 
                   />
-                  <img alt="" className="absolute top-0 left-0 z-[2] w-full" src="https://s3.upgrader.pro/cdn/fa/images/collection-filter/ellipse.svg" />
+                  <img alt="" className="absolute top-0 left-0 z-[2] w-full" src="/cdn/fa/images/collection-filter/ellipse.svg" />
                   <img alt="" className="absolute z-[3] h-[75%] lg:h-[90%] top-2" src="/assets/glock.webp" />
                   <div className="absolute z-[4] h-full w-full flex-col items-center justify-center bg-[linear-gradient(180deg,rgba(23,24,28,0.00)_41.95%,rgba(30,31,35,0.90)_68.51%,#1E1F23_100%)]"></div>
                   <div className="z-[4] mx-2 mt-auto mb-0 flex h-full w-full flex-col items-center justify-end pb-2 lg:pb-3">
@@ -371,11 +371,11 @@ export function CatalogPanel({
                       </div>
                     )}
                     
-                    <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.svg')` }}>
+                    <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('/cdn/fa/images/light-gray-logo.svg')` }}>
                       <div className="absolute top-1.5 right-1.5 z-[2] flex flex-col items-end justify-center space-x-0.5">
                         <div className="flex items-center justify-center space-x-0.5">
                           <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
-                          <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                          <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                         </div>
                         <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                       </div>

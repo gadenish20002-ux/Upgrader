@@ -32,7 +32,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="mb-6 flex min-h-[19px] items-center justify-between px-[0.625rem] pt-[0.625rem] shrink-0">
           <div className="flex items-center gap-1.5 text-base leading-[19px] font-medium text-white">
             <div className="flex items-center gap-1.5">
-              <img alt="" className="h-4 w-4" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" />
+              <img alt="" className="h-4 w-4" src="/cdn/fa/icons/settings.svg" />
               <span className="text-base font-medium text-white">Настройки</span>
             </div>
           </div>

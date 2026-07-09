@@ -118,17 +118,17 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
         <a href="https://vip.upgrader.pro/" target="_blank" aria-label="Открыть vip.upgrader.pro" className="hidden w-full items-center justify-between rounded-[0.75rem] border-[0.0625rem] border-dashed border-[#FFFFFF33] bg-[#1C1D1F] p-2 pl-4 lg:flex">
           <div className="flex flex-col items-start justify-center gap-[0.125rem] lg:flex-row lg:items-center lg:gap-2">
             <div className="flex items-center justify-center gap-2">
-              <img alt="crown-icon" className="h-[1rem] w-[1rem] lg:mb-[0.0625rem] lg:h-[1.125rem] lg:w-[1.125rem]" src="https://s3.upgrader.pro/cdn/fa/icons/profile/crown-silver.svg" />
+              <img alt="crown-icon" className="h-[1rem] w-[1rem] lg:mb-[0.0625rem] lg:h-[1.125rem] lg:w-[1.125rem]" src="/cdn/fa/icons/profile/crown-silver.svg" />
               <span className="text-gradient-vip-club-silver text-[0.875rem] font-semibold uppercase">VIP CLUB</span>
             </div>
             <span className="text-[0.625rem] text-white opacity-50 lg:text-[0.875rem]">Проверь свой уровень и забирай подарки</span>
           </div>
           <div className="relative flex h-[1.75rem] items-center justify-center overflow-hidden rounded-[0.375rem] bg-[radial-gradient(circle,#363636_0%,#808080_100%)] p-[0.0625rem] shadow-[0_0_0_1px_rgba(255,255,255,0.20),0_4px_10px_0_rgba(0,0,0,0.35)] inset-shadow-[0_0_4px_1px_rgba(255,255,255,0.25)] lg:h-[2rem] lg:rounded-[0.5rem]">
             <div className="flex items-center justify-center gap-2 rounded-[0.375rem] bg-[linear-gradient(175deg,#808080_-15.4%,#363636_114.09%)] px-[0.5625rem] py-[0.3125rem] transition-opacity duration-200 lg:rounded-[0.5rem] lg:px-[0.6875rem]">
-              <img alt="crown-icon" className="absolute left-0 h-full" src="https://s3.upgrader.pro/cdn/fa/images/profile/vip/ellipse-left.svg" />
-              <img alt="crown-icon" className="absolute h-full" src="https://s3.upgrader.pro/cdn/fa/images/profile/vip/rectangle-center.svg" />
-              <img alt="crown-icon" className="absolute right-0 h-full" src="https://s3.upgrader.pro/cdn/fa/images/profile/vip/ellipse-right.svg" />
-              <img alt="crown-icon" className="h-[0.875rem] w-[0.875rem] lg:h-[1rem] lg:w-[1rem]" src="https://s3.upgrader.pro/cdn/fa/icons/profile/crown-silver.svg" />
+              <img alt="crown-icon" className="absolute left-0 h-full" src="/cdn/fa/images/profile/vip/ellipse-left.svg" />
+              <img alt="crown-icon" className="absolute h-full" src="/cdn/fa/images/profile/vip/rectangle-center.svg" />
+              <img alt="crown-icon" className="absolute right-0 h-full" src="/cdn/fa/images/profile/vip/ellipse-right.svg" />
+              <img alt="crown-icon" className="h-[0.875rem] w-[0.875rem] lg:h-[1rem] lg:w-[1rem]" src="/cdn/fa/icons/profile/crown-silver.svg" />
               <span className="font-exo2 text-[0.8125rem] leading-normal font-semibold text-[#C2C2C2] lg:text-[0.875rem]">VIP CLUB</span>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 className="group relative flex shrink-0 items-center justify-center rounded-[0.75rem] border-[1px] border-[#FFFFFF1A] p-1 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <img className="relative h-[3.75rem] w-[3.75rem] min-w-[3.75rem] rounded-[0.5rem] object-cover transition-opacity group-hover:opacity-50" src={state.avatar || "https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp"} alt={state.username} />
+                <img className="relative h-[3.75rem] w-[3.75rem] min-w-[3.75rem] rounded-[0.5rem] object-cover transition-opacity group-hover:opacity-50" src={state.avatar || "/cdn/fa/images/default-avatar-small.webp"} alt={state.username} />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="w-6 h-6 text-white" />
                 </div>
@@ -206,23 +206,23 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 </div>
                 <div className="mt-[0.4375rem] flex items-center justify-start space-x-1.5 lg:mt-[1.5rem]">
                   <span className="text-[1.5rem] leading-normal font-bold text-white lg:text-[2rem]">{formatNumber(Math.floor(state.balance))}</span>
-                  <img alt="" className="h-5 w-5 lg:h-7 lg:w-7" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                  <img alt="" className="h-5 w-5 lg:h-7 lg:w-7" src="/cdn/fa/icons/coin-2.svg" />
                 </div>
                 <button className="flex items-center justify-start space-x-1.5 text-white/50 transition-all duration-200 hover:opacity-80 mt-1">
                   <span className="text-[0.875rem]">История платежей</span>
-                  <img alt="" className="h-[0.75rem] w-[0.75rem]" src="https://s3.upgrader.pro/cdn/fa/icons/profile/arrow-right.svg" />
+                  <img alt="" className="h-[0.75rem] w-[0.75rem]" src="/cdn/fa/icons/profile/arrow-right.svg" />
                 </button>
               </div>
             </div>
             <div className="flex w-full gap-1.5 lg:order-2">
               <button className="bg-[#FBD506] inline-flex min-h-[41px] w-full items-center justify-center gap-1.5 space-x-1.5 rounded-[0.5rem] px-3 py-2 text-[0.875rem] !leading-[1.25] font-semibold text-[#17181C] shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] transition-all duration-200 select-none hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] focus:outline-none lg:space-x-3 lg:py-3 lg:text-[1rem]">
-                <img alt="top-up-icon" className="h-[1.125rem] w-[1.125rem]" src="https://s3.upgrader.pro/cdn/fa/icons/top-up-mobile.svg" /> Пополнить баланс
+                <img alt="top-up-icon" className="h-[1.125rem] w-[1.125rem]" src="/cdn/fa/icons/top-up-mobile.svg" /> Пополнить баланс
               </button>
             </div>
             <div className="w-full mt-1.5 lg:order-1 lg:mt-auto lg:mb-3">
               <label htmlFor="promocode" className="box-border flex w-full flex-1 items-start justify-center gap-3 rounded-[0.5rem] border-[1px] border-dashed border-[#FFFFFF1A] bg-[#FFFFFF0D] p-1.5">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-[0.375rem]" style={{ background: "linear-gradient(93deg, #fbc206 1.16%, #ffdd23 50.58%, #fbd506 100%), rgba(255, 255, 255, 0.1)" }}>
-                  <img alt="" className="absolute" src="https://s3.upgrader.pro/cdn/fa/images/profile/promocode/kupon-decor.svg" />
+                  <img alt="" className="absolute" src="/cdn/fa/images/profile/promocode/kupon-decor.svg" />
                   <img alt="" className="h-6 w-6 flex-shrink-0" src="/assets/kupon-black.svg" />
                 </div>
                 <input id="promocode" type="text" className="ml-1.5 flex h-8 w-full min-w-10 flex-1 flex-shrink-1 rounded-[0.375rem] border-transparent bg-transparent text-[1rem] leading-[1.375rem] transition-colors duration-200 placeholder:text-[#A7A7A7] focus:outline-none lg:ml-0 lg:h-10 text-white" placeholder="Введите купон" />
@@ -242,7 +242,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 <div className="z-[3] flex items-end justify-between">
                   <span className="text-[0.875rem] text-white/50">Лучший дроп</span>
                   <div className="absolute top-0 right-0 flex items-center justify-start space-x-1 rounded-tr-[11px] rounded-bl-[6px] bg-[#FFFFFF1A] px-1.5 py-1">
-                    <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+                    <img alt="up-arrow-up" className="h-2.5 w-2.5" src="/cdn/fa/icons/up-arrow-yellow.svg" />
                     <span className="font-exo2 text-[0.75rem] font-semibold text-white">{bestDrop.game.chance}%</span>
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 </div>
                 <div className="z-[3] flex items-center justify-start space-x-0.5">
                   <span className="text-gradient-yellow text-[0.8125rem] font-tektur font-bold">{formatPrice(bestDrop.skin.price)}</span>
-                  <img alt="" className="h-3 w-3" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                  <img alt="" className="h-3 w-3" src="/cdn/fa/icons/coin-2.svg" />
                 </div>
               </div>
             ) : (
@@ -290,7 +290,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 </div>
                 <div className="flex items-center justify-start space-x-1 text-[#FBD506]">
                   <span className="text-[0.875rem] lg:text-[1rem] font-bold">{formatNumber(withdrawnTotal)}</span>
-                  <img alt="" className="h-4 w-4" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                  <img alt="" className="h-4 w-4" src="/cdn/fa/icons/coin-2.svg" />
                 </div>
               </div>
               <div className="flex h-full min-h-[6rem] w-full flex-1 flex-col items-start justify-start rounded-xl bg-[#00000066] p-4">
@@ -302,7 +302,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                 </div>
                 <div className="flex items-center space-x-2 lg:mt-auto lg:mb-0 text-[#FBD506]">
                   <span className="font-exo2 text-[1.125rem] font-semibold">{state.userUpgrades || 0}</span>
-                  <img alt="" className="h-5 w-5" src="https://s3.upgrader.pro/cdn/fa/icons/arrow-logo.svg" />
+                  <img alt="" className="h-5 w-5" src="/cdn/fa/icons/arrow-logo.svg" />
                 </div>
               </div>
             </div>
@@ -411,11 +411,11 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                     <div className="pointer-events-none z-[2] h-full w-full">
                       <div className="w-full h-full">
                         <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
-                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                             <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
                               <div className="flex items-center justify-center space-x-0.5">
                                 <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
-                                <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                                <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                               </div>
                               <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                             </div>
@@ -504,11 +504,11 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                       <div className="pointer-events-none z-[2] h-full w-full">
                         <div className="w-full h-full">
                           <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
-                            <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.png')" }}>
+                            <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                               <div className="absolute z-[2] flex flex-col items-end justify-center space-x-0.5 top-1.5 right-1.5">
                                 <div className="flex items-center justify-center space-x-0.5">
                                   <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
-                                  <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                                  <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                                 </div>
                                 <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                               </div>

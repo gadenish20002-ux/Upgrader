@@ -11,201 +11,201 @@ const SKIN_ITEMS = [
     id: 1,
     name: "Sand Dune",
     weapon: "P250",
-    img: "https://s3.upgrader.pro/cdn/items/832/medium.png",
+    img: "/cdn/items/832/medium.png",
     rarity: "rgb(176, 195, 217)",
     chance: "36.22%",
     playerName: "Na1za_riO",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/111a61a368ac8d1752a1704d9b3d7221-6a203de0878a2.jpg",
+    playerAvatar: "/cdn/avatars/111a61a368ac8d1752a1704d9b3d7221-6a203de0878a2.jpg",
   },
   {
     id: 2,
     name: "Recoil XM1014",
     weapon: "Sealed Graffiti",
-    img: "https://s3.upgrader.pro/cdn/items/23405/medium.png",
+    img: "/cdn/items/23405/medium.png",
     rarity: "rgb(176, 195, 217)",
     chance: "8.15%",
     playerName: "whease",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/6c28f8a2a2870e947c829656eb79e6fb-69c281cab2163.jpg",
+    playerAvatar: "/cdn/avatars/6c28f8a2a2870e947c829656eb79e6fb-69c281cab2163.jpg",
   },
   {
     id: 3,
     name: "Magmatude",
     weapon: "Charm",
-    img: "https://s3.upgrader.pro/cdn/items/15207/medium.png",
+    img: "/cdn/items/15207/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "74.99%",
     playerName: "Vazik.prime",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/b64124e79bf3d94b9a0a1853d4cae73c-69a831ef25f63.jpg",
+    playerAvatar: "/cdn/avatars/b64124e79bf3d94b9a0a1853d4cae73c-69a831ef25f63.jpg",
   },
   {
     id: 4,
     name: "Gold Toof",
     weapon: "Glock-18",
-    img: "https://s3.upgrader.pro/cdn/items/14117/medium.png",
+    img: "/cdn/items/14117/medium.png",
     rarity: "rgb(235, 75, 75)",
     chance: "57.33%",
     playerName: "Hom1k",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/7bc10ef69452e5ba264a2dfa5780924d-6a057ac19657e.jpg",
+    playerAvatar: "/cdn/avatars/7bc10ef69452e5ba264a2dfa5780924d-6a057ac19657e.jpg",
   },
   {
     id: 5,
     name: "Moonrise",
     weapon: "Glock-18",
-    img: "https://s3.upgrader.pro/cdn/items/8948/medium.png",
+    img: "/cdn/items/8948/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "78.92%",
     playerName: "Litschi-ω-",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/d90b485d7b7fe71e5f1fa4a4239125ec-69fcc52662686.jpg",
+    playerAvatar: "/cdn/avatars/d90b485d7b7fe71e5f1fa4a4239125ec-69fcc52662686.jpg",
   },
   {
     id: 6,
     name: "Kiss♥Love",
     weapon: "Sawed-Off",
-    img: "https://s3.upgrader.pro/cdn/items/2219/medium.png",
+    img: "/cdn/items/2219/medium.png",
     rarity: "rgb(211, 44, 230)",
     chance: "53.82%",
     playerName: "The Celestial </3",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/89eef987360768bb05b5847a69eb55c0-6a1cf95432244.jpg",
+    playerAvatar: "/cdn/avatars/89eef987360768bb05b5847a69eb55c0-6a1cf95432244.jpg",
   },
   {
     id: 7,
     name: "Tropical Storm",
     weapon: "Souvenir SSG 08",
-    img: "https://s3.upgrader.pro/cdn/items/16329/medium.png",
+    img: "/cdn/items/16329/medium.png",
     rarity: "rgb(94, 152, 217)",
     chance: "78.20%",
     playerName: "ultraseks",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/4851c22247e82a21f2b24298f7e328e3-6a1e89666c464.jpg",
+    playerAvatar: "/cdn/avatars/4851c22247e82a21f2b24298f7e328e3-6a1e89666c464.jpg",
   },
   {
     id: 8,
     name: "Faulty Wiring",
     weapon: "FAMAS",
-    img: "https://s3.upgrader.pro/cdn/items/12328/medium.png",
+    img: "/cdn/items/12328/medium.png",
     rarity: "rgb(176, 195, 217)",
     chance: "36.67%",
     playerName: "бурмалда",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/76baee4d478451e448c1c4539795e2b7-691ea69645cfe.jpg",
+    playerAvatar: "/cdn/avatars/76baee4d478451e448c1c4539795e2b7-691ea69645cfe.jpg",
   },
   {
     id: 9,
     name: "Liquidation",
     weapon: "M4A1-S",
-    img: "https://s3.upgrader.pro/cdn/items/3005/medium.png",
+    img: "/cdn/items/3005/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "53.68%",
     playerName: "Glebik_pro777",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/d954aa007022653c7b57f253efe1a57f-6a203f839d8c0.jpg",
+    playerAvatar: "/cdn/avatars/d954aa007022653c7b57f253efe1a57f-6a203f839d8c0.jpg",
   },
   {
     id: 10,
     name: "Half Sleeve",
     weapon: "FAMAS",
-    img: "https://s3.upgrader.pro/cdn/items/1039/medium.png",
+    img: "/cdn/items/1039/medium.png",
     rarity: "rgb(94, 152, 217)",
     chance: "35.55%",
     playerName: "milfanyaa",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/28e36b4e5262199addb55fa24872b30a-69885605952da.jpg",
+    playerAvatar: "/cdn/avatars/28e36b4e5262199addb55fa24872b30a-69885605952da.jpg",
   },
   {
     id: 11,
     name: "USTILO (Foil)",
     weapon: "Sticker",
-    img: "https://s3.upgrader.pro/cdn/items/20945/medium.png",
+    img: "/cdn/items/20945/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "14.24%",
     playerName: "nastya.dust2.раза",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/73eace0c93a8d70c04f89dccc14e2933-69f7db041f991.jpg",
+    playerAvatar: "/cdn/avatars/73eace0c93a8d70c04f89dccc14e2933-69f7db041f991.jpg",
   },
   {
     id: 12,
     name: "Ace Devil",
     weapon: "Sticker",
-    img: "https://s3.upgrader.pro/cdn/items/12135/medium.png",
+    img: "/cdn/items/12135/medium.png",
     rarity: "rgb(211, 44, 230)",
     chance: "36.98%",
     playerName: "LA",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/a2df8fe62f75d7f49cd3d640426ce67d-6973d3634769c.jpg",
+    playerAvatar: "/cdn/avatars/a2df8fe62f75d7f49cd3d640426ce67d-6973d3634769c.jpg",
   },
   {
     id: 13,
     name: "Autumn Twilly",
     weapon: "MP5-SD",
-    img: "https://s3.upgrader.pro/cdn/items/12351/medium.png",
+    img: "/cdn/items/12351/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "36.69%",
     playerName: "SVINKA PEPE",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/f170056c4b2d42899b4971bbb72cd473-6995d8a133414.jpg",
+    playerAvatar: "/cdn/avatars/f170056c4b2d42899b4971bbb72cd473-6995d8a133414.jpg",
   },
   {
     id: 14,
     name: "Skadoodle",
     weapon: "Sticker",
-    img: "https://s3.upgrader.pro/cdn/items/17644/medium.png",
+    img: "/cdn/items/17644/medium.png",
     rarity: "rgb(75, 105, 255)",
     chance: "13.47%",
     playerName: "filayka +WW",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/048c31f8af5e9f5d46e26951c93fa748-69b2e29b17842.jpg",
+    playerAvatar: "/cdn/avatars/048c31f8af5e9f5d46e26951c93fa748-69b2e29b17842.jpg",
   },
   {
     id: 15,
     name: "Chopper",
     weapon: "P90",
-    img: "https://s3.upgrader.pro/cdn/items/7448/medium.png",
+    img: "/cdn/items/7448/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "37.00%",
     playerName: "gorilla_7777_",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/39c129ec9495a43da6a6b32d1de48c8c-69178220ae8d7.jpg",
+    playerAvatar: "/cdn/avatars/39c129ec9495a43da6a6b32d1de48c8c-69178220ae8d7.jpg",
   },
   {
     id: 16,
     name: "Wild Child",
     weapon: "UMP-45",
-    img: "https://s3.upgrader.pro/cdn/items/13631/medium.png",
+    img: "/cdn/items/13631/medium.png",
     rarity: "rgb(211, 44, 230)",
     chance: "78.77%",
     playerName: "Dabs",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/ef3b5f28e037b86d96d1ff11657b4876-6a033cb00ffd0.jpg",
+    playerAvatar: "/cdn/avatars/ef3b5f28e037b86d96d1ff11657b4876-6a033cb00ffd0.jpg",
   },
   {
     id: 17,
     name: "Falcons (Foil) | Austin 2025",
     weapon: "Sticker Slab",
-    img: "https://s3.upgrader.pro/cdn/items/26372/medium.png",
+    img: "/cdn/items/26372/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "35.01%",
     playerName: "𝘦𝘤𝘴𝘵𝘢𝘴𝘺",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/1c96a4352f9accbf6d8c426bde4f2d7b-6999c43338114.jpg",
+    playerAvatar: "/cdn/avatars/1c96a4352f9accbf6d8c426bde4f2d7b-6999c43338114.jpg",
   },
   {
     id: 18,
     name: "Weasel",
     weapon: "Glock-18",
-    img: "https://s3.upgrader.pro/cdn/items/1728/medium.png",
+    img: "/cdn/items/1728/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "54.53%",
     playerName: "Kres",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/36735caf84bc54511acf15ff258d2deb-6a05f447de23f.jpg",
+    playerAvatar: "/cdn/avatars/36735caf84bc54511acf15ff258d2deb-6a05f447de23f.jpg",
   },
   {
     id: 19,
     name: "Slate",
     weapon: "AK-47",
-    img: "https://s3.upgrader.pro/cdn/items/2279/medium.png",
+    img: "/cdn/items/2279/medium.png",
     rarity: "rgb(136, 71, 255)",
     chance: "28.45%",
     playerName: "MUERTE™",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/cd83c96911d094dd5335f0911fb32de9-69cd026d3cd08.jpg",
+    playerAvatar: "/cdn/avatars/cd83c96911d094dd5335f0911fb32de9-69cd026d3cd08.jpg",
   },
   {
     id: 20,
     name: "Red Stone",
     weapon: "SSG 08",
-    img: "https://s3.upgrader.pro/cdn/items/10886/medium.png",
+    img: "/cdn/items/10886/medium.png",
     rarity: "rgb(176, 195, 217)",
     chance: "21.50%",
     playerName: "Bedoch",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/3c2467a8ca6af3f12792e19bbf9b56fc-69be4acc58317.jpg",
+    playerAvatar: "/cdn/avatars/3c2467a8ca6af3f12792e19bbf9b56fc-69be4acc58317.jpg",
   },
 ]
 
@@ -384,10 +384,10 @@ function SkinCard({
             className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]"
             src={skin.playerAvatar}
             alt="Аватар пользователя"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp' }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
           />
           <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-black/60 px-1 py-[0.125rem]">
-            <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+            <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="/cdn/fa/icons/up-arrow-yellow.svg" />
             <span className="font-exo text-[0.45rem] font-bold text-white leading-none">{skin.chance}</span>
           </div>
         </div>
@@ -395,7 +395,7 @@ function SkinCard({
         <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
           {/* Chance badge — top-left */}
           <div className="absolute -top-1 -left-1.5 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
-            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="/cdn/fa/icons/up-arrow-yellow.svg" />
             <span className="font-exo text-xxxs font-normal text-white">{skin.chance}</span>
           </div>
 
@@ -415,7 +415,7 @@ function SkinCard({
               className="h-6 w-6 cursor-pointer rounded-full object-cover"
               src={skin.playerAvatar}
               alt="Аватар пользователя"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp' }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
             />
             <span className="font-exo text-xxs max-w-[11rem] truncate font-normal text-white">
               {skin.playerName}
@@ -462,7 +462,7 @@ function SkinCard({
         <img
           alt=""
           className="absolute top-1/2 -right-1.5 h-[6.6875rem] w-[4.125rem] -translate-y-1/2 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-          src="https://s3.upgrader.pro/cdn/fa/images/upgrader-arrow-up.svg"
+          src="/cdn/fa/images/upgrader-arrow-up.svg"
         />
       )}
     </button>
@@ -491,7 +491,7 @@ const BEST_DROPS: BestDropItemData[] = [
     chance: "25.07%",
     price: "574170.93",
     playerName: "bigPenis",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/2c9e6ed092ea72100ab54c5f5c175f5d-6a0349e82c94c.jpg",
+    playerAvatar: "/cdn/avatars/2c9e6ed092ea72100ab54c5f5c175f5d-6a0349e82c94c.jpg",
     img: "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk4veqYaF7IfysCnWRxuF4j-B-Xxa-kBkupjDLw96pcX6TZg5yCZJ5TbNZtxjtwNS2NemztgDbidoQyH-sjCga6no-6_FCD_QEyQmfGQ/360fx360f"
   },
   {
@@ -500,7 +500,7 @@ const BEST_DROPS: BestDropItemData[] = [
     chance: "5.16%",
     price: "999547.78",
     playerName: "bigPenis",
-    playerAvatar: "https://s3.upgrader.pro/cdn/avatars/2c9e6ed092ea72100ab54c5f5c175f5d-6a0349e82c94c.jpg",
+    playerAvatar: "/cdn/avatars/2c9e6ed092ea72100ab54c5f5c175f5d-6a0349e82c94c.jpg",
     img: "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf-jFk7uW-V6N4LvedB3WvzedxuPUnHnjnzUl0sWrdztitI3rDZgJzAsZ1QOFY4UPqldDgMO_l41HXit9AmTK-0H227dAsvQ/360fx360f"
   }
 ]
@@ -551,17 +551,17 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
             className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]"
             src={item.playerAvatar}
             alt="Аватар пользователя"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp' }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
           />
           <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-black/40 px-1 py-[0.125rem]">
-            <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+            <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="/cdn/fa/icons/up-arrow-yellow.svg" />
             <span className="font-exo text-[0.45rem] font-bold text-white leading-none">{item.chance}</span>
           </div>
         </div>
       ) : (
         <div className="pointer-events-none relative z-[2] flex h-full w-full flex-col items-start justify-start space-x-0.5 select-none">
           <div className="absolute -top-1 -left-2 flex items-center justify-start space-x-1 rounded-r-lg bg-black/40 px-1.5 py-0.5">
-            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/up-arrow-yellow.svg" />
+            <img alt="up-arrow-up" className="h-2.5 w-2.5" src="/cdn/fa/icons/up-arrow-yellow.svg" />
             <span className="font-exo text-xxxs font-bold text-white">{item.chance}</span>
           </div>
 
@@ -575,7 +575,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
               className="h-6 w-6 cursor-pointer rounded-full object-cover" 
               src={item.playerAvatar} 
               alt="Аватар пользователя" 
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://s3.upgrader.pro/cdn/fa/images/default-avatar-small.webp' }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
             />
             <span className="font-tektur text-xxs max-w-[11rem] truncate font-bold text-white uppercase">{item.playerName}</span>
           </div>
@@ -586,7 +586,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
       {!horizontal && (
         <div className="absolute top-2 right-2 z-[3] flex translate-y-[-50%] items-center justify-center space-x-0.5 opacity-0 transition-all duration-700 group-hover:translate-y-0 group-hover:opacity-100">
           <span className="text-[0.625rem] leading-none font-semibold text-white">{item.price}</span>
-          <img alt="" className="h-2.5 w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+          <img alt="" className="h-2.5 w-2.5" src="/cdn/fa/icons/coin-2.svg" />
         </div>
       )}
 

@@ -88,7 +88,7 @@ export function CartModal({
       <div tabIndex={0} className="animate-scaleIn bg-block h-full m-0 max-w-full outline-none overflow-hidden p-[0.125rem] relative rounded-xl shadow-[0_2px_4px_rgba(0,0,0,0.1)] lg:h-fit lg:w-[40.75rem] w-full flex flex-col">
         <div className="mb-6 flex min-h-[19px] items-center justify-between px-[0.625rem] pt-[0.625rem] shrink-0">
           <div className="flex items-center gap-1.5 text-base leading-[19px] font-medium text-white">
-            <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/card-gray.svg" />
+            <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="/cdn/fa/icons/card-gray.svg" />
             <span className="text-[0.8125rem] font-medium text-white lg:text-base">Корзина</span>
           </div>
           <button onClick={onClose} className="bg-[#17181C] border-none cursor-pointer duration-200 flex h-[18px] hover:bg-[#202022] items-center justify-center rounded-[15px] text-white/40 transition-colors w-[18px] z-[1]">×</button>
@@ -101,7 +101,7 @@ export function CartModal({
                 <span className="text-xs font-light text-[#A7A7A7]"> {selectedShopIds.length} предмет{selectedShopIds.length === 1 ? "" : selectedShopIds.length > 1 && selectedShopIds.length < 5 ? "а" : "ов"} </span>
                 {selectedShopIds.length > 0 && (
                   <button onClick={onClearCart} className="flex cursor-pointer items-center gap-1 transition-all duration-200 hover:brightness-150">
-                    <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/trash.svg" />
+                    <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="/cdn/fa/icons/trash.svg" />
                     <span className="text-xs font-light text-[#A7A7A7]"> Удалить все </span>
                   </button>
                 )}
@@ -126,10 +126,10 @@ export function CartModal({
                         <div className="flex flex-wrap items-center space-x-[0.5rem] lg:space-x-[1.6875rem] justify-end">
                           <div className="flex items-center gap-0.5">
                             <span className="text-gradient-yellow font-bold text-white text-sm lg:text-base">{formatPrice(skin.price)}</span>
-                            <img alt="" className="h-3.5 w-3.5 lg:h-4.5 lg:w-4.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                            <img alt="" className="h-3.5 w-3.5 lg:h-4.5 lg:w-4.5" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
                           <button onClick={() => onRemoveItem(id)} className="flex h-8 w-8 lg:h-10 lg:w-10 items-center justify-center rounded-md border-[1px] border-solid border-[#A7A7A7] bg-[#17181C] transition-colors hover:border-[#FBD506]">
-                            <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/trash.svg" />
+                            <img alt="" className="h-3 w-3 lg:h-4 lg:w-4" src="/cdn/fa/icons/trash.svg" />
                           </button>
                         </div>
                       </div>
@@ -144,7 +144,7 @@ export function CartModal({
                 <span className="font-[700] text-white" style={{ fontFamily: "SimpleFont, sans-serif" }}>Итого</span>
                 <div className="flex items-center gap-0.5">
                   <span className="font-bold text-white text-xl" style={{ fontFamily: "SimpleFont, sans-serif" }}>{formatPrice(totalPrice)}</span>
-                  <img alt="" className="h-4.5 w-4.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                  <img alt="" className="h-4.5 w-4.5" src="/cdn/fa/icons/coin-2.svg" />
                 </div>
               </div>
 

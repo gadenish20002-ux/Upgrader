@@ -912,7 +912,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                         <span className="font-semibold text-white text-[0.4rem] lg:text-[0.8rem] leading-none z-[1]">Ставка</span>
                         <div className="flex items-center justify-center gap-[0.2rem] rounded-[0.3rem] border border-white/10 px-[0.4rem] py-[0.2rem] lg:px-[0.6rem] lg:py-[0.35rem] z-[1] bg-[#17181c]">
                           <span className="font-semibold text-white text-[0.4rem] lg:text-[0.7rem] leading-none">{formatPrice(displayBalance)}</span>
-                          <img alt="" className="h-[0.4rem] w-[0.4rem] lg:h-[0.7rem] lg:w-[0.7rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                          <img alt="" className="h-[0.4rem] w-[0.4rem] lg:h-[0.7rem] lg:w-[0.7rem]" src="/cdn/fa/icons/coin-2.svg" />
                         </div>
                         <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, #FBD50666 0%, #FBD50633 30%, #FBD5061a 45%, transparent 70%)` }} />
                       </div>
@@ -961,7 +961,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                           {/* Price badge top-right */}
                           <div className="absolute top-1 right-1 z-[3] flex items-center space-x-0.5">
                             <span className="font-tektur text-gradient-yellow text-[0.4rem] lg:text-[0.55rem] font-bold">{formatPrice(skinPrice)}</span>
-                            <img alt="" className="h-[0.45rem] w-[0.45rem] lg:h-[0.6rem] lg:w-[0.6rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                            <img alt="" className="h-[0.45rem] w-[0.45rem] lg:h-[0.6rem] lg:w-[0.6rem]" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
                           <img
                             className="z-[2] w-[85%] h-[85%] object-contain drop-shadow-xl"
@@ -979,7 +979,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                           <span className="font-semibold text-white text-[0.5rem] lg:text-[1rem] leading-none">Ставка</span>
                           <div className="flex items-center justify-center gap-[0.2rem] rounded-[0.3rem] border border-white/10 px-[0.4rem] py-[0.2rem] lg:px-[0.6rem] lg:py-[0.35rem]">
                             <span className="font-semibold text-white text-[0.5rem] lg:text-[0.9rem] leading-none">{formatPrice(displayBalance)}</span>
-                            <img alt="" className="h-[0.5rem] w-[0.5rem] lg:h-[0.9rem] lg:w-[0.9rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                            <img alt="" className="h-[0.5rem] w-[0.5rem] lg:h-[0.9rem] lg:w-[0.9rem]" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
                         </div>
                       </div>
@@ -1039,7 +1039,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               <div className="flex items-center justify-end space-x-2">
                 <div className="flex items-center justify-end space-x-0.5">
                   <span className="text-gradient-yellow text-xs font-semibold lg:text-sm font-exo2"> {formatPrice(balanceInput)} </span>
-                  <img alt="" className="h-3 w-3" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                  <img alt="" className="h-3 w-3" src="/cdn/fa/icons/coin.svg" />
                 </div>
                 <span className="text-gray text-xxxs lg:text-xxs font-exo2">(max {formatPrice(state.balance)})</span>
               </div>
@@ -1144,7 +1144,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               </button>
             ))}
             <button onClick={() => setIsSettingsOpen(true)} className="flex h-8 w-10 flex-1 -skew-x-6 transform cursor-pointer items-center justify-center rounded-md bg-[linear-gradient(270deg,#17181C_0%,_rgba(23,24,28,0.00)_100%)] drop-shadow-[0_0_4px_rgba(0,0,0,0.20)] transition-colors hover:border-white/20 hover:bg-[#FBD50633] lg:h-[2.4375rem] lg:w-[3.25rem]">
-              <img alt="settings" className="h-3.5 w-3.5 skew-x-6 transform lg:h-4 lg:w-4" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" />
+              <img alt="settings" className="h-3.5 w-3.5 skew-x-6 transform lg:h-4 lg:w-4" src="/cdn/fa/icons/settings.svg" />
             </button>
           </div>
         </div>

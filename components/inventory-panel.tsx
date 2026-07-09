@@ -167,7 +167,7 @@ export function InventoryPanel({
                       <span className="text-[0.75rem] leading-[0.875rem] text-[#FFFFFF] opacity-50"> Всего скинов </span>
                       <span className="flex flex-nowrap items-center justify-center text-[0.75rem] font-tektur font-semibold">
                         {formatPrice(displayedSkins.reduce((sum, item) => sum + (getSkin(state.skins, (item as any).skinId)?.price || 0), 0))}
-                        <img alt="coin-icon" className="ml-1 h-3.5 lg:h-[0.9075rem] w-3.5 lg:w-[0.9075rem]" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                        <img alt="coin-icon" className="ml-1 h-3.5 lg:h-[0.9075rem] w-3.5 lg:w-[0.9075rem]" src="/cdn/fa/icons/coin.svg" />
                       </span>
                     </div>
                   </>
@@ -192,21 +192,21 @@ export function InventoryPanel({
                         <span className="opacity-50 font-exo"> Цена </span>
                       </div>
                       <div className="relative h-full flex-1">
-                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="/cdn/fa/icons/coin.svg" />
                         <input name="priceFrom" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="flex h-full w-full flex-1 items-center rounded-l-[0.375rem] rounded-r-none border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-l-[0.625rem] lg:px-3 lg:pl-6" placeholder="от" type="number" />
                       </div>
                       <div className="relative h-full flex-1">
-                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="https://s3.upgrader.pro/cdn/fa/icons/coin.svg" />
+                        <img alt="coin-icon" className="absolute top-[0.75rem] left-2 hidden h-[0.9075rem] w-[0.9075rem] lg:block" src="/cdn/fa/icons/coin.svg" />
                         <input name="priceTo" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="flex h-full w-full flex-1 items-center rounded-l-none rounded-r-[0.375rem] border-[1px] border-[#FFFFFF1A] bg-transparent font-exo px-2 text-[0.75rem] text-[#FFFFFF] placeholder:opacity-50 focus:outline-none lg:min-w-[5rem] lg:rounded-r-[0.625rem] lg:px-3 lg:pl-6" placeholder="до" type="number" />
                       </div>
                     </div>
                     <input name="itemName" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`absolute right-0 z-[2] flex h-full items-center rounded-[0.375rem] bg-[#1E1F23] font-exo text-[0.75rem] text-[#FFFFFF] transition-all duration-200 placeholder:opacity-50 focus:outline-none lg:rounded-[0.625rem] pl-3 pr-10 ${isSearchOpen ? 'w-full border-[1px] border-[#FFFFFF1A]' : 'w-[0] opacity-0 pointer-events-none'}`} placeholder="Поиск по названию..." type="text" />
                     <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="z-[3] flex h-[2rem] w-[2rem] flex-shrink-0 cursor-pointer items-center justify-center rounded-[0.375rem] bg-[#FFFFFF0D] text-[0.75rem] text-[#FFFFFF] transition-all duration-200 hover:bg-[#FFFFFF1A] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem]">
-                      <img className="h-3.5 lg:h-4" src="https://s3.upgrader.pro/cdn/fa/icons/search.svg" alt="Поиск" />
+                      <img className="h-3.5 lg:h-4" src="/cdn/fa/icons/search.svg" alt="Поиск" />
                     </button>
                   </div>
                   <button onClick={onOpenCart} className="relative flex h-[2rem] w-[2rem] flex-shrink-0 items-center justify-center rounded-[0.375rem] bg-[#FEDB1C] transition-colors duration-200 hover:bg-[#fcd500] lg:h-[2.375rem] lg:w-[2.375rem] lg:rounded-[0.625rem] cursor-pointer">
-                    <img alt="" className="h-4 w-4" src="https://s3.upgrader.pro/cdn/fa/icons/black-shop.svg" />
+                    <img alt="" className="h-4 w-4" src="/cdn/fa/icons/black-shop.svg" />
                     {selectedShopIds.length > 0 && (
                       <div className="absolute top-[-0.35rem] right-[-0.35rem] flex h-4.5 w-4.5 p-1 items-center justify-center rounded-full border-[3px] border-solid border-[#1E1F23] bg-[linear-gradient(93deg,#FBD506_1.16%,#FFDD23_50.58%,#FBD506_100%)]">
                         <span className="text-[10px] leading-none text-black font-bold">{selectedShopIds.length}</span>
@@ -234,7 +234,7 @@ export function InventoryPanel({
                 <span className="mt-2 text-[0.875rem] leading-none text-white opacity-50">Войдите для доступа к апгрейдам</span>
                 <button onClick={() => useStore.getState().login()} className="mt-8 flex h-[2.5rem] items-center gap-2 rounded-[0.75rem] bg-[#FDD811] px-3 py-2 shadow-[0_0_2px_0_rgba(255,255,255,0.50)_inset] shadow-[0_0_20px_0_rgba(255,221,35,0.25)] transition-all duration-200 hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)]">
                   <span className="text-[1rem] font-semibold text-[#202022]"> Войти через Steam </span>
-                  <img alt="" className="h-5 w-5" src="https://s3.upgrader.pro/cdn/fa/icons/steam-dark.svg" />
+                  <img alt="" className="h-5 w-5" src="/cdn/fa/icons/steam-dark.svg" />
                 </button>
               </div>
               <div className="relative w-full items-center justify-center overflow-hidden lg:h-[19.375rem] mt-6 pointer-events-none">
@@ -311,11 +311,11 @@ export function InventoryPanel({
                         </div>
                       )}
                       
-                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('https://s3.upgrader.pro/cdn/fa/images/light-gray-logo.svg')` }}>
+                      <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat lg:bg-[length:50%]" style={{ backgroundImage: `url('/cdn/fa/images/light-gray-logo.svg')` }}>
                         <div className="absolute top-1.5 right-1.5 z-[2] flex flex-col items-end justify-center space-x-0.5">
                           <div className="flex items-center justify-center space-x-0.5">
                             <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
-                            <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="https://s3.upgrader.pro/cdn/fa/icons/coin-2.svg" />
+                            <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
                           <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
                         </div>

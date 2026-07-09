@@ -67,7 +67,7 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
             
             <div className="flex items-center justify-between bg-[#1E1F23] p-[1.5rem]">
               <span className="font-exo flex items-center gap-1.5 text-[1.25rem] leading-normal text-white">
-                <img alt="settings-icon" className="h-4 w-4 brightness-150" src="https://s3.upgrader.pro/cdn/fa/icons/settings.svg" /> 
+                <img alt="settings-icon" className="h-4 w-4 brightness-150" src="/cdn/fa/icons/settings.svg" /> 
                 Настройки 
               </span>
               <button onClick={onClose}>
@@ -110,7 +110,7 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
                       ))}
                     </div>
                     <button onClick={handleResetMultipliers} className="-mb-4 h-5 w-5 transition-all duration-200 hover:brightness-150">
-                      <img alt="refresh" className="h-5 w-5" src="https://s3.upgrader.pro/cdn/fa/icons/refresh-single-yellow.svg" />
+                      <img alt="refresh" className="h-5 w-5" src="/cdn/fa/icons/refresh-single-yellow.svg" />
                     </button>
                   </div>
                 </div>
@@ -134,7 +134,7 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
                       ))}
                     </div>
                     <button onClick={handleResetPercentages} className="-mb-4 h-5 w-5 transition-all duration-200 hover:brightness-150">
-                      <img alt="refresh" className="h-5 w-5" src="https://s3.upgrader.pro/cdn/fa/icons/refresh-single-yellow.svg" />
+                      <img alt="refresh" className="h-5 w-5" src="/cdn/fa/icons/refresh-single-yellow.svg" />
                     </button>
                   </div>
                 </div>
