@@ -685,7 +685,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
 
     syncManager.suppress(20000)
     setSpinning(true)
-    
+    // Start the wheel spinning immediately on click (while the upgrade request is in
+    // flight) so the pointer is visibly moving the whole time instead of sitting
+    // frozen until the server responds. finishSpin(win) lands it on the result below.
+    wheelRef.current?.startSpin()
+
     const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     let win: boolean
     let serverAccount: any = null
@@ -713,6 +717,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     } catch (err) {
       console.error('[upgrade]', err)
       toast.error('Ошибка апгрейда. Попробуйте снова.')
+      wheelRef.current?.cancelSpin()   // stop the in-flight spin, don't leave it whirling
       setSpinning(false)
       lockedLeftCard.current = null
       lockedTarget.current = undefined
@@ -733,7 +738,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setState(p => ({ ...p, ...serverAccount, skins: p.skins, upgradeSkins: p.upgradeSkins, upgrades: p.upgrades + 1 }))
     }
 
-    const result = await wheelRef.current!.spin(win)
+    const result = await wheelRef.current!.finishSpin(win)
 
     if (result) {
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
