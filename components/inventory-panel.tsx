@@ -245,8 +245,22 @@ export function InventoryPanel({
             </div>
           </>
         ) : displayedSkins.length === 0 ? (
-          <div className="flex h-full min-h-[400px] items-center justify-center px-6 py-14 text-center text-sm font-medium text-white/50">
-            {mode === "inventory" ? "Инвентарь пуст" : "Магазин пуст"}
+          <div className="relative flex h-full min-h-[400px] w-full items-center justify-center">
+            {/* Empty inventory state (also shown during a spin once the last skins are consumed): */}
+            {isSpinning && (
+              <div className="absolute top-0 left-0 z-[3] h-full w-full rounded-xl rounded-t-none bg-[rgba(25,25,27,0.10)] backdrop-blur-xs"></div>
+            )}
+            <div className="bg-block relative z-[4] flex flex-col items-center justify-center space-y-1.5 rounded-lg px-5 py-8 shadow-[0px_0px_4px_0px_rgba(255,255,255,0.10)]">
+              <span className="inline max-w-[11.0625rem] items-center space-x-1.5 text-center text-sm font-bold text-white">
+                <span>{mode === "inventory" ? "У вас нет скинов" : "Магазин пуст"}</span>
+              </span>
+              {mode === "inventory" && (
+                <button onClick={() => setMode("shop")} className="border-yellow-gradient-new flex h-10 items-center justify-center space-x-3 rounded-lg border px-3 text-sm font-bold text-white">
+                  <img alt="" className="h-3 w-3" src="/cdn/fa/icons/store-yellow.svg" />
+                  <span>Магазин</span>
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="z-[1] grid w-full grid-cols-3 gap-1 px-1.5 py-1.5 lg:grid-cols-5 lg:gap-1.5 content-start overflow-hidden">
