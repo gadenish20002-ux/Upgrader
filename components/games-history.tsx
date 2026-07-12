@@ -6,6 +6,22 @@ export function GamesHistory() {
   const { state } = useStore()
   const games = state.gameHistory
 
+  // Rarity glow: accepts a hex ('#d32ce6') or an rgb()/rgba() string and
+  // builds a valid radial-gradient. The previous string-.replace() hack produced
+  // invalid CSS for hex colours ('#d32ce6' -> 'rgba(d32ce6'), so the rarity glow
+  // silently disappeared in history — items looked colourless.
+  const glowBg = (c: string) => {
+    let rgb = '136, 71, 255'
+    if (c.trim().startsWith('#')) {
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(c.trim())
+      if (m) rgb = `${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}`
+    } else {
+      const m = c.match(/rgba?\(([^)]+)\)/)
+      if (m) rgb = m[1].split(',').slice(0, 3).map((x) => x.trim()).join(', ')
+    }
+    return `radial-gradient(circle, rgba(${rgb}, 0.4) 0%, rgba(${rgb}, 0.2) 30%, rgba(${rgb}, 0.1) 45%, transparent 70%)`
+  }
+
   const [visibleCount, setVisibleCount] = React.useState(9)
 
   if (games.length === 0) {
@@ -62,7 +78,7 @@ export function GamesHistory() {
                     <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, ${betRarity} 10%, rgb(28, 28, 32) 75%)` }}>
                       <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={betImage || undefined} alt="" />
-                        <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.4)').replace('#', 'rgba(')} 0%, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.2)').replace('#', 'rgba(')} 30%, ${betRarity.replace('rgb', 'rgba').replace(')', ', 0.1)').replace('#', 'rgba(')} 45%, transparent 70%)` }}></div>
+                        <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: glowBg(betRarity) }}></div>
                       </div>
                     </div>
                   </div>
@@ -94,7 +110,7 @@ export function GamesHistory() {
                           </div>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={targetImage || undefined} alt="" />
-                        <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, ${targetRarity.replace('rgb', 'rgba').replace(')', ', 0.4)').replace('#', 'rgba(')} 0%, ${targetRarity.replace('rgb', 'rgba').replace(')', ', 0.2)').replace('#', 'rgba(')} 30%, ${targetRarity.replace('rgb', 'rgba').replace(')', ', 0.1)').replace('#', 'rgba(')} 45%, transparent 70%)` }}></div>
+                        <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: glowBg(targetRarity) }}></div>
                       </div>
                     </div>
                   </div>
@@ -115,7 +131,7 @@ export function GamesHistory() {
                         <div tabIndex={0} role="button" className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" aria-pressed="false" style={{ background: `linear-gradient(137deg, ${resultRarity} 10%, rgb(28, 28, 32) 75%)` }}>
                           <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
                             <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={resultImage || undefined} alt="" />
-                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: `radial-gradient(circle, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.4)').replace('#', 'rgba(')} 0%, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.2)').replace('#', 'rgba(')} 30%, ${resultRarity?.replace('rgb', 'rgba').replace(')', ', 0.1)').replace('#', 'rgba(')} 45%, transparent 70%)` }}></div>
+                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" style={{ background: glowBg(resultRarity) }}></div>
                           </div>
                         </div>
                       </div>
