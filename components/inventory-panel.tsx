@@ -245,10 +245,26 @@ export function InventoryPanel({
             </div>
           </>
         ) : displayedSkins.length === 0 ? (
-          <div className="relative flex h-full min-h-[400px] w-full items-center justify-center">
-            {/* Empty inventory state (also shown during a spin once the last skins are consumed): */}
-            {isSpinning && (
+          <div className="relative flex h-full min-h-[400px] w-full items-center justify-center overflow-hidden">
+            {isSpinning ? (
+              /* During a spin, once the last skins are consumed: subtle blur only. */
               <div className="absolute top-0 left-0 z-[3] h-full w-full rounded-xl rounded-t-none bg-[rgba(25,25,27,0.10)] backdrop-blur-xs"></div>
+            ) : (
+              /* Normal empty state: blurred sample skins behind a frosted overlay. */
+              <>
+                <div className="pointer-events-none absolute inset-0 grid grid-cols-3 content-start gap-1 overflow-hidden px-1.5 py-1.5 opacity-60 blur-[3px] select-none lg:grid-cols-5 lg:gap-1.5">
+                  {state.skins.slice(0, 20).map((sk, i) => (
+                    <div key={i} className="bg-block flex h-[5rem] items-center justify-center overflow-visible rounded-md bg-[length:85%_85%] bg-center bg-no-repeat lg:h-[6.75rem]" style={{ backgroundImage: "url('/assets/item-shadow/usp.png')" }}>
+                      <div className="relative h-full w-full rounded-md p-[0.0625rem]" style={{ background: `linear-gradient(137deg, ${RARITY_COLORS[sk.rarity] || '#fff'} 10%, rgb(28, 28, 32) 75%)` }}>
+                        <div className="bg-block relative flex h-full w-full items-center justify-center rounded-md bg-[length:50%] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.svg')" }}>
+                          <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={sk.image || "/placeholder.svg"} alt="" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute inset-0 z-[3] bg-[#16171a]/50"></div>
+              </>
             )}
             <div className="bg-block relative z-[4] flex flex-col items-center justify-center space-y-1.5 rounded-lg px-5 py-8 shadow-[0px_0px_4px_0px_rgba(255,255,255,0.10)]">
               <span className="inline max-w-[11.0625rem] items-center space-x-1.5 text-center text-sm font-bold text-white">
