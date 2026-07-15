@@ -29,6 +29,9 @@ export interface Predict {
   currentLosses: number
   showPercentages: boolean
   showMultipliers: boolean
+  // Admin "у края": the pointer stops at the very edge of the win sector
+  // (just inside on forced wins, just outside on forced losses).
+  edgeMode?: boolean
 }
 
 export interface GameHistoryEntry {
@@ -49,6 +52,14 @@ export interface ItemHistoryEntry {
   skinId: string
   action: ItemHistoryAction
   date: number
+}
+
+// An item the player sent to withdrawal: it leaves the inventory immediately,
+// shows as "Ждем продавца" for ~1 minute, then completes into itemHistory.
+export interface PendingWithdrawal {
+  uid: string
+  skinId: string
+  startedAt: number
 }
 
 export interface PendingUpgrade {
@@ -74,6 +85,12 @@ export interface AppState {
   userUpgrades: number
   itemHistory: ItemHistoryEntry[]
   withdrawnItems?: string[] // keep as optional for backwards compatibility during migration
+  // Items awaiting the "Ждем продавца" withdrawal window.
+  pendingWithdrawals?: PendingWithdrawal[]
+  // Persistent withdrawal counters: itemHistory is capped at 500 entries, so
+  // counting "withdrawn" entries there loses data once history overflows.
+  withdrawnCount?: number
+  withdrawnTotal?: number
   predict: Predict
   adminPassword: string
   fastMode: boolean

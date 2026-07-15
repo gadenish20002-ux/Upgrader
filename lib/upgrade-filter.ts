@@ -1,12 +1,13 @@
 import type { Skin } from "./types"
 
 export const UPGRADE_WIN_FACTOR = 0.92
-export const MIN_UPGRADE_CHANCE = 0.01
+// Minimum selectable chance is 0.1% (was 1%).
+export const MIN_UPGRADE_CHANCE = 0.001
 export const MAX_UPGRADE_CHANCE = 0.8
 
 export function clampPercentageTarget(value: number) {
-  if (!Number.isFinite(value)) return 1
-  return Math.min(80, Math.max(1, value))
+  if (!Number.isFinite(value)) return 0.1
+  return Math.min(80, Math.max(0.1, value))
 }
 
 export function getUpgradeChance(inputValue: number, skinPrice: number) {

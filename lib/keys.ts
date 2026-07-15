@@ -57,6 +57,9 @@ export const ACCOUNT_FIELDS = [
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
+  "pendingWithdrawals",
+  "withdrawnCount",
+  "withdrawnTotal",
   "gameHistory",
   "pendingUpgrade",
   "fastMultipliers",
@@ -185,7 +188,14 @@ export async function getAccount(code: string): Promise<AccountState> {
 export async function patchAccount(code: string, patch: Partial<AccountState>): Promise<AccountState> {
   const current = await kv.get<Partial<AccountState>>(accountKvKey(code))
   const base = { ...defaultAccount(code), ...pickAccountFields(current) }
-  const next = { ...base, ...pickAccountFields(patch) }
+  const picked: any = pickAccountFields(patch)
+  // Clients send predict as a whole object and may hold a stale copy of the
+  // other flags (e.g. toggling "Отображение %" while "Отображение x" changed in
+  // another tab). Merge per-field so one toggle can never clobber another.
+  if (picked.predict && typeof picked.predict === "object") {
+    picked.predict = { ...((base as any).predict || {}), ...picked.predict }
+  }
+  const next = { ...base, ...picked }
   await kv.set(accountKvKey(code), next)
   return next as AccountState
 }
@@ -203,6 +213,9 @@ export const HISTORY_FIELDS = [
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
+  "pendingWithdrawals",
+  "withdrawnCount",
+  "withdrawnTotal",
   "gameHistory",
   "pendingUpgrade",
 ] as const

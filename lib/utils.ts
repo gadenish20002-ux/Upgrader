@@ -35,6 +35,25 @@ export function formatSkinName(name: string) {
   return name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// Short wear codes on item cards (Field-Tested → FT), like the reference site.
+const WEAR_SHORT: Record<string, string> = {
+  "factory new": "FN",
+  "minimal wear": "MW",
+  "field-tested": "FT",
+  "well-worn": "WW",
+  "battle-scarred": "BS",
+  "прямо с завода": "FN",
+  "немного поношенное": "MW",
+  "после полевых испытаний": "FT",
+  "поношенное": "WW",
+  "закалённое в боях": "BS",
+};
+
+export function formatWearShort(wear: string) {
+  if (!wear) return wear;
+  return WEAR_SHORT[wear.trim().toLowerCase()] ?? wear;
+}
+
 export function isSticker(weapon: string) {
   if (!weapon) return false;
   const w = weapon.toLowerCase();

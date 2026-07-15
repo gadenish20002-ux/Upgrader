@@ -31,6 +31,9 @@ const ACCOUNT_FIELDS = new Set<string>([
   "userUpgrades",
   "itemHistory",
   "withdrawnItems",
+  "pendingWithdrawals",
+  "withdrawnCount",
+  "withdrawnTotal",
   "gameHistory",
   "pendingUpgrade",
   "fastMultipliers",
@@ -603,6 +606,13 @@ export function formatPrice(value: number): string {
 
 export function formatNumber(value: number): string {
   return value.toLocaleString("ru-RU")
+}
+
+// Header balance format from the reference site: "0 000.00" — space-separated
+// thousands with a DOT before the kopecks (ru-RU would give a comma).
+export function formatBalance(value: number): string {
+  const formatted = value.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatted.replace(",", ".")
 }
 
 export const syncManager = {

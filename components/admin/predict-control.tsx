@@ -45,6 +45,7 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
   const currentLosses = state.predict.currentLosses || 0
   const showPercentages = state.predict.showPercentages ?? true
   const showMultipliers = state.predict.showMultipliers ?? true
+  const edgeMode = state.predict.edgeMode === true
 
   return (
     <section className="rounded-xl border border-border bg-card p-5">
@@ -117,20 +118,32 @@ export function PredictControl({ predictWindowHref = "/admin/predict" }: { predi
         </div>
       )}
 
+      {/* Both display flags are written together with their effective values:
+          if only the toggled one were sent, the other could be dropped as
+          undefined and re-filled from the default — flipping it off by itself
+          (the "проценты выключил — иксы тоже сбились" bug). */}
       <div className="mt-4 flex gap-4">
         <button
-          onClick={() => patchPredict({ showPercentages: !showPercentages })}
+          onClick={() => patchPredict({ showPercentages: !showPercentages, showMultipliers })}
           className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showPercentages ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
         >
           {showPercentages ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           Отображение %
         </button>
         <button
-          onClick={() => patchPredict({ showMultipliers: !showMultipliers })}
+          onClick={() => patchPredict({ showMultipliers: !showMultipliers, showPercentages })}
           className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${showMultipliers ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
         >
           {showMultipliers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           Отображение x
+        </button>
+        <button
+          onClick={() => patchPredict({ edgeMode: !edgeMode })}
+          title="При «всегда победа» стрелка останавливается в самом начале/конце сектора выигрыша; при «всегда поражение» — чуть-чуть за его границей"
+          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${edgeMode ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/40 text-muted-foreground'}`}
+        >
+          <Target className="h-4 w-4" />
+          У края
         </button>
       </div>
 

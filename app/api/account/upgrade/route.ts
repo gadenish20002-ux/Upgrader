@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
     // Calculate chance exactly as client does
     let calculatedChance = totalStake / targetSkin.price
-    calculatedChance = Math.max(0.01, Math.min(0.92, calculatedChance))
+    calculatedChance = Math.max(0.001, Math.min(0.92, calculatedChance))
     
     // Forced outcome is a PER-KEY setting: read it from THIS account only, so one
     // key's "win"/"lose" mode never applies to another key (the reported bug).

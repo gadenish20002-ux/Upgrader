@@ -215,6 +215,14 @@ let uidCounter = SKIN_ITEMS.length
 
 type SkinEntry = (typeof SKIN_ITEMS)[0] & { uid: number }
 
+const LOCAL_SKIN_IMAGE_COUNT = 30
+const DEFAULT_AVATAR = "/cdn/fa/images/default-avatar-small.webp"
+
+const liveItemImage = (skin: { id: number; img: string }) =>
+  skin.img.startsWith("/cdn/items/")
+    ? `/assets/images/skins/skin-${(skin.id - 1) % LOCAL_SKIN_IMAGE_COUNT}.png`
+    : skin.img
+
 type LiveFeedMotion = {
   enterMs: number
   totalMs: number
@@ -384,7 +392,7 @@ function SkinCard({
             className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]"
             src={skin.playerAvatar}
             alt="Аватар пользователя"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR }}
           />
           <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-black/60 px-1 py-[0.125rem]">
             <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="/cdn/fa/icons/up-arrow-yellow.svg" />
@@ -415,7 +423,7 @@ function SkinCard({
               className="h-6 w-6 cursor-pointer rounded-full object-cover"
               src={skin.playerAvatar}
               alt="Аватар пользователя"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR }}
             />
             <span className="font-exo text-xxs max-w-[11rem] truncate font-normal text-white">
               {skin.playerName}
@@ -432,10 +440,9 @@ function SkinCard({
             ? "left-1/2 -translate-x-1/2 max-w-[80%] max-h-[80%]"
             : "right-0 max-h-[5.6875rem] w-full max-w-[5.8125rem]"
           }`}
-        src={skin.img}
+        src={liveItemImage(skin)}
         onError={(e) => { 
-          const btn = e.currentTarget.closest('button'); 
-          if (btn) btn.style.display = 'none'; 
+          (e.currentTarget as HTMLImageElement).src = "/assets/unknown-item.svg"
         }}
       />
 
@@ -551,7 +558,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
             className="h-4 w-4 rounded-full object-cover border-[1px] border-[#FFFFFF1A]"
             src={item.playerAvatar}
             alt="Аватар пользователя"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR }}
           />
           <div className="flex items-center space-x-0.5 rounded-[0.25rem] bg-black/40 px-1 py-[0.125rem]">
             <img alt="up-arrow-up" className="h-[0.45rem] w-[0.45rem]" src="/cdn/fa/icons/up-arrow-yellow.svg" />
@@ -575,7 +582,7 @@ function BestDropItem({ item, horizontal = false }: { item: BestDropItemData; ho
               className="h-6 w-6 cursor-pointer rounded-full object-cover" 
               src={item.playerAvatar} 
               alt="Аватар пользователя" 
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/cdn/fa/images/default-avatar-small.webp' }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR }}
             />
             <span className="font-tektur text-xxs max-w-[11rem] truncate font-bold text-white uppercase">{item.playerName}</span>
           </div>

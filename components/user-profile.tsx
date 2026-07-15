@@ -4,7 +4,7 @@ import { useRef, useState, useMemo } from "react"
 import { useStore, formatNumber, getSkin, formatPrice, syncManager } from "@/lib/store"
 import { AnimatedArrowBg } from "./animated-arrow-bg"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import { formatWeaponName, formatSkinName, formatWearShort } from "@/lib/utils"
 import { LogOut, Settings, Camera, KeyRound } from "lucide-react"
 import { GamesHistory } from "./games-history"
 import { SettingsModal } from "./settings-modal"
@@ -27,12 +27,16 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
   const [itemHistoryVisible, setItemHistoryVisible] = useState(8)
   const itemHistory = state.itemHistory || []
   const withdrawSkin = withdrawItem ? getSkin(state.skins, withdrawItem.skinId) : null
+  // "Выведено" uses the persistent counters (itemHistory is capped at 500, so
+  // counting entries there loses withdrawals after re-login / history overflow).
   const withdrawnEntries = itemHistory.filter(i => i.action === "withdrawn")
-  const withdrawnCount = withdrawnEntries.length
-  const withdrawnTotal = withdrawnEntries.reduce((acc, entry) => {
+  const legacyWithdrawnTotal = withdrawnEntries.reduce((acc, entry) => {
     const skin = getSkin(state.skins, entry.skinId)
     return acc + (skin?.price || 0)
   }, 0)
+  const pendingWithdrawals = state.pendingWithdrawals || []
+  const withdrawnCount = Math.max(state.withdrawnCount || 0, withdrawnEntries.length + pendingWithdrawals.length)
+  const withdrawnTotal = Math.max(state.withdrawnTotal || 0, legacyWithdrawnTotal)
 
   const bestDrop = useMemo(() => {
     let bestGame = null
@@ -99,13 +103,18 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
         setState(p => ({ ...p, ...payload.account, skins: p.skins, upgradeSkins: p.upgradeSkins }))
       }
     } catch {
-      removeFromInventory([withdrawItem.uid])
-      addItemHistory([{
-        id: `ih-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        skinId: withdrawItem.skinId,
-        action: "withdrawn",
-        date: Date.now()
-      }])
+      // Offline fallback: mirror the server behaviour — the item leaves the
+      // inventory and waits in "Ждем продавца".
+      const uid = withdrawItem.uid
+      const skinId = withdrawItem.skinId
+      const price = withdrawSkin?.price || 0
+      setState(p => ({
+        ...p,
+        inventory: p.inventory.filter(i => i.uid !== uid),
+        pendingWithdrawals: [{ uid, skinId, startedAt: Date.now() }, ...(p.pendingWithdrawals || [])],
+        withdrawnCount: (p.withdrawnCount || 0) + 1,
+        withdrawnTotal: (p.withdrawnTotal || 0) + price,
+      }))
     }
     setWithdrawItem(null)
     notifyItemWithdrawn()
@@ -393,12 +402,40 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
               </button>
             </div>
           </div>
-          {activeTab === 'inventory' && (state.inventory.length === 0 ? (
+          {activeTab === 'inventory' && (state.inventory.length === 0 && pendingWithdrawals.length === 0 ? (
             <div className="flex w-full items-center justify-center py-8">
               <span className="text-[#a7a7a7]">У вас пока нет предметов</span>
             </div>
           ) : (
             <div className="!mb-0 grid w-full grid-cols-3 gap-1 px-3 pb-3 lg:grid-cols-8 lg:gap-3">
+              {pendingWithdrawals.map((pw) => {
+                const skin = getSkin(state.skins, pw.skinId)
+                if (!skin) return null
+                const rarityColor = RARITY_COLORS[skin.rarity] || "#fff"
+                return (
+                  <div key={`pw-${pw.uid}`} className="relative flex h-28 lg:h-[9.6875rem] w-full flex-col items-center">
+                    {/* Withdrawal in progress — "Ждем продавца" overlay */}
+                    <div className="absolute top-0 left-0 z-[5] flex h-full w-full flex-col items-center justify-center space-y-3 rounded-md bg-black/50 backdrop-blur-xs">
+                      <img alt="" className="mx-auto h-5 w-5 animate-spin" src="/cdn/fa/icons/loading-yellow.svg" />
+                      <span className="text-[#a7a7a7] text-[0.625rem] text-center font-normal"> Ждем продавца </span>
+                    </div>
+                    <div className="pointer-events-none z-[2] h-full w-full">
+                      <div className="w-full h-full">
+                        <div className="group relative h-full w-full rounded-md p-[0.0625rem] shadow-[0px_0px_2.407px_0px_rgba(255,255,255,0.10)]" style={{ background: `linear-gradient(137deg, rgb(${hexToRgb(rarityColor)}) 10%, rgb(28, 28, 32) 75%)` }}>
+                          <div className="bg-block tablet:bg-size-[50%] relative flex h-full w-full items-center justify-center rounded-md bg-cover bg-[length:2.5rem] bg-center bg-no-repeat" style={{ backgroundImage: "url('/cdn/fa/images/light-gray-logo.png')" }}>
+                            <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
+                            <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
+                              <span className="text-[#a7a7a7] font-semibold text-[0.5rem]">{formatWeaponName(skin.weapon)}</span>
+                              <span className="text-white text-[0.5rem] font-tektur max-w-full truncate font-bold lg:text-[0.625rem]">{formatSkinName(skin.name)}</span>
+                            </div>
+                            <div className="absolute top-1/2 left-1/2 z-[0] h-full w-full -translate-x-1/2 -translate-y-1/2" style={{ background: `radial-gradient(circle, rgba(${hexToRgb(rarityColor)}, 0.4) 0%, rgba(${hexToRgb(rarityColor)}, 0.2) 30%, rgba(${hexToRgb(rarityColor)}, 0.1) 45%, transparent 70%)` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
               {state.inventory.map((item, index) => {
                 const skin = getSkin(state.skins, item.skinId)
                 if (!skin) return null
@@ -417,7 +454,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                                 <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
                                 <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                               </div>
-                              <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                              <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{formatWearShort(skin.wear)}</span>
                             </div>
                             <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                             <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">
@@ -510,7 +547,7 @@ export function UserProfile({ onClose }: { onClose?: () => void }) {
                                   <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
                                   <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                                 </div>
-                                <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                                <span className="text-[#a7a7a7] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{formatWearShort(skin.wear)}</span>
                               </div>
                               <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%] transition-all duration-500 group-hover:scale-110 group-hover:brightness-200" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                               <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">

@@ -32,15 +32,30 @@ const PUBLIC_ACCOUNT_KEY = "__default__"
 
 // Type removed since it's no longer stored in state
 
-function pickFastCompensationSkin() {
+// Compensation drop on a loss: an item worth 5–15% of the bet sum.
+function pickFastCompensationSkin(betTotal: number, catalog: Skin[]) {
+  if (betTotal > 0 && catalog.length > 0) {
+    const min = betTotal * 0.05
+    const max = betTotal * 0.15
+    const inRange = catalog.filter((skin) => skin.price >= min && skin.price <= max)
+    if (inRange.length > 0) return inRange[Math.floor(Math.random() * inRange.length)]
+    // No exact match — take the skin closest to 10% of the bet.
+    const target = betTotal * 0.1
+    const closest = catalog.reduce((best, skin) =>
+      !best || Math.abs(skin.price - target) < Math.abs(best.price - target) ? skin : best,
+    undefined as Skin | undefined)
+    if (closest) return closest
+  }
   return COMPENSATION_BONUS_ITEMS[Math.floor(Math.random() * COMPENSATION_BONUS_ITEMS.length)]
 }
 
 function FastLossCompensationCard({
   skin,
+  awardCompensation,
   onComplete,
 }: {
   skin: Skin
+  awardCompensation: boolean
   onComplete: (awardedSkinId?: string) => void
 }) {
   const onCompleteRef = useRef(onComplete)
@@ -50,9 +65,12 @@ function FastLossCompensationCard({
   }, [onComplete])
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => onCompleteRef.current(skin.id), FAST_COMPENSATION_DURATION_MS)
+    const timeout = window.setTimeout(
+      () => onCompleteRef.current(awardCompensation ? skin.id : undefined),
+      FAST_COMPENSATION_DURATION_MS,
+    )
     return () => window.clearTimeout(timeout)
-  }, [skin.id])
+  }, [awardCompensation, skin.id])
 
   const rarityColor = RARITY_COLORS[skin.rarity] ?? "#8847ff"
 
@@ -63,7 +81,7 @@ function FastLossCompensationCard({
           <span className="font-exo2 text-[9px] font-bold leading-tight text-white lg:text-[13px] lg:leading-snug">
             Выберите скины или скины и баланс для использования
           </span>
-          <span className="text-[0.4375rem] text-[#A7A7A7] lg:text-xxs">Вы можете выбрать несколько скинов</span>
+          <span className="text-[0.4375rem] text-[#A7A7A7] lg:text-xxs font-exo2">Вы можете выбрать несколько скинов</span>
         </div>
         <div className="absolute inset-0 z-0">
           <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
@@ -147,6 +165,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const [loseAnimating, setLoseAnimating] = useState(false)
   const [fastLoseAnimating, setFastLoseAnimating] = useState(false)
   const [fastCompensationSkin, setFastCompensationSkin] = useState<Skin | null>(null)
+  const [fastLossAwardCompensation, setFastLossAwardCompensation] = useState(false)
   const loseCaseAudioRef = useRef<HTMLAudioElement | null>(null)
   const [leftPanelMode, setLeftPanelMode] = useState<"inventory" | "shop">("inventory")
   const [mobileTab, setMobileTab] = useState<"inventory" | "catalog">("inventory")
@@ -216,13 +235,23 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   const chance = useMemo(() => {
     if (!targetSkin || inputValue <= 0) return 0
     const raw = getUpgradeChance(inputValue, targetSkin.price)
-    return Math.min(0.92, Math.max(0.01, raw))
+    return Math.min(0.92, Math.max(0.001, raw))
   }, [targetSkin, inputValue])
 
   const multiplier = targetSkin && inputValue > 0 ? targetSkin.price / inputValue : 0
+  // Balance (ruble) stakes are allowed only up to an 80% chance: cap the slider
+  // so adding balance cannot push the upgrade chance above 0.8 for the selected
+  // target. Items alone may still exceed it (matches the reference site).
+  const balanceCap = useMemo(() => {
+    if (!targetSkinRaw) return state.balance
+    const maxInput = (0.8 * targetSkinRaw.price) / 0.92
+    return Math.max(0, Math.min(state.balance, maxInput - selectedInventoryValue))
+  }, [targetSkinRaw, state.balance, selectedInventoryValue])
+
   const isBothSelected = !!targetSkin && selectedItems.length > 0
   const isReadyForTarget = !targetSkin && inputValue > 0
   const isUpgradeAnimating = spinning || loseAnimating || fastLoseAnimating || winAnimating
+  const isInventoryBusy = spinning || loseAnimating || fastLoseAnimating
 
   // Keep the per-account background state-sync (the 2s /api/account + /api/state poll in
   // lib/store) suppressed for the WHOLE spin → win/lose animation flow. handleSpin only
@@ -535,13 +564,15 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     pendingWonItemUidRef.current = null
   }
 
-  async function finalizePendingWin() {
+  const completedWonUidRef = useRef<string | null>(null)
+
+  // Completes the pending win on the SERVER as soon as the wheel stops, so the
+  // won item appears in the inventory immediately and can be staked on the next
+  // upgrade while the win animation is still playing.
+  async function completePendingWin() {
     if (finalizingPendingRef.current) return
     const pendingId = pendingUpgradeIdRef.current || state.pendingUpgrade?.id || null
-    if (!pendingId) {
-      finishWinUi(null)
-      return
-    }
+    if (!pendingId) return
 
     finalizingPendingRef.current = true
     const effectiveAccountKey = typeof window !== "undefined"
@@ -570,7 +601,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
             skins: previous.skins,
             upgradeSkins: previous.upgradeSkins,
           }))
-          finishWinUi(payload.wonItem?.uid || pendingWonItemUidRef.current)
+          completedWonUidRef.current = payload.wonItem?.uid || pendingWonItemUidRef.current
+          pendingUpgradeIdRef.current = null
           return
         } catch (error) {
           lastError = error
@@ -580,11 +612,17 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       throw lastError
     } catch (error) {
       console.error("[upgrade-complete]", error)
-      setWinAnimating(false)
       toast.error("Выигрыш сохранён и будет завершён после обновления страницы")
     } finally {
       finalizingPendingRef.current = false
     }
+  }
+
+  // Win animation finished → only UI cleanup remains (the server part already
+  // completed right after the wheel stopped).
+  function handleWinAnimationComplete() {
+    finishWinUi(completedWonUidRef.current ?? pendingWonItemUidRef.current)
+    completedWonUidRef.current = null
   }
 
   // A page reload during a winning animation leaves a server-side pending result.
@@ -607,12 +645,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setWinAnimKey((key) => key + 1)
     setLeftPanelMode("inventory")
     setMobileTab("inventory")
+    void completePendingWin()
   }, [state.pendingUpgrade, state.skins, spinning, winAnimating])
 
-  async function startFastLossCompensation() {
-    const bonusSkin = pickFastCompensationSkin()
+  async function startFastLossCompensation(awardCompensation: boolean, betTotal: number) {
+    const bonusSkin = pickFastCompensationSkin(betTotal, state.skins)
+    setFastLossAwardCompensation(awardCompensation)
     setFastCompensationSkin(bonusSkin)
     setFastLoseAnimating(true)
+
+    if (!awardCompensation) return
     
     const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     try {
@@ -630,6 +672,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   function handleFastLossComplete(awardedSkinId?: string) {
     setFastLoseAnimating(false)
     setFastCompensationSkin(null)
+    setFastLossAwardCompensation(false)
 
     if (pendingHistoryEntryRef.current) {
       if (awardedSkinId) {
@@ -663,6 +706,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       toast.error("Недостаточно баланса")
       return
     }
+    // Ruble stakes are limited to an 80% chance (items-only stakes are exempt).
+    if (balanceInput > 0 && getUpgradeChance(inputValue, targetSkin.price) > 0.8) {
+      toast.error("Ставка балансом доступна только до 80% шанса")
+      return
+    }
     // Chance bounds are now handled automatically by targetSkin becoming undefined
 
     if (state.soundMode === "on") {
@@ -682,13 +730,11 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     setAutoMatchEnabled(false)
     const consumedUids = new Set(selectedItems.map((item) => item!.uid))
     const shouldUseFastLoseAnimation = state.fastMode || isMobile
+    const consumedInventoryValue = selectedInventoryValue
+    const inputTotalForSpin = inputValue
 
     syncManager.suppress(20000)
     setSpinning(true)
-    // Start the wheel spinning immediately on click (while the upgrade request is in
-    // flight) so the pointer is visibly moving the whole time instead of sitting
-    // frozen until the server responds. finishSpin(win) lands it on the result below.
-    wheelRef.current?.startSpin()
 
     const effectiveAccountKey = typeof window !== 'undefined' ? (window.localStorage.getItem('upgrader_account_key') || '__default__') : '__default__'
     let win: boolean
@@ -717,7 +763,6 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
     } catch (err) {
       console.error('[upgrade]', err)
       toast.error('Ошибка апгрейда. Попробуйте снова.')
-      wheelRef.current?.cancelSpin()   // stop the in-flight spin, don't leave it whirling
       setSpinning(false)
       lockedLeftCard.current = null
       lockedTarget.current = undefined
@@ -738,7 +783,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       setState(p => ({ ...p, ...serverAccount, skins: p.skins, upgradeSkins: p.upgradeSkins, upgrades: p.upgrades + 1 }))
     }
 
-    const result = await wheelRef.current!.finishSpin(win)
+    const result = await wheelRef.current!.spin(win)
 
     if (result) {
       toast.success(`Победа! Вы получили ${targetSkin.weapon} | ${targetSkin.name}`)
@@ -746,14 +791,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         const winAudio = new Audio("/sounds/fireworkWin.mp3")
         winAudio.play().catch(() => {})
       }
+      // Land the won item in the inventory right away (usable immediately).
+      void completePendingWin()
       setWinAnimating(true)
       setWinAnimKey((k) => k + 1)
       setLeftPanelMode("inventory")
       setMobileTab("inventory")
     } else {
-      const shouldShowLoseAnim = selectedInventoryValue > 50
-      if (shouldShowLoseAnim && shouldUseFastLoseAnimation) {
-        startFastLossCompensation()
+      const shouldShowLoseAnim = consumedInventoryValue > 50
+      if (shouldUseFastLoseAnimation) {
+        startFastLossCompensation(shouldShowLoseAnim, inputTotalForSpin)
       } else if (shouldShowLoseAnim) {
         playLoseCaseSound()
         setLoseAnimating(true)
@@ -796,17 +843,18 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
   // the combo is ineligible, which would otherwise snap the scale back to 50% with both cards full.
   const wheelChance =
     isUpgradeAnimating && lockedLeftCard.current && lockedTarget.current
-      ? Math.min(0.92, Math.max(0.01, getUpgradeChance(lockedLeftCard.current.total, lockedTarget.current.price)))
+      ? Math.min(0.92, Math.max(0.001, getUpgradeChance(lockedLeftCard.current.total, lockedTarget.current.price)))
       : targetSkinRaw && inputValue > 0
-        ? Math.min(0.92, Math.max(0.01, getUpgradeChance(inputValue, targetSkinRaw.price)))
+        ? Math.min(0.92, Math.max(0.001, getUpgradeChance(inputValue, targetSkinRaw.price)))
         : chance
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto px-2">
       {/* Relative wrapper so LoseAnimationOverlay can be absolute within it */}
       <div className="relative w-full flex flex-col items-center">
-      {/* Top: Logo */}
-      <div className="relative z-[120] flex items-center justify-center gap-[0.3125rem] lg:gap-2 mb-2 lg:mb-2 mt-2 lg:mt-0">
+      {/* Top: Logo — must stay BELOW the fixed site header (z-50), otherwise it
+          rides on top of the gray header bar when the page scrolls. */}
+      <div className="relative z-[40] flex items-center justify-center gap-[0.3125rem] lg:gap-2 mb-2 lg:mb-2 mt-2 lg:mt-0">
         <SiteLogo className="h-[1.5125rem] w-[1.5125rem] lg:h-8 lg:w-8" />
         <span className="font-tektur text-xl font-extrabold text-white lg:text-2xl"> UPGRADER </span>
       </div>
@@ -837,7 +885,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
         {/* Center Wheel */}
         <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 order-2 flex flex-col items-center justify-center relative z-20 py-2">
           <div className="relative flex justify-center w-full">
-            <UpgradeWheel ref={wheelRef} chance={wheelChance} hasSelection={isUpgradeAnimating || (!!targetSkinRaw && inputValue > 0)} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} />
+            <UpgradeWheel ref={wheelRef} chance={wheelChance} hasSelection={isUpgradeAnimating || (!!targetSkinRaw && inputValue > 0)} fastMode={state.fastMode} soundMode={state.soundMode} showPercentages={state.predict.showPercentages !== false} edgeMode={state.predict.edgeMode === true && (state.predict.outcome === "win" || state.predict.outcome === "lose")} />
           </div>
         </div>
 
@@ -849,12 +897,16 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           } : undefined}
         >
           {fastLoseAnimating && fastCompensationSkin ? (
-            <FastLossCompensationCard skin={fastCompensationSkin} onComplete={handleFastLossComplete} />
+            <FastLossCompensationCard
+              skin={fastCompensationSkin}
+              awardCompensation={fastLossAwardCompensation}
+              onComplete={handleFastLossComplete}
+            />
           ) : displayIsEmpty ? (
             <div className="relative h-full w-full">
               <div className="absolute top-0 left-0 right-0 text-center px-2 py-3 lg:px-5 lg:pt-5 lg:pb-3 z-10 flex flex-col items-center justify-center space-y-[0.125rem] lg:space-y-[0.5rem] min-h-[22px] lg:min-h-0">
                 <span className="text-[9px] font-bold text-white lg:text-[13px] leading-tight lg:leading-snug font-exo2">Выберите скины или скины и баланс для использования</span>
-                <span className="lg:text-xxs text-[0.4375rem] text-[#A7A7A7]">Вы можете выбрать несколько скинов</span>
+                <span className="lg:text-xxs text-[0.4375rem] text-[#A7A7A7] font-exo2">Вы можете выбрать несколько скинов</span>
               </div>
               <div className="absolute inset-0 z-0">
                 <img src="/assets/images/game/unknown-item-shadow.webp" alt="" className="absolute inset-0 z-0 h-full w-full object-cover" />
@@ -880,8 +932,8 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                         style={{ background: `linear-gradient(137deg, ${rarityColor} 10%, rgb(28,28,32) 75%)` }}
                       >
                         <div
-                          className="relative flex h-full w-full items-center justify-center rounded-md overflow-hidden"
-                          style={{ backgroundColor: '#17181c' }}
+                          className="relative flex h-full w-full items-center justify-center rounded-md overflow-hidden bg-[length:50%] bg-center bg-no-repeat"
+                          style={{ backgroundColor: '#17181c', backgroundImage: "url('/cdn/fa/images/light-gray-logo.svg')" }}
                         >
                           <div className="absolute top-0.5 right-0.5 z-[2] flex items-center space-x-0.5 lg:top-1 lg:right-1">
                             <span className="font-tektur font-bold text-white leading-normal" style={{ fontSize: 'clamp(3px, 1.2vw, 7px)' }}>
@@ -933,7 +985,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
                 <span className="font-tektur text-gradient-yellow font-bold" style={{ fontSize: 'clamp(6px, 2vw, 18px)' }}>{formatPrice(displayTotal)}</span>
                 <img alt="" className="h-[7px] w-[7px] lg:h-4 lg:w-4" src="/assets/icons/coin.svg" />
               </div>
-              <img alt="" className="absolute top-1/2 left-1/2 z-[0] w-full max-w-[14rem] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40" src="/assets/images/game/unknown-item-shadow.webp" />
+              <img alt="" className="absolute top-1/2 left-1/2 z-[0] w-full max-w-[16rem] -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-70" src="/assets/images/game/unknown-item-shadow.webp" />
             </div>
           ) : (
             <div className="relative flex h-full w-full items-center justify-center">
@@ -1054,13 +1106,13 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               min="0" 
               step="0.01" 
               className="custom-range w-full" 
-              max={state.balance > 0 ? state.balance : 100} 
-              value={balanceInput}
+              max={balanceCap > 0 ? balanceCap : 100} 
+              value={Math.min(balanceInput, balanceCap > 0 ? balanceCap : balanceInput)}
               onChange={(e) => {
-                setBalanceInput(Number(e.target.value))
+                setBalanceInput(Math.min(Number(e.target.value), balanceCap))
                 setWonItemUid(null)
               }}
-              style={{ "--range-progress": `${(balanceInput / (state.balance > 0 ? state.balance : 100)) * 100}%` } as React.CSSProperties} 
+              style={{ "--range-progress": `${(Math.min(balanceInput, balanceCap > 0 ? balanceCap : balanceInput) / (balanceCap > 0 ? balanceCap : 100)) * 100}%` } as React.CSSProperties} 
             />
           </div>
         </div>
@@ -1127,7 +1179,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
           {/* Win Animation Overlay */}
           <WinAnimationOverlay
             playing={winAnimating}
-            onComplete={() => { void finalizePendingWin() }}
+            onComplete={handleWinAnimationComplete}
           />
         </div>
 
@@ -1174,6 +1226,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
       {/* Lose animation overlay — absolute within this relative wrapper */}
       <LoseAnimationOverlay
         playing={loseAnimating}
+        betTotal={lockedLeftCard.current?.total ?? 0}
         onComplete={(awardedSkinId?: string) => {
           stopLoseCaseSound()
           setLoseAnimating(false)
@@ -1229,7 +1282,7 @@ export function UpgradeSection({ sidebarTargetId }: { sidebarTargetId: string | 
               onRemoveShopItem={removeShopItem}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickBuy={handleBuyCartItems}
-              isSpinning={isUpgradeAnimating || isCartBuying}
+              isSpinning={isInventoryBusy || isCartBuying}
             />
           </div>
           <div className={`w-full ${mobileTab === "catalog" ? "block" : "hidden lg:block"}`}>

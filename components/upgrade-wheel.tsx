@@ -3,13 +3,16 @@
 import { flushSync } from "react-dom"
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react"
 
+const FAST_SPIN_MS = 1500
+const NORMAL_FAST_PHASE_MS = 2000
+const NORMAL_SLOW_PHASE_MS = 5000
+const FAST_TURNS = 3
+const NORMAL_FAST_TURNS = 4
+const NORMAL_SLOW_TURNS = 2
+const NORMAL_SPIN_MS = NORMAL_FAST_PHASE_MS + NORMAL_SLOW_PHASE_MS
+
 export interface UpgradeWheelHandle {
   spin: (win: boolean) => Promise<boolean>
-  // Two-phase spin: begin spinning the instant the user clicks (while the upgrade
-  // request is in flight), then land on the result once the server responds.
-  startSpin: () => void
-  finishSpin: (win: boolean) => Promise<boolean>
-  cancelSpin: () => void
 }
 
 interface UpgradeWheelProps {
@@ -18,10 +21,13 @@ interface UpgradeWheelProps {
   fastMode?: boolean
   soundMode?: "on" | "off"
   showPercentages?: boolean
+  // Admin "у края": with a forced outcome the pointer stops right at the win
+  // sector's boundary — just inside it on wins, just outside it on losses.
+  edgeMode?: boolean
 }
 
 export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(function UpgradeWheel(
-  { chance, hasSelection, fastMode, soundMode = "on", showPercentages = true },
+  { chance, hasSelection, fastMode, soundMode = "on", showPercentages = true, edgeMode = false },
   ref,
 ) {
   const [rotation, setRotation] = useState(0)
@@ -30,26 +36,10 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const rotationRef = useRef(0)
   const [resetTimer, setResetTimer] = useState<NodeJS.Timeout | null>(null)
   const [isResolving, setIsResolving] = useState(false)
+  const [pointerTransition, setPointerTransition] = useState("transform 0.3s")
 
   // Locked values captured at spin start — prevent mid-spin prop changes from affecting animation
   const lockedChanceRef = useRef<number | null>(null)
-  // Spin duration stored in a ref so JSX can read it without causing extra renders
-  const spinDurationMsRef = useRef<number>(7300)
-
-  // ── Two-phase spin state ──────────────────────────────────────────────────
-  // startSpin() runs a constant-speed rotation the moment the user clicks (during
-  // the upgrade fetch); finishSpin() decelerates from wherever the pointer is and
-  // lands on the win/lose segment once the server result is known. This removes the
-  // old "click → ~1.5s frozen pointer → jump to result" feel — the wheel visibly
-  // spins the whole time, and faster in fast mode. The full transition string lives
-  // in a ref so the same style hook serves both the linear pre-spin and the eased land.
-  const preSpinActiveRef = useRef(false)
-  const preSpinStartAngleRef = useRef(0)
-  const preSpinStartTimeRef = useRef(0)
-  const preSpinSpeedRef = useRef(0)
-  const pointerTransitionRef = useRef<string>("transform 7300ms cubic-bezier(0.4, 0, 0.2, 1)")
-  const spinAudioRef = useRef<HTMLAudioElement | null>(null)
-  const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now())
 
   const prevHasSelectionRef = useRef(hasSelection)
   // After ANY spin (win OR loss), the arc holds the just-played chance (e.g. 72%)
@@ -94,12 +84,11 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     prevHasSelectionRef.current = hasSelection
   }, [hasSelection, result, resetTimer, isResolving])
 
-  // Real chance while a target + source are both active (hasSelection). When the
-  // source is empty: hold the just-played chance after ANY spin (frozenChanceRef),
-  // else fall back to the 50% baseline (fresh/empty state only).
-  const displayChance = hasSelection
-    ? (lockedChanceRef.current ?? chance)
-    : (frozenChanceRef.current ?? 0.5)
+  // Keep the resolved spin chance visible after the pointer stops. The parent can
+  // consume inventory and recompute chance to 0 before win/loss UI finishes.
+  const displayChance = lockedChanceRef.current
+    ?? (result !== "none" ? (frozenChanceRef.current ?? chance) : undefined)
+    ?? (hasSelection ? chance : (frozenChanceRef.current ?? 0.5))
   const segAngle = Math.min(0.999, Math.max(0.0001, displayChance)) * 360
 
   const circumference = 779.115
@@ -108,130 +97,76 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
   const strokeGap = circumference - strokeDash
   const strokeOffset = (circumference * Math.max(0.0001, displayChance)) / 2 - circumference / 4 - gap
 
-  // ── Phase 1: begin a constant-speed spin immediately on click ──────────────
-  const startSpinImpl = () => {
-    if (resetTimer) {
-      clearTimeout(resetTimer)
-      setResetTimer(null)
-    }
-    const isFast = !!fastMode
-    lockedChanceRef.current = chance          // freeze arc sector for the whole spin
-
-    // Constant angular speed (deg/s). Fast mode spins visibly faster. We aim the
-    // linear transition at a far target over a long ceiling; finishSpin() interrupts
-    // it as soon as the server result arrives, so the ceiling is never reached.
-    const speed = isFast ? 2100 : 900
-    const ceilingMs = 14000
-    const current = rotationRef.current
-    const target = current + speed * (ceilingMs / 1000)
-
-    preSpinActiveRef.current = true
-    preSpinStartAngleRef.current = current
-    preSpinStartTimeRef.current = nowMs()
-    preSpinSpeedRef.current = speed
-    pointerTransitionRef.current = `transform ${ceilingMs}ms linear`
-    spinDurationMsRef.current = ceilingMs
-    rotationRef.current = target
-
-    flushSync(() => {
-      setSpinning(true)
-      setResult("none")
-    })
-    requestAnimationFrame(() => {
-      setRotation(target)
-      if (soundMode === "on") {
-        try { spinAudioRef.current?.pause() } catch {}
-        const audio = new Audio(isFast ? "/sounds/shortSpin.mp3" : "/sounds/longSpin.mp3")
-        audio.play().catch(() => {})
-        spinAudioRef.current = audio
-      }
-    })
-  }
-
-  // ── Phase 2: decelerate from the current position and land on the result ───
-  const finishSpinImpl = (win: boolean) =>
+  const spinImpl = (win: boolean) =>
     new Promise<boolean>((resolve) => {
-      const isFast = !!fastMode
-      const landMs = isFast ? 1100 : 2800
-
-      // Estimate the pointer's current absolute angle from the linear pre-spin.
-      // (Linear speed is exactly preSpinSpeedRef, so elapsed*speed matches the CSS
-      // position; the CSS transition then eases from that computed value.)
-      let currentAbs = rotationRef.current
-      if (preSpinActiveRef.current) {
-        const elapsed = nowMs() - preSpinStartTimeRef.current
-        currentAbs = preSpinStartAngleRef.current + preSpinSpeedRef.current * (elapsed / 1000)
+      if (resetTimer) {
+        clearTimeout(resetTimer)
+        setResetTimer(null)
       }
-
+      
+      const isFast = !!fastMode
+      const targetDurationMs = isFast ? FAST_SPIN_MS : NORMAL_SPIN_MS
+      lockedChanceRef.current = chance
+      
+      flushSync(() => {
+        setSpinning(true)
+        setResult("none")
+      })
+      
       const chanceForSeg = lockedChanceRef.current ?? chance
       const segA = Math.min(0.999, Math.max(0.0001, chanceForSeg)) * 360
       const halfSeg = segA / 2
       const winStart = 360 - halfSeg
       const winEnd   = 360 + halfSeg
-      const pos = win
-        ? winStart + Math.random() * Math.max(segA - 2, 0.5) + 1
-        : winEnd   + Math.random() * Math.max(360 - segA - 2, 0.5) + 1
-
+      // "У края": stop at the very edge of the win sector instead of a random spot.
+      const edgeOffset = 1 + Math.random() * 1.5
+      const pos = edgeMode
+        ? win
+          ? (Math.random() < 0.5 ? winStart + edgeOffset : winEnd - edgeOffset)
+          : (Math.random() < 0.5 ? winEnd + edgeOffset : winStart - edgeOffset)
+        : win
+          ? winStart + Math.random() * Math.max(segA - 2, 0.5) + 1
+          : winEnd   + Math.random() * Math.max(360 - segA - 2, 0.5) + 1
+        
+      const current = rotationRef.current
       const posMod = ((pos % 360) + 360) % 360
-      const currentMod = ((currentAbs % 360) + 360) % 360
+      const currentMod = ((current % 360) + 360) % 360
       let delta = posMod - currentMod
       if (delta < 0) delta += 360
-      const extraTurns = isFast ? 2 : 3        // guarantee visible decelerating turns
-      const finalTarget = currentAbs + extraTurns * 360 + delta
-
-      rotationRef.current = finalTarget
-      preSpinActiveRef.current = false
-      pointerTransitionRef.current = `transform ${landMs}ms cubic-bezier(0.16, 0.84, 0.3, 1)`
-      spinDurationMsRef.current = landMs
-
+      const next = current + (isFast ? FAST_TURNS : NORMAL_FAST_TURNS + NORMAL_SLOW_TURNS) * 360 + delta
+      
       requestAnimationFrame(() => {
-        // New transition + new target in one commit → the browser interrupts the
-        // linear spin at its current computed angle and eases forward to finalTarget.
-        setRotation(finalTarget)
-        window.setTimeout(() => {
-          try { spinAudioRef.current?.pause(); spinAudioRef.current = null } catch {}
-          flushSync(() => {
-            setIsResolving(true)
-            setSpinning(false)
-            // After ANY spin (win OR loss), hold the just-played chance on the arc
-            // until the user picks the next source weapon.
-            frozenChanceRef.current = lockedChanceRef.current
-            lockedChanceRef.current = null
-            setResult(win ? "win" : "lose")
-          })
-          resolve(win)
-          setTimeout(() => { setIsResolving(false) }, 100)
-        }, landMs)
+        if (isFast) {
+          rotationRef.current = next
+          setPointerTransition(`transform ${FAST_SPIN_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`)
+          setRotation(next)
+        } else {
+          rotationRef.current = next
+          setPointerTransition(`transform ${NORMAL_SPIN_MS}ms cubic-bezier(0.25, 0.1, 0.2, 1)`)
+          setRotation(next)
+        }
+        if (soundMode === "on") {
+          const spinAudio = new Audio(isFast ? "/sounds/shortSpin.mp3" : "/sounds/longSpin.mp3")
+          spinAudio.play().catch(() => {})
+        }
       })
+      
+      window.setTimeout(() => {
+        flushSync(() => {
+          setIsResolving(true)
+          setSpinning(false)
+          frozenChanceRef.current = lockedChanceRef.current
+          lockedChanceRef.current = null
+          setPointerTransition("transform 0.3s")
+          setResult(win ? "win" : "lose")
+        })
+        resolve(win)
+        setTimeout(() => { setIsResolving(false) }, 100)
+      }, targetDurationMs)
     })
-
-  // ── Abort: freeze the pointer where it is (e.g. the upgrade request failed) ──
-  const cancelSpinImpl = () => {
-    let currentAbs = rotationRef.current
-    if (preSpinActiveRef.current) {
-      const elapsed = nowMs() - preSpinStartTimeRef.current
-      currentAbs = preSpinStartAngleRef.current + preSpinSpeedRef.current * (elapsed / 1000)
-    }
-    preSpinActiveRef.current = false
-    rotationRef.current = currentAbs
-    pointerTransitionRef.current = "none"
-    try { spinAudioRef.current?.pause(); spinAudioRef.current = null } catch {}
-    flushSync(() => {
-      setSpinning(false)
-      lockedChanceRef.current = null
-      setRotation(currentAbs)
-    })
-  }
 
   useImperativeHandle(ref, () => ({
-    startSpin: startSpinImpl,
-    finishSpin: finishSpinImpl,
-    cancelSpin: cancelSpinImpl,
-    // Legacy one-shot spin, kept for safety: start + land back-to-back.
-    spin: (win: boolean) => {
-      startSpinImpl()
-      return finishSpinImpl(win)
-    },
+    spin: spinImpl
   }))
 
   const arcStroke = "url(#progress-gradient)"
@@ -243,11 +178,6 @@ export const UpgradeWheel = forwardRef<UpgradeWheelHandle, UpgradeWheelProps>(fu
     if (c <= 0.65) return "средний шанс"
     return "высокий шанс"
   }
-
-  // The active transition (linear pre-spin OR eased land) is stored in a ref and set
-  // by start/finishSpin. Once the spin resolves, keep the exact transform without a
-  // second transition (a post-spin transition could visually pull the pointer back).
-  const pointerTransition = spinning ? pointerTransitionRef.current : "none"
 
   return (
     <div className="relative order-first col-span-2 h-[13.75rem] lg:order-none lg:col-span-1 lg:flex lg:h-[22.25rem] lg:items-center lg:justify-center w-full">

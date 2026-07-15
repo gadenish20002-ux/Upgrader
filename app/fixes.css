@@ -21,3 +21,12 @@ body .font-exo2 a[href="/cabinet"] {
   > span::before {
   content: "*";
 }
+
+/* The skin-select windows ("Выберите скины…", "Выберите скин для апгрейда")
+   must use the reference font. The @theme-inline --font-exo2 self-reference can
+   collapse, leaving those headings on the body Tektur font — pin it here. */
+.font-exo2,
+.font-exo {
+  font-family: var(--font-exo2), "Exo 2", sans-serif;
+  font-feature-settings: normal;
+}

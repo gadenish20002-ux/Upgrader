@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useStore, formatNumber } from "@/lib/store"
+import { useStore, formatNumber, formatBalance } from "@/lib/store"
 import { LoginButton } from "./login-button"
 import { currentGlobalUpgrades } from "@/lib/default-data"
 import Image from "next/image"
@@ -116,16 +116,12 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
               </div>
             </div>
 
-            <div className="hidden tablet:flex h-[2.375rem] w-[13.4375rem] shrink-0 items-center justify-center rounded-[0.375rem] bg-[linear-gradient(90deg,#ECD591_0%,#897237_50%,#ECD591_100%)] p-[0.0625rem] transition-all duration-300">
-              <div className="tablet:rounded-[0.375rem] tablet:bg-cover tablet:px-[0.5625rem] tablet:py-[0.5625rem] relative flex h-full w-full items-center justify-between overflow-hidden rounded-t-none rounded-b-[0.375rem] bg-[linear-gradient(90deg,rgba(23,24,28,0.70)_0%,rgba(23,24,28,0.40)_100%),linear-gradient(183deg,#595977_-97.81%,#28282D_141%)] px-[0.625rem] py-[0.6875rem]">
-                <img alt="event" className="tablet:-right-6 absolute right-5 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-dots.svg" />
-                <img alt="event" className="tablet:right-2 tablet:left-auto absolute right-auto left-22 h-full flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-center.svg" />
-                <img alt="event" className="tablet:block absolute left-0.5 hidden h-[1rem] flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-left.svg" />
-                <img alt="event" className="tablet:block absolute right-0.5 hidden h-[1rem] flex-shrink-0" src="/assets/images/league/streamer-battle-rectangle-right.svg" />
-                <img alt="event" className="tablet:block absolute right-2 hidden h-full flex-shrink-0" src="/assets/images/league/streamer-battle-swords.webp" />
-                <img alt="event" className="tablet:right-0 tablet:hidden absolute right-[3rem] block h-full flex-shrink-0" src="/assets/images/league/streamer-battle-swords-mobile.webp" />
-                <span className="font-exo text-gradient-streamer-battle z-[1] flex flex-shrink-1 flex-wrap items-center justify-center text-[1rem] leading-[1rem] font-semibold"> Битва Стримеров </span>
-                <span className="font-exo tablet:hidden absolute right-0 flex max-h-[1.25rem] w-[2.5rem] items-center justify-center gap-[0.5rem] rounded-l-[0.25rem] bg-[#17181C] bg-[linear-gradient(270deg,#ECD591_0%,#A68B47_72.21%,#ECD591_100%)] px-[0.9375rem] py-[0.375rem] text-[0.75rem] leading-[0.875rem] font-bold text-[#1C1C20] uppercase"> new </span>
+            <div className="hidden tablet:flex h-[2.375rem] w-[13.4375rem] shrink-0 items-center justify-center rounded-[0.375rem] transition-all duration-300">
+              <div className="tablet:rounded-[0.375rem] tablet:bg-cover tablet:px-[0.5625rem] tablet:py-[0.5625rem] relative flex h-full w-full items-center justify-center overflow-hidden rounded-t-none rounded-b-[0.375rem] bg-[linear-gradient(90deg,#10949E_0%,#04343A_50%,#DA2039_100%)] px-[0.625rem] py-[0.6875rem]">
+                <div className="absolute top-0 right-0 bottom-0 left-0 block h-full flex-shrink-0" style={{ backgroundRepeat: "repeat", backgroundPosition: "center center", backgroundImage: "url('/cdn/fa/images/league/sides-battle-bg.svg')" }}></div>
+                <img alt="sides-battle-spytech" className="tablet:scale-100 tablet:left-1 absolute left-6 block h-full flex-shrink-0 scale-[1.42]" src="/cdn/fa/images/league/sides-battle-spytech.webp" />
+                <img alt="sides-battle-arabesque" className="tablet:scale-100 tablet:right-1 absolute right-6 block h-full flex-shrink-0 scale-[1.42]" src="/cdn/fa/images/league/sides-battle-arabesque.webp" />
+                <span className="font-exo z-[1] flex flex-shrink-1 flex-wrap items-center justify-center text-[1rem] leading-[1rem] font-semibold text-[#FFFFFF]"> Битва Сторон </span>
               </div>
             </div>
           </div>
@@ -146,9 +142,11 @@ export function SiteHeader({ onProfileClick, onLogoClick }: { onProfileClick?: (
           {loggedIn ? (
             <div className="z-[2] !mr-0 flex h-full items-center justify-end space-x-2">
               <div className="tablet:h-12 tablet:space-x-[-0.875rem] flex h-[2.5rem] shrink-1 items-center justify-center space-x-[-0.5rem] lg:space-x-[-0.625rem]">
-                <button className="tablet:h-full tablet:pr-6 tablet:pl-3 z-[1] flex h-[2rem] lg:h-[2.25rem] shrink-0 items-center justify-center space-x-1 rounded-l-[0.625rem] border-[1px] border-r-0 border-[#FEDB1A33] bg-[#FEDB1A0D] pr-3 lg:pr-4 pl-2 transition-all duration-200 hover:brightness-110">
-                  <div className="tablet:text-lg flex h-full items-center text-[0.875rem] lg:text-[1.05rem] font-semibold text-white font-exo2">{formatNumber(Math.round(state.balance))}</div>
-                  <img alt="" className="tablet:h-5 tablet:w-5 h-[1rem] w-[1rem] lg:h-[1.125rem] lg:w-[1.125rem]" src="/cdn/fa/icons/coin.svg" />
+                <button className="tablet:h-full tablet:pr-6 z-[1] flex h-[2rem] lg:h-[2.25rem] shrink-0 items-center justify-center space-x-1 rounded-l-[0.625rem] border-[1px] border-r-0 border-[#FEDB1A33] bg-[#FEDB1A0D] pr-3 lg:pr-4 pl-2 lg:pl-3 transition-all duration-200 hover:brightness-110">
+                  <img alt="" className="tablet:h-4 tablet:w-4 h-[0.9075rem] w-[0.9075rem] lg:h-4 lg:w-4" src="/cdn/fa/icons/coins.svg" />
+                  {/* Balance shows kopecks in the reference "0 000.00" format */}
+                  <div className="tablet:text-base flex h-full items-center text-[0.875rem] lg:text-[1rem] font-semibold text-white font-exo2 tabular-nums">{formatBalance(state.balance)}</div>
+                  <img alt="arrow-down-icon" className="h-3.5 w-3.5 lg:h-4.5 lg:w-4.5" src="/cdn/fa/icons/arrow-yellow.svg" />
                 </button>
                 <button className="bg-[#FBD506] z-[2] flex h-[2.25rem] w-[2.75rem] lg:min-h-11 lg:w-auto shrink-1 items-center justify-center space-x-2 rounded-[0.625rem] lg:px-4 px-0 py-0 lg:py-2.5 text-[1.125rem] leading-[1rem] !font-light font-medium font-exo2 text-[#202022] transition-all duration-200 select-none hover:shadow-[0_0_20px_0_rgba(255,171,27,0.80)] focus:outline-none">
                   <img className="h-[1.1rem] w-[1.1rem] lg:h-[1.25rem] lg:w-[1.25rem]" alt="top-up" src="/assets/top-up-mobile.svg" />

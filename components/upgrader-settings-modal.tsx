@@ -30,7 +30,7 @@ export function UpgraderSettingsModal({ onClose }: UpgraderSettingsModalProps) {
 
   const handleSave = () => {
     const normalizedPercentages = fastPercentages.map((percentage) =>
-      Math.min(80, Math.max(1, Number.isFinite(percentage) ? percentage : 1))
+      Math.min(80, Math.max(0.1, Number.isFinite(percentage) ? percentage : 0.1))
     ) as [number, number, number]
 
     setState((p) => ({

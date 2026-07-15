@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react"
 import { useStore, getSkin, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
 import { LoginButton } from "./login-button"
-import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import { formatWeaponName, formatSkinName, formatWearShort } from "@/lib/utils"
 import { LiveDropAnimation } from "./live-drop-animation"
 import Image from "next/image"
 import { Backpack, Store, ChevronLeft, ChevronRight } from "lucide-react"
@@ -35,7 +35,8 @@ export function InventoryPanel({
   isSpinning?: boolean
 }) {
   const { state } = useStore()
-  const [sortOrderShop, setSortOrderShop] = useState<"desc" | "asc">("desc")
+  // Shop opens sorted cheap→expensive (по возрастанию), like the reference site.
+  const [sortOrderShop, setSortOrderShop] = useState<"desc" | "asc">("asc")
   const [sortOrderInv, setSortOrderInv] = useState<"desc" | "asc">("desc")
   const [currentPage, setCurrentPage] = useState(1)
   const [minPriceShop, setMinPriceShop] = useState("")
@@ -355,7 +356,7 @@ export function InventoryPanel({
                             <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
                             <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                           </div>
-                          <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                          <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{formatWearShort(skin.wear)}</span>
                         </div>
                         <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                         <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">

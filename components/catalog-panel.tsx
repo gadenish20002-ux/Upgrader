@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react"
 import { useStore, formatPrice } from "@/lib/store"
 import { RARITY_COLORS } from "@/lib/default-data"
-import { formatWeaponName, formatSkinName } from "@/lib/utils"
+import { formatWeaponName, formatSkinName, formatWearShort } from "@/lib/utils"
 import type { Skin } from "@/lib/types"
 import {
   getUpgradeChance,
@@ -377,7 +377,7 @@ export function CatalogPanel({
                           <span className="font-tektur text-gradient-yellow text-[0.5rem] lg:text-[0.625rem] font-bold text-white">{formatPrice(skin.price)}</span>
                           <img alt="" className="h-2 w-2 lg:h-2.5 lg:w-2.5" src="/cdn/fa/icons/coin-2.svg" />
                         </div>
-                        <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{skin.wear}</span>
+                        <span className="text-[#85878d] font-exo text-[0.4375rem] lg:text-[0.5rem] font-semibold">{formatWearShort(skin.wear)}</span>
                       </div>
                       <img className="z-[1] w-full max-w-[4.375rem] object-cover lg:max-w-[79%]" src={skin.image || "/placeholder.svg"} alt={skin.name} />
                       <div className="absolute left-1/2 z-[2] flex w-full max-w-[80%] -translate-x-1/2 flex-col items-center justify-center text-center bottom-1.5">

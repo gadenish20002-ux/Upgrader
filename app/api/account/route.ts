@@ -44,6 +44,29 @@ async function authorize(
 // (Previously it was removed here to keep predict a single global site setting,
 //  which is exactly what caused the "все ключи побеждают одновременно" bug.)
 
+// "Ждем продавца" window: a withdrawn item stays pending for ~1 minute, then
+// automatically completes into itemHistory ("Выведено").
+const WITHDRAW_SETTLE_MS = 60_000
+
+async function settlePendingWithdrawals(code: string, account: Awaited<ReturnType<typeof getAccount>>) {
+  const pending = account.pendingWithdrawals || []
+  if (pending.length === 0) return account
+  const now = Date.now()
+  const done = pending.filter((p) => now - p.startedAt >= WITHDRAW_SETTLE_MS)
+  if (done.length === 0) return account
+
+  const entries = done.map((p) => ({
+    id: `hist-${now}-${Math.random().toString(36).slice(2, 7)}`,
+    skinId: p.skinId,
+    action: "withdrawn" as const,
+    date: now,
+  }))
+  return patchAccount(code, {
+    pendingWithdrawals: pending.filter((p) => now - p.startedAt < WITHDRAW_SETTLE_MS),
+    itemHistory: [...entries, ...(account.itemHistory || [])].slice(0, 500),
+  })
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -51,7 +74,8 @@ export async function GET(request: Request) {
     const auth = await authorize(code, request)
     if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: auth.status })
 
-    const account = await getAccount(code)
+    let account = await getAccount(code)
+    account = await settlePendingWithdrawals(code, account)
     return NextResponse.json({ account, key: auth.meta })
   } catch {
     return NextResponse.json({ error: "storage unavailable" }, { status: 503 })

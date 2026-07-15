@@ -13,6 +13,8 @@ interface LoseAnimationOverlayProps {
   playing: boolean
   onComplete?: (awardedSkinId?: string) => void
   onStopSound?: () => void
+  // The bet total of the lost spin — the compensation drop is worth 5–15% of it.
+  betTotal?: number
 }
 
 type Phase = "case" | "skipping" | "roulette" | "result"
@@ -115,7 +117,24 @@ function pickWeightedSkin(stickerItems: Skin[], otherItems: Skin[], fallback: Sk
   return pool[Math.floor(Math.random() * pool.length)] ?? fallback[0]
 }
 
-function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
+// The compensation winner is worth 5–15% of the lost bet. Tape filler stays
+// random cheap items for visual variety.
+function pickCompensationWinner(skins: Skin[], betTotal: number): Skin | null {
+  if (skins.length === 0) return null
+  if (betTotal > 0) {
+    const min = betTotal * 0.05
+    const max = betTotal * 0.15
+    const inRange = skins.filter((skin) => skin.price >= min && skin.price <= max)
+    if (inRange.length > 0) return inRange[Math.floor(Math.random() * inRange.length)]
+    const target = betTotal * 0.1
+    return skins.reduce((best, skin) =>
+      !best || Math.abs(skin.price - target) < Math.abs(best.price - target) ? skin : best,
+    undefined as Skin | undefined) ?? null
+  }
+  return null
+}
+
+function pickTape(skins: Skin[], betTotal = 0): { items: TapeEntry[]; winner: Skin | null } {
   if (skins.length === 0) return { items: [], winner: null }
 
   const cheapSkins = skins.filter((skin) => skin.price > 0 && skin.price <= 1000)
@@ -123,7 +142,9 @@ function pickTape(skins: Skin[]): { items: TapeEntry[]; winner: Skin | null } {
   const stickerItems = [...COMPENSATION_BONUS_ITEMS, ...pool.filter(isStickerSkin)]
   const otherItems = pool.filter((skin) => !isStickerSkin(skin) && skin.price <= 80)
   const fallback = stickerItems.length > 0 ? stickerItems : pool
-  const winner = pickWeightedSkin(stickerItems, otherItems, fallback) ?? pool[0] ?? skins[0]
+  const winner =
+    pickCompensationWinner(skins, betTotal) ??
+    pickWeightedSkin(stickerItems, otherItems, fallback) ?? pool[0] ?? skins[0]
 
   const items = Array.from({ length: TAPE_LENGTH }, (_, index) => {
     const skin = pickWeightedSkin(stickerItems, otherItems, fallback) ?? winner
@@ -586,7 +607,7 @@ function ResultScreen({
   )
 }
 
-export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseAnimationOverlayProps) {
+export function LoseAnimationOverlay({ playing, onComplete, onStopSound, betTotal = 0 }: LoseAnimationOverlayProps) {
   const { state, setState } = useStore()
   const [visible, setVisible] = useState(false)
   const [phase, setPhase] = useState<Phase>("skipping")
@@ -754,7 +775,7 @@ export function LoseAnimationOverlay({ playing, onComplete, onStopSound }: LoseA
       // Capture current skins once at animation start — do NOT include state.skins
       // in the dependency array to avoid re-triggering when inventory changes.
       capturedSkinsRef.current = state.skins
-      const next = pickTape(capturedSkinsRef.current)
+      const next = pickTape(capturedSkinsRef.current, betTotal)
       if (!next.winner) {
         onCompleteRef.current?.()
         return
